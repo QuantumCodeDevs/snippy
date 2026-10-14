@@ -4,30 +4,29 @@ import { of } from 'rxjs';
 import { EmbedPlayerComponent } from './embed-player.component';
 import { SnippyApi } from '@app/services/data/snippy-api.service';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import 'jasmine';
 
 describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
   let component: EmbedPlayerComponent;
   let fixture: ComponentFixture<EmbedPlayerComponent>;
-  let mockApi: jasmine.SpyObj<SnippyApi>;
+  let mockApi: { getSnippetByShortId: ReturnType<typeof vi.fn> };
   let mockActivatedRoute: any;
 
   beforeEach(async () => {
     // Create mock API
-    mockApi = jasmine.createSpyObj('SnippyApi', ['getSnippetByShortId']);
-    mockApi.getSnippetByShortId.and.returnValue(
-      Promise.resolve({
-        snippet: {
-          shortId: 'test123',
-          snippetFiles: [
-            { fileType: 'html', content: '<div>Test</div>' },
-            { fileType: 'css', content: 'body { color: red; }' },
-            { fileType: 'js', content: 'console.log("test");' },
-          ],
-          cdnResources: [],
-        },
-      })
-    );
+    mockApi = {
+      getSnippetByShortId: vi.fn().mockName('SnippyApi.getSnippetByShortId'),
+    };
+    mockApi.getSnippetByShortId.mockResolvedValue({
+      snippet: {
+        shortId: 'test123',
+        snippetFiles: [
+          { fileType: 'html', content: '<div>Test</div>' },
+          { fileType: 'css', content: 'body { color: red; }' },
+          { fileType: 'js', content: 'console.log("test");' },
+        ],
+        cdnResources: [],
+      },
+    });
 
     // Create mock ActivatedRoute with paramMap and queryParamMap
     mockActivatedRoute = {
@@ -70,7 +69,7 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       expect(component.showResult()).toBe(false);
 
       // Spy on setTimeout to detect timer scheduling
-      spyOn(window, 'setTimeout').and.callThrough();
+      vi.spyOn(window, 'setTimeout');
 
       // Trigger ngAfterViewInit
       fixture.detectChanges();
@@ -92,7 +91,7 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       component['preview'] = undefined;
 
       // Spy on setTimeout
-      const setTimeoutSpy = spyOn(window, 'setTimeout').and.callThrough();
+      const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
 
       // Call refreshPreview directly
       component['refreshPreview']();
@@ -107,17 +106,17 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
 
     it('should cancel pending timeout on component destruction', fakeAsync(() => {
       // Set up component with result pane enabled
+      fixture.detectChanges();
       component.showResult.set(true);
       component['preview'] = undefined; // Preview not yet available
 
-      fixture.detectChanges();
       component.ngAfterViewInit();
 
       // Verify a timeout was scheduled
       expect(component['refreshTimeoutHandle']).not.toBeNull();
 
       // Spy on clearTimeout
-      const clearTimeoutSpy = spyOn(window, 'clearTimeout').and.callThrough();
+      const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout');
 
       // Destroy the component
       component.ngOnDestroy();
@@ -134,8 +133,8 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       component.showResult.set(true);
       component['preview'] = undefined;
 
-      const clearTimeoutSpy = spyOn(window, 'clearTimeout').and.callThrough();
-      const setTimeoutSpy = spyOn(window, 'setTimeout').and.returnValue(123 as any);
+      const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout');
+      const setTimeoutSpy = vi.spyOn(window, 'setTimeout').mockReturnValue(123 as any);
 
       // First call to refreshPreview
       component['refreshPreview']();
@@ -143,7 +142,7 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       expect(component['refreshTimeoutHandle']).toBe(123 as any);
 
       // Second call to refreshPreview should clear the first timeout
-      setTimeoutSpy.and.returnValue(456 as any);
+      setTimeoutSpy.mockReturnValue(456 as any);
       component['refreshPreview']();
 
       expect(clearTimeoutSpy).toHaveBeenCalledWith(123 as any);
@@ -159,12 +158,11 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
   describe('Security: Proper behavior with result pane enabled', () => {
     it('should start refreshPreview when showResult is true', fakeAsync(() => {
       // Default configuration includes result pane
+      fixture.detectChanges();
       component.showResult.set(true);
       component['preview'] = undefined;
 
-      const setTimeoutSpy = spyOn(window, 'setTimeout').and.callThrough();
-
-      fixture.detectChanges();
+      const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
       component.ngAfterViewInit();
 
       // Verify setTimeout was called (timer loop started as expected)
@@ -180,8 +178,10 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       component.showResult.set(true);
 
       // Mock preview component
-      const mockPreview = jasmine.createSpyObj('SnippetPreviewComponent', ['updatePreview']);
-      component['preview'] = mockPreview;
+      const mockPreview = {
+        updatePreview: vi.fn().mockName('SnippetPreviewComponent.updatePreview'),
+      };
+      component['preview'] = mockPreview as never;
 
       component['refreshPreview']();
 
@@ -197,13 +197,19 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       component.showResult.set(true);
       component['preview'] = undefined;
 
-      const setTimeoutSpy = spyOn(window, 'setTimeout').and.callFake((fn: Function) => {
-        // Simulate preview becoming available after first timeout
-        const mockPreview = jasmine.createSpyObj('SnippetPreviewComponent', ['updatePreview']);
-        component['preview'] = mockPreview;
-        fn(); // Execute the callback
-        return 999 as any;
-      });
+      const setTimeoutSpy = vi
+        .spyOn(window, 'setTimeout')
+        .mockImplementation((fn: TimerHandler) => {
+          // Simulate preview becoming available after first timeout
+          const mockPreview = {
+            updatePreview: vi.fn().mockName('SnippetPreviewComponent.updatePreview'),
+          };
+          component['preview'] = mockPreview as never;
+          if (typeof fn === 'function') {
+            fn();
+          }
+          return 999;
+        });
 
       component['refreshPreview']();
 
@@ -286,9 +292,9 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       expect(component.enabledTabs()).toContain('result');
       expect(component.showResult()).toBe(true);
 
-      // Cleanup any scheduled timeouts
-      component.ngOnDestroy();
+      // Let the snippet load settle before destroying, so a late refresh cannot reschedule.
       tick();
+      component.ngOnDestroy();
       flush();
     }));
   });
@@ -323,8 +329,8 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
     }));
 
     it('should handle rapid component creation and destruction without timer leaks', fakeAsync(() => {
-      const setTimeoutSpy = spyOn(window, 'setTimeout').and.callThrough();
-      const clearTimeoutSpy = spyOn(window, 'clearTimeout').and.callThrough();
+      const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
+      const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout');
 
       // Create and destroy component multiple times
       for (let i = 0; i < 3; i++) {
@@ -332,10 +338,10 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
 
         const testFixture = TestBed.createComponent(EmbedPlayerComponent);
         const testComponent = testFixture.componentInstance;
-        testComponent.showResult.set(true);
-        testComponent['preview'] = undefined;
 
         testFixture.detectChanges();
+        testComponent.showResult.set(true);
+        testComponent['preview'] = undefined;
         testComponent.ngAfterViewInit();
 
         // Verify timeout was scheduled
@@ -347,13 +353,13 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
 
         // Verify timeout was cleared
         expect(clearTimeoutSpy).toHaveBeenCalled();
+        expect(testComponent['refreshTimeoutHandle']).toBeNull();
       }
 
-      tick(1000);
-      flush();
-
       // Verify clearTimeout was called at least as many times as setTimeout
-      expect(clearTimeoutSpy.calls.count()).toBeGreaterThanOrEqual(setTimeoutSpy.calls.count());
+      expect(vi.mocked(clearTimeoutSpy).mock.calls.length).toBeGreaterThanOrEqual(
+        vi.mocked(setTimeoutSpy).mock.calls.length
+      );
     }));
   });
 
@@ -362,8 +368,10 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       component.showResult.set(true);
       component.editable.set(true);
 
-      const mockPreview = jasmine.createSpyObj('SnippetPreviewComponent', ['updatePreview']);
-      component['preview'] = mockPreview;
+      const mockPreview = {
+        updatePreview: vi.fn().mockName('SnippetPreviewComponent.updatePreview'),
+      };
+      component['preview'] = mockPreview as never;
 
       component.onCodeChange('html', '<div>New content</div>');
 
@@ -388,8 +396,10 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
 
     it('should handle rerun action correctly', fakeAsync(() => {
       component.showResult.set(true);
-      const mockPreview = jasmine.createSpyObj('SnippetPreviewComponent', ['updatePreview']);
-      component['preview'] = mockPreview;
+      const mockPreview = {
+        updatePreview: vi.fn().mockName('SnippetPreviewComponent.updatePreview'),
+      };
+      component['preview'] = mockPreview as never;
 
       const initialTick = component.previewTick();
       component.rerun();

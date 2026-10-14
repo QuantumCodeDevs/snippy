@@ -147,8 +147,6 @@ export function dataUrlToBlob(dataUrl: string): Blob {
 export class SnippetPreviewComponent implements AfterViewInit, OnDestroy {
   @ViewChild('previewIframe') previewIframe?: ElementRef<HTMLIFrameElement>;
 
-  readonly previewSandbox = PREVIEW_IFRAME_SANDBOX;
-
   private previewConsole = inject(PreviewConsoleService);
   private previewSnapshot = inject(PreviewSnapshotService);
   private destroyRef = inject(DestroyRef);

@@ -1,0 +1,6 @@
+{
+  "name": "karma",
+  "version": "6.4.4",
+  "private": true,
+  "description": "Stand-in for @angular/build's optional Karma peer. Unit tests use Vitest, so the real karma package (and its unpatched braces dependency) is not installed."
+}

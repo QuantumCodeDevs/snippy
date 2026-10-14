@@ -1,8 +1,9 @@
 <div class="flex h-full w-full flex-col bg-white">
+  <!-- Angular rejects a bound sandbox attribute; keep this in sync with PREVIEW_IFRAME_SANDBOX. -->
   <iframe
     class="h-full w-full border-0"
     #previewIframe
-    [attr.sandbox]="previewSandbox"
+    sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"
     referrerpolicy="no-referrer"
   >
   </iframe>

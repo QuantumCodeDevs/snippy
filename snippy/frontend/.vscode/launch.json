@@ -11,10 +11,12 @@
     },
     {
       "name": "ng test",
-      "type": "chrome",
+      "type": "node",
       "request": "launch",
-      "preLaunchTask": "npm: test",
-      "url": "http://localhost:9876/debug.html"
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["ng", "test", "--watch=false", "--debug"],
+      "console": "integratedTerminal"
     }
   ]
 }

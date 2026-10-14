@@ -68,7 +68,7 @@ describe('SnippetPreviewComponent', () => {
   });
 
   describe('XSS mitigation - origin isolation', () => {
-    it('should render snippet content in isolated origin (not same-origin)', (done) => {
+    it('should render snippet content in isolated origin (not same-origin)', async () => {
       component.ngAfterViewInit();
 
       const testHtml = '<div id="test">Test Content</div>';
@@ -77,38 +77,35 @@ describe('SnippetPreviewComponent', () => {
 
       component.updatePreview(testHtml, testCss, testJs, null, []);
 
-      // Wait for iframe to load
-      setTimeout(() => {
-        const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
-        expect(iframe).toBeTruthy();
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // Verify srcdoc is set (content is rendered)
-        expect(iframe.srcdoc).toContain(testHtml);
-        expect(iframe.srcdoc).toContain(testCss);
-        expect(iframe.srcdoc).toContain(testJs);
+      const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+      expect(iframe).toBeTruthy();
 
-        // Verify sandbox prevents same-origin access
-        // In a sandboxed iframe without allow-same-origin, contentDocument should be null
-        // or accessing it should throw a SecurityError
-        try {
-          const doc = iframe.contentDocument;
-          // If we can access contentDocument, verify it's not same-origin
-          if (doc) {
-            // The document should exist but origin should be different
-            // We can't directly check origin in tests, but we verify sandbox is set
-            expect(iframe.hasAttribute('sandbox')).toBe(true);
-            expect(iframe.getAttribute('sandbox')).not.toContain('allow-same-origin');
-          }
-        } catch (e) {
-          // SecurityError is expected and acceptable - it means sandbox is working
-          expect(e).toBeDefined();
+      // Verify srcdoc is set (content is rendered)
+      expect(iframe.srcdoc).toContain(testHtml);
+      expect(iframe.srcdoc).toContain(testCss);
+      expect(iframe.srcdoc).toContain(testJs);
+
+      // Verify sandbox prevents same-origin access
+      // In a sandboxed iframe without allow-same-origin, contentDocument should be null
+      // or accessing it should throw a SecurityError
+      try {
+        const doc = iframe.contentDocument;
+        // If we can access contentDocument, verify it's not same-origin
+        if (doc) {
+          // The document should exist but origin should be different
+          // We can't directly check origin in tests, but we verify sandbox is set
+          expect(iframe.hasAttribute('sandbox')).toBe(true);
+          expect(iframe.getAttribute('sandbox')).not.toContain('allow-same-origin');
         }
-
-        done();
-      }, 100);
+      } catch (e) {
+        // SecurityError is expected and acceptable - it means sandbox is working
+        expect(e).toBeDefined();
+      }
     });
 
-    it('should prevent snippet code from accessing parent window storage', (done) => {
+    it('should prevent snippet code from accessing parent window storage', async () => {
       component.ngAfterViewInit();
 
       // Malicious JS that attempts to access parent storage
@@ -123,12 +120,11 @@ describe('SnippetPreviewComponent', () => {
 
       component.updatePreview('<div>test</div>', '', maliciousJs, null, []);
 
-      setTimeout(() => {
-        // Verify parent storage was not modified
-        expect(localStorage.getItem('xss')).toBeNull();
-        expect(sessionStorage.getItem('xss')).toBeNull();
-        done();
-      }, 100);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify parent storage was not modified
+      expect(localStorage.getItem('xss')).toBeNull();
+      expect(sessionStorage.getItem('xss')).toBeNull();
     });
   });
 
@@ -137,7 +133,7 @@ describe('SnippetPreviewComponent', () => {
       component.ngAfterViewInit();
 
       const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
-      const consoleSpy = spyOn(component['previewConsole'], 'append');
+      const consoleSpy = vi.spyOn(component['previewConsole'], 'append').mockReturnValue(undefined);
 
       // Create a fake message event from a different source
       const fakeEvent = new MessageEvent('message', {
@@ -157,37 +153,36 @@ describe('SnippetPreviewComponent', () => {
       expect(consoleSpy).not.toHaveBeenCalled();
     });
 
-    it('should accept valid messages from preview iframe', (done) => {
+    it('should accept valid messages from preview iframe', async () => {
       component.ngAfterViewInit();
       component.updatePreview('<div>test</div>', '', '', null, []);
 
-      setTimeout(() => {
-        const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
-        const consoleSpy = spyOn(component['previewConsole'], 'append');
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // Create a valid message event from iframe
-        const validEvent = new MessageEvent('message', {
-          data: {
-            source: 'snippy-console',
-            level: 'log',
-            args: ['valid message'],
-          },
-          source: iframe.contentWindow,
-          origin: 'null', // Sandboxed iframes have null origin
-        });
+      const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+      const consoleSpy = vi.spyOn(component['previewConsole'], 'append').mockReturnValue(undefined);
 
-        component['onConsoleMessage'](validEvent);
+      // Create a valid message event from iframe
+      const validEvent = new MessageEvent('message', {
+        data: {
+          source: 'snippy-console',
+          level: 'log',
+          args: ['valid message'],
+        },
+        source: iframe.contentWindow,
+        origin: 'null', // Sandboxed iframes have null origin
+      });
 
-        // Should process message from correct source
-        expect(consoleSpy).toHaveBeenCalledWith('log', ['valid message']);
-        done();
-      }, 100);
+      component['onConsoleMessage'](validEvent);
+
+      // Should process message from correct source
+      expect(consoleSpy).toHaveBeenCalledWith('log', ['valid message']);
     });
 
     it('should reject messages without snippy-console source marker', () => {
       component.ngAfterViewInit();
 
-      const consoleSpy = spyOn(component['previewConsole'], 'append');
+      const consoleSpy = vi.spyOn(component['previewConsole'], 'append').mockReturnValue(undefined);
 
       const invalidEvent = new MessageEvent('message', {
         data: {
@@ -213,8 +208,12 @@ describe('SnippetPreviewComponent', () => {
       component.updatePreview('<div>test</div>', 'body { color: red; }', '', null, []);
 
       // Spy on the private methods
-      const updateCssOnlySpy = spyOn<any>(component, 'updateCssOnly').and.returnValue(false);
-      const fullReloadSpy = spyOn<any>(component, 'fullReload');
+      const preview = component as unknown as {
+        updateCssOnly: (css: string) => boolean;
+        fullReload: () => void;
+      };
+      const updateCssOnlySpy = vi.spyOn(preview, 'updateCssOnly').mockReturnValue(false);
+      const fullReloadSpy = vi.spyOn(preview, 'fullReload').mockReturnValue(undefined);
 
       // Try a partial update that will fail
       component.updatePreview('<div>test</div>', 'body { color: blue; }', '', 'partial', []);
@@ -233,8 +232,12 @@ describe('SnippetPreviewComponent', () => {
       component.updatePreview('<div>test</div>', 'body { color: red; }', '', null, []);
 
       // Spy on the private methods
-      const updateCssOnlySpy = spyOn<any>(component, 'updateCssOnly').and.returnValue(true);
-      const fullReloadSpy = spyOn<any>(component, 'fullReload');
+      const preview = component as unknown as {
+        updateCssOnly: (css: string) => boolean;
+        fullReload: () => void;
+      };
+      const updateCssOnlySpy = vi.spyOn(preview, 'updateCssOnly').mockReturnValue(true);
+      const fullReloadSpy = vi.spyOn(preview, 'fullReload').mockReturnValue(undefined);
 
       // Try a partial update that will succeed
       component.updatePreview('<div>test</div>', 'body { color: blue; }', '', 'partial', []);
@@ -328,7 +331,7 @@ describe('SnippetPreviewComponent', () => {
     it('captures from a scriptless same-origin iframe and removes it', async () => {
       const sandboxes: string[] = [];
       const nativeCreate = document.createElement.bind(document);
-      spyOn(document, 'createElement').and.callFake(
+      vi.spyOn(document, 'createElement').mockImplementation(
         (tagName: string, options?: string | ElementCreationOptions) => {
           const el = nativeCreate(tagName, options as ElementCreationOptions);
           if (tagName.toLowerCase() === 'iframe') {
@@ -350,10 +353,14 @@ describe('SnippetPreviewComponent', () => {
         null,
         []
       );
-      await (component as unknown as { captureJpeg: () => Promise<Blob | null> }).captureJpeg();
+      await (
+        component as unknown as {
+          captureJpeg: () => Promise<Blob | null>;
+        }
+      ).captureJpeg();
 
       expect(sandboxes).toContain(CAPTURE_IFRAME_SANDBOX);
-      expect(sandboxes.every((value) => !value.includes('allow-scripts'))).toBeTrue();
+      expect(sandboxes.every((value) => !value.includes('allow-scripts'))).toBe(true);
       expect(document.querySelectorAll('iframe[aria-hidden="true"]').length).toBe(0);
 
       const live = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
