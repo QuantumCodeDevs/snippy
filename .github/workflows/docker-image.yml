@@ -58,8 +58,8 @@ jobs:
         file: ./snippy/frontend/Dockerfile
         push: true
         tags: |
-          kennyl777/snippy-frontend:${{ env.FE_VERSION }}
-          kennyl777/snippy-frontend:latest
+          slurrps/snippy-frontend:${{ env.FE_VERSION }}
+          slurrps/snippy-frontend:latest
 
     - name: Build and push PocketBase image
       uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5.4.0
@@ -68,5 +68,5 @@ jobs:
         file: ./snippy/pocketbase/Dockerfile
         push: true
         tags: |
-          kennyl777/snippy-pocketbase:${{ env.PB_VERSION }}
-          kennyl777/snippy-pocketbase:latest
+          slurrps/snippy-pocketbase:${{ env.PB_VERSION }}
+          slurrps/snippy-pocketbase:latest
