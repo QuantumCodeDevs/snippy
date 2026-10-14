@@ -8,7 +8,7 @@
 services:
   pocketbase:
     # One process. pb_data is SQLite plus files, so do not scale this service.
-    image: kennyl777/snippy-pocketbase:latest
+    image: slurrps/snippy-pocketbase:latest
     container_name: snippy-pocketbase
     env_file:
       - .env
@@ -21,7 +21,7 @@ services:
       - NPM
 
   frontend:
-    image: kennyl777/snippy-frontend:latest
+    image: slurrps/snippy-frontend:latest
     container_name: snippy-frontend
     environment:
       POCKETBASE_URL: ${POCKETBASE_URL:-}
