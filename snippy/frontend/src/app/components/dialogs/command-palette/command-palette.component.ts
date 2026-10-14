@@ -145,7 +145,7 @@ export class CommandPaletteComponent {
           id: 'embed',
           label: 'Embed snippet',
           icon: 'code',
-          run: () => this.dialogs.open(EmbedDialogComponent, 'lg'),
+          run: () => this.dialogs.open(EmbedDialogComponent, 'xl'),
         });
         commands.push({
           id: 'share',

@@ -273,6 +273,7 @@ export class SnippetPreviewComponent implements AfterViewInit, OnDestroy {
       const root = doc?.documentElement;
       if (!doc || !root) return null;
 
+      await this.waitForCaptureStyles(doc);
       const pixelRatio = Math.min(1, 800 / Math.max(srcWidth, srcHeight));
       const backgroundColor = this.snapshotBackground(doc);
       const dataUrl = await toJpeg(root, {
@@ -280,7 +281,8 @@ export class SnippetPreviewComponent implements AfterViewInit, OnDestroy {
         width: srcWidth,
         height: srcHeight,
         pixelRatio,
-        cacheBust: true,
+        cacheBust: false,
+        skipFonts: true,
         backgroundColor,
         style: {
           width: `${srcWidth}px`,
@@ -313,6 +315,23 @@ export class SnippetPreviewComponent implements AfterViewInit, OnDestroy {
         document.body.appendChild(iframe);
       }
     });
+  }
+
+  /** Stylesheets and font faces must finish before layout is read. */
+  private waitForCaptureStyles(doc: Document): Promise<void> {
+    const sheets = Array.from(doc.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).map(
+      (link) =>
+        new Promise<void>((resolve) => {
+          if (link.sheet) {
+            resolve();
+            return;
+          }
+          link.addEventListener('load', () => resolve(), { once: true });
+          link.addEventListener('error', () => resolve(), { once: true });
+        })
+    );
+    const fonts = doc.fonts?.ready ?? Promise.resolve();
+    return Promise.all([fonts, ...sheets]).then(() => undefined);
   }
 
   private snapshotBackground(doc: Document): string {

@@ -1,7 +1,7 @@
 /* Chips, menus, destructive hover affordances */
 
 .mat-mdc-chip {
-  --mdc-chip-container-shape-radius: 9999px !important;
+  --mdc-chip-container-shape-radius: var(--btn-radius) !important;
   background: var(--card-bg) !important;
   border: 1px solid var(--hairline) !important;
 }
@@ -14,7 +14,7 @@
 .mat-mdc-menu-panel {
   background: var(--card-bg) !important;
   border: 1px solid var(--hairline) !important;
-  border-radius: 0.9rem !important;
+  border-radius: var(--radius-panel) !important;
   box-shadow: none !important;
   overflow: hidden;
 }

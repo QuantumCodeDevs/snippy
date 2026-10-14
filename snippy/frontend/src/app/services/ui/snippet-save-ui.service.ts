@@ -16,8 +16,9 @@ export class SnippetSaveUIService {
   //#region Save
 
   /**
-   * Persist the open snippet, clear drafts, optionally snapshot, then toast.
-   * New pens navigate to `/:user/snippet/:shortId` after save.
+   * Persist the open snippet, clear drafts, then toast.
+   * Snapshot capture continues in the background.
+   * New pens still navigate to `/:user/snippet/:shortId`.
    */
   async saveSnippetWithUI(snippetStoreService: SnippetStoreService, userGetter: () => User | null) {
     const isNew = !snippetStoreService.snippet()?.shortId;
@@ -31,13 +32,13 @@ export class SnippetSaveUIService {
       }
       this.drafts.remove(DRAFT_TRY_KEY);
       if (saved.snippetId) {
-        await this.previewSnapshot.captureAndUpload(saved.snippetId);
+        void this.previewSnapshot.captureAndUpload(saved.snippetId);
       }
       this.snackbarService.success('Snippet saved');
       if (isNew && saved.shortId) {
-        const currentUser = userGetter();
-        if (currentUser?.userName) {
-          this.navigation.toSnippet(saved.shortId, currentUser.userName);
+        const owner = userGetter()?.userName || saved.userName;
+        if (owner) {
+          await this.navigation.toSnippet(saved.shortId, owner);
         }
       }
     } catch (err) {

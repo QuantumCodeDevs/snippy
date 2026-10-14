@@ -20,7 +20,7 @@
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--hairline);
-  border-radius: 0.75rem;
+  border-radius: var(--radius-panel);
   background: var(--card-bg);
 }
 
@@ -34,6 +34,7 @@
 
 .editor-type-label {
   padding: 0.5rem 0.75rem;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.16em;

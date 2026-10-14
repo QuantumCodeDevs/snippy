@@ -3,7 +3,7 @@
 /* Dialogs — container chrome (surface fill is dialog-scoped below) */
 .mat-mdc-dialog-container {
   --mdc-dialog-container-color: transparent !important;
-  --mdc-dialog-container-shape: 1.1rem;
+  --mdc-dialog-container-shape: var(--radius-panel);
   --mat-dialog-container-elevation-shadow: none !important;
   --mat-dialog-container-small-max-width: 100vw;
   padding: 0 !important;
@@ -11,7 +11,7 @@
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
-  border-radius: 1.1rem !important;
+  border-radius: var(--radius-panel) !important;
   overflow: hidden !important;
   display: flex;
   flex-direction: column;
@@ -30,7 +30,7 @@
   background: var(--dialog-surface) !important;
   border: 1px solid var(--hairline) !important;
   outline: none !important;
-  border-radius: 1.1rem !important;
+  border-radius: var(--radius-panel) !important;
   box-shadow: none !important;
   padding: 0.5rem !important;
   overflow: hidden;

@@ -164,7 +164,12 @@ export class SnippetWebViewComponent implements OnInit, AfterViewInit, OnDestroy
             this.editorUi.setGuestMode(!snip?.isOwner);
           });
         } else if (id && !guest) {
-          void this.snippetStoreService.loadSnippet(id).then(() => this.restoreDraft());
+          const current = this.snippetStoreService.snippet();
+          if (current?.shortId === id) {
+            this.restoreDraft();
+          } else {
+            void this.snippetStoreService.loadSnippet(id).then(() => this.restoreDraft());
+          }
         } else {
           const forceNew = !!query.get('new');
           const templateId = guest ? 'hello' : query.get('template');
@@ -201,7 +206,18 @@ export class SnippetWebViewComponent implements OnInit, AfterViewInit, OnDestroy
     this.editorUi.setGuestMode(false);
     this.previewConsole.setOpen(false);
     this.previewConsole.clear();
-    this.snippetStoreService.clearSnippet();
+    if (!this.navigatingToOpenSnippet()) {
+      this.snippetStoreService.clearSnippet();
+    }
+  }
+
+  /** Keep the saved pen in the store when save navigates to its new URL. */
+  private navigatingToOpenSnippet(): boolean {
+    const shortId = this.snippetStoreService.snippet()?.shortId;
+    if (!shortId) return false;
+    const nav = this.router.getCurrentNavigation();
+    const next = nav?.finalUrl?.toString() || nav?.extractedUrl?.toString() || '';
+    return next.includes(`/snippet/${shortId}`);
   }
 
   private initBlankSnippet(guest: boolean, templateId?: string | null) {

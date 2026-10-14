@@ -1,10 +1,10 @@
 /* Snackbar glass + tone variants */
 
 .mat-mdc-snack-bar-container {
-  --mdc-snackbar-container-shape: 9999px;
+  --mdc-snackbar-container-shape: var(--btn-radius);
   --mdc-snackbar-supporting-text-color: var(--snackbar-text);
   --mat-snack-bar-button-color: var(--snackbar-text);
-  border-radius: 9999px !important;
+  border-radius: var(--btn-radius) !important;
   border: 1px solid var(--hairline) !important;
   background: var(--snackbar-bg) !important;
   box-shadow: none !important;

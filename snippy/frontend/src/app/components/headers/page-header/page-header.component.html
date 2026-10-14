@@ -7,7 +7,16 @@
             <span class="brand-star" aria-hidden="true">✦</span>
             Snippy
           </a>
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="cmdk-button"
+              (click)="openCommandPalette()"
+              aria-label="Search commands"
+            >
+              <mat-icon class="cmdk-button__icon">search</mat-icon>
+              <span class="cmdk-button__keys">Ctrl K</span>
+            </button>
             <app-theme-toggle></app-theme-toggle>
             <app-user-menu></app-user-menu>
           </div>
@@ -17,8 +26,17 @@
             Snippy
           </a>
           <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="cmdk-button"
+              (click)="openCommandPalette()"
+              aria-label="Search commands"
+            >
+              <mat-icon class="cmdk-button__icon">search</mat-icon>
+              <span class="cmdk-button__keys">Ctrl K</span>
+            </button>
             <app-theme-toggle></app-theme-toggle>
-            <a mat-stroked-button routerLink="/public">View snippets</a>
+            <a mat-stroked-button routerLink="/public" class="header-secondary">View snippets</a>
             <button mat-raised-button color="primary" (click)="login()">Log in</button>
           </div>
         }
@@ -34,9 +52,7 @@
           Snippy
         </a>
 
-        <nav
-          class="flex flex-wrap items-center gap-1 rounded-full border border-line bg-surface p-1"
-        >
+        <nav class="feed-nav" aria-label="Feeds">
           @if (user()) {
             <a
               routerLink="/home"
@@ -53,12 +69,30 @@
         </nav>
 
         @if (user()) {
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="cmdk-button"
+              (click)="openCommandPalette()"
+              aria-label="Search commands"
+            >
+              <mat-icon class="cmdk-button__icon">search</mat-icon>
+              <span class="cmdk-button__keys">Ctrl K</span>
+            </button>
             <app-theme-toggle></app-theme-toggle>
             <app-user-menu></app-user-menu>
           </div>
         } @else {
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="cmdk-button"
+              (click)="openCommandPalette()"
+              aria-label="Search commands"
+            >
+              <mat-icon class="cmdk-button__icon">search</mat-icon>
+              <span class="cmdk-button__keys">Ctrl K</span>
+            </button>
             <app-theme-toggle></app-theme-toggle>
             <button mat-raised-button color="primary" (click)="login()">Log in</button>
           </div>
@@ -173,6 +207,15 @@
             </button>
           }
 
+          <button
+            type="button"
+            class="cmdk-button"
+            (click)="openCommandPalette()"
+            aria-label="Search commands"
+          >
+            <mat-icon class="cmdk-button__icon">search</mat-icon>
+            <span class="cmdk-button__keys">Ctrl K</span>
+          </button>
           <app-theme-toggle></app-theme-toggle>
           @if (isGuest || !user()) {
             <button mat-raised-button color="primary" (click)="login()">Log in</button>
@@ -192,12 +235,30 @@
           Snippy
         </a>
         @if (user()) {
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="cmdk-button"
+              (click)="openCommandPalette()"
+              aria-label="Search commands"
+            >
+              <mat-icon class="cmdk-button__icon">search</mat-icon>
+              <span class="cmdk-button__keys">Ctrl K</span>
+            </button>
             <app-theme-toggle></app-theme-toggle>
             <app-user-menu></app-user-menu>
           </div>
         } @else {
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="cmdk-button"
+              (click)="openCommandPalette()"
+              aria-label="Search commands"
+            >
+              <mat-icon class="cmdk-button__icon">search</mat-icon>
+              <span class="cmdk-button__keys">Ctrl K</span>
+            </button>
             <app-theme-toggle></app-theme-toggle>
             <button mat-raised-button color="primary" (click)="login()">Log in</button>
           </div>

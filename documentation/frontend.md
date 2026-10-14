@@ -29,9 +29,9 @@ Related: [PocketBase collections and rules](db.md) · [self-host README](../READ
 
 ## Request flow
 
-Dev: [`proxy.conf.json`](../snippy/frontend/proxy.conf.json) forwards `/api` and `/_/` to `http://pocketbase:8090`. That proxy is only for `ng serve` on your machine. The Admin UI is still the PocketBase process.
+Dev: [`proxy.conf.js`](../snippy/frontend/proxy.conf.js) forwards `/api` and `/_/` to PocketBase (`http://127.0.0.1:8090`, or `POCKETBASE_PROXY_TARGET` inside Compose). `ng serve` loads it from `angular.json`. The Admin UI is still the PocketBase process.
 
-Prod: [`nginx.site.conf`](../snippy/frontend/nginx.site.conf) forwards `/api/` only. CSP `connect-src` is `'self' blob: data:`. `script-src` keeps `'unsafe-inline'`, `'unsafe-eval'`, and `https:` because the editor and CDN libraries need them. Snippet HTML and JS run only in the preview `srcdoc` iframe (`allow-scripts`, no `allow-same-origin`, no `allow-top-navigation`, no `allow-popups-to-escape-sandbox`). Snapshot capture uses a second iframe with `allow-same-origin` and no scripts. Embed sandbox headers stay on `/embed/`.
+Prod: [`nginx.site.conf`](../snippy/frontend/nginx.site.conf) forwards `/api/` only. CSP `connect-src` is `'self' blob: data:` plus `https://api.cdnjs.com` and `https://cdnjs.cloudflare.com`. `script-src` keeps `'unsafe-inline'`, `'unsafe-eval'`, and `https:` because the editor and CDN libraries need them. Snippet HTML and JS run only in the preview `srcdoc` iframe (`allow-scripts`, no `allow-same-origin`, no `allow-top-navigation`, no `allow-popups-to-escape-sandbox`). Snapshot capture uses a second iframe with `allow-same-origin` and no scripts. Embed sandbox headers stay on `/embed/`.
 
 ```mermaid
 flowchart LR

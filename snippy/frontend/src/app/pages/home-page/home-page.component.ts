@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
   selector: 'app-home-page',
   imports: [MatButton, MatAnchor, MatIconModule, RouterLink],
   templateUrl: './home-page.component.html',
+  styleUrl: './home-page.component.scss',
   changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class HomePageComponent {

@@ -6,13 +6,13 @@
   --mdc-outlined-card-outline-color: var(--hairline) !important;
   position: relative;
   overflow: hidden;
-  border-radius: 1.1rem !important;
+  border-radius: var(--radius-panel) !important;
   border: 1px solid var(--hairline) !important;
   background: var(--card-bg) !important;
   box-shadow: none !important;
   transition:
-    border-color 180ms ease,
-    background 180ms ease;
+    border-color var(--dur-short) var(--ease-out),
+    background var(--dur-short) var(--ease-out);
 }
 
 .mat-mdc-card:hover {

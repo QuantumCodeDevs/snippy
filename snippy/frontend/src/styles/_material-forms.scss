@@ -11,15 +11,15 @@
   --mdc-outlined-text-field-input-text-color: var(--text-primary);
   --mdc-outlined-text-field-input-text-placeholder-color: var(--text-dim);
   --mdc-outlined-text-field-caret-color: var(--brand-violet-focus);
-  --mdc-outlined-text-field-container-shape: 0.75rem;
-  --mat-form-field-outlined-container-shape: 0.75rem;
+  --mdc-outlined-text-field-container-shape: var(--btn-radius);
+  --mat-form-field-outlined-container-shape: var(--btn-radius);
   --mat-form-field-container-height: 3rem;
   --mat-form-field-focus-select-arrow: var(--brand-violet-focus);
 
   /* Single glass surface — no fill + outline double-edge */
   .mdc-text-field--outlined {
     background: var(--dialog-field-bg) !important;
-    border-radius: 0.75rem !important;
+    border-radius: var(--btn-radius) !important;
   }
 
   .mdc-text-field--focused .mdc-floating-label .mat-mdc-floating-label {

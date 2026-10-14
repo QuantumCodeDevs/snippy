@@ -1,0 +1,149 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app */
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: var(--space-lg);
+  align-items: center;
+}
+
+.home-copy {
+  min-width: 0;
+}
+
+.home-copy h1 {
+  margin-top: var(--space-sm);
+  max-width: 14ch;
+  font-size: clamp(2.25rem, 4vw + 1rem, 4.25rem);
+  font-weight: 600;
+  font-style: normal;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+  color: var(--text-bright);
+}
+
+.home-lede {
+  max-width: 38rem;
+  margin-top: var(--space-sm);
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-top: var(--space-md);
+}
+
+.home-actions a {
+  white-space: nowrap;
+}
+
+.home-figure {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-panel);
+  background: var(--card-bg);
+}
+
+.home-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.home-figure figcaption {
+  padding: 0.65rem 0.85rem;
+  border-top: 1px solid var(--hairline);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.home-band {
+  margin-top: var(--space-2xl);
+  padding: var(--space-lg);
+  border-radius: var(--radius-panel);
+  background: var(--band-bg);
+  color: var(--band-ink);
+}
+
+.home-band h2,
+.home-close h2 {
+  font-size: clamp(1.75rem, 2vw + 1rem, 2.5rem);
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.home-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-steps li {
+  min-width: 0;
+  color: var(--band-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.home-steps strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--band-ink);
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.home-close {
+  margin-top: var(--space-2xl);
+  margin-bottom: var(--space-lg);
+}
+
+.home-close p {
+  max-width: 36rem;
+  margin-top: var(--space-xs);
+  color: var(--text-muted);
+}
+
+.home-close .mat-mdc-raised-button,
+.home-close button {
+  margin-top: var(--space-md);
+}
+
+@media (max-width: 900px) {
+  .home-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .home-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-band {
+    padding: var(--space-md);
+  }
+}

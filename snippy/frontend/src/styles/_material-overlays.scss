@@ -3,25 +3,11 @@
 .mat-mdc-select-panel {
   background: var(--card-bg) !important;
   border: 1px solid var(--hairline) !important;
-  border-radius: 0.9rem !important;
+  border-radius: var(--radius-panel) !important;
   box-shadow: none !important;
 }
 
-.mat-button-toggle-group {
-  border: 1px solid var(--glass-border-subtle) !important;
-  border-radius: 9999px !important;
-  overflow: hidden;
-  background: var(--card-bg);
-}
-
-.mat-button-toggle {
-  background: transparent !important;
-}
-
-.mat-button-toggle-checked {
-  background: var(--nav-active-bg) !important;
-  color: var(--nav-active-text);
-}
+/* Layout toggles live in _material-switch.scss */
 
 .mat-mdc-paginator {
   background: transparent !important;

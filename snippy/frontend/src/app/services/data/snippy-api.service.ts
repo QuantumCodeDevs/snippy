@@ -8,6 +8,7 @@ import {
   mapAsset,
   mapCollection,
   mapComment,
+  fileUrl,
   mapSnippet,
   mapSnippetList,
   mapUser,
@@ -185,10 +186,16 @@ export class SnippyApi {
     });
   }
 
-  /** Expand files and map a snippet record to the editor `Snippet` shape. */
-  private async mapSnippetDetail(record: RecordModel, extras?: Partial<Snippet>): Promise<Snippet> {
-    const files = await this.filesFor(record.id);
-    return mapSnippet(this.pb, record, files, this.me, extras);
+  /** Whether the signed-in user has favorited `snippetId`. */
+  private async isSnippetFavorited(snippetId: string): Promise<boolean> {
+    if (!this.me) return false;
+    const fav = await this.pb.collection('favorites').getList(1, 1, {
+      filter: this.filter('snippet = {:sid} && user = {:uid}', {
+        sid: snippetId,
+        uid: this.me,
+      }),
+    });
+    return fav.totalItems > 0;
   }
 
   /** Map a PocketBase list result to `{ snippets, totalCount }`. */
@@ -260,24 +267,40 @@ export class SnippyApi {
     return new Set(result.map((r) => String(r['following'])));
   }
 
-  /** Create or update the three `snippet_files` rows to match the editor panes. */
-  private async syncFiles(snippetId: string, files?: CreateSnippetRequest['snippetFiles']) {
-    const existing = await this.filesFor(snippetId);
-    const byType = new Map(existing.map((f) => [String(f['fileType']), f]));
-    for (const type of FILE_TYPES) {
-      const incoming = files?.find((f) => f.fileType === type);
-      const content = incoming?.content ?? '';
-      const rec = byType.get(type);
-      if (rec) {
-        await this.pb.collection('snippet_files').update(rec.id, { content });
-      } else {
-        await this.pb.collection('snippet_files').create({
+  /** Create or update the three `snippet_files` rows in parallel. */
+  private async syncFiles(
+    snippetId: string,
+    files?: CreateSnippetRequest['snippetFiles'],
+    options?: { create?: boolean }
+  ): Promise<RecordModel[]> {
+    const byType = new Map<string, string>();
+    const missingId = FILE_TYPES.some((type) => !this.fileId(files, type));
+    if (!options?.create && missingId) {
+      const existing = await this.filesFor(snippetId);
+      for (const rec of existing) byType.set(String(rec['fileType']), rec.id);
+    }
+    return Promise.all(
+      FILE_TYPES.map((type) => {
+        const content = files?.find((f) => f.fileType === type)?.content ?? '';
+        const id = this.fileId(files, type) || byType.get(type);
+        if (id) {
+          return this.pb.collection('snippet_files').update(id, { content });
+        }
+        return this.pb.collection('snippet_files').create({
           snippet: snippetId,
           fileType: type,
           content,
         });
-      }
-    }
+      })
+    );
+  }
+
+  private fileId(
+    files: CreateSnippetRequest['snippetFiles'] | undefined,
+    type: string
+  ): string | undefined {
+    const id = files?.find((f) => f.fileType === type)?.snippetFileID;
+    return id ? String(id) : undefined;
   }
 
   //#endregion Snippet Helpers
@@ -289,14 +312,11 @@ export class SnippyApi {
     const rec = await this.pb
       .collection('snippets')
       .getFirstListItem(this.filter('shortId = {:id}', { id: shortId }), { expand: 'user' });
-    let isFavorited = false;
-    if (this.me) {
-      const fav = await this.pb.collection('favorites').getList(1, 1, {
-        filter: this.filter('snippet = {:sid} && user = {:uid}', { sid: rec.id, uid: this.me }),
-      });
-      isFavorited = fav.totalItems > 0;
-    }
-    return this.mapSnippetDetail(rec, { isFavorited });
+    const [isFavorited, files] = await Promise.all([
+      this.isSnippetFavorited(rec.id),
+      this.filesFor(rec.id),
+    ]);
+    return mapSnippet(this.pb, rec, files, this.me, { isFavorited });
   }
 
   /** Load a snippet via hidden share token (`GET /api/snippy/shared/{token}`). */
@@ -311,31 +331,36 @@ export class SnippyApi {
   /** Create a snippet owned by the signed-in user and sync HTML/CSS/JS files. */
   async createSnippet(body: CreateSnippetRequest): Promise<Snippet> {
     if (!this.me) throw Object.assign(new Error('Unauthenticated'), { status: 401 });
-    const rec = await this.pb.collection('snippets').create({
-      user: this.me,
-      name: body.name || 'Untitled',
-      description: body.description || '',
-      isPrivate: !!body.isPrivate,
-      tags: body.tags ?? [],
-      cdnResources: body.cdnResources ?? [],
-    });
-    await this.syncFiles(rec.id, body.snippetFiles);
-    const saved = await this.pb.collection('snippets').getOne(rec.id, { expand: 'user' });
-    return this.mapSnippetDetail(saved);
+    const rec = await this.pb.collection('snippets').create(
+      {
+        user: this.me,
+        name: body.name || 'Untitled',
+        description: body.description || '',
+        isPrivate: !!body.isPrivate,
+        tags: body.tags ?? [],
+        cdnResources: body.cdnResources ?? [],
+      },
+      { expand: 'user' }
+    );
+    const fileRecords = await this.syncFiles(rec.id, body.snippetFiles, { create: true });
+    return mapSnippet(this.pb, rec, fileRecords, this.me);
   }
 
   /** Update snippet metadata and replace pane contents. */
   async updateSnippet(snippetId: string, body: CreateSnippetRequest): Promise<Snippet> {
-    const rec = await this.pb.collection('snippets').update(snippetId, {
-      name: body.name,
-      description: body.description ?? '',
-      isPrivate: !!body.isPrivate,
-      tags: body.tags ?? [],
-      cdnResources: body.cdnResources ?? [],
-    });
-    await this.syncFiles(snippetId, body.snippetFiles);
-    const saved = await this.pb.collection('snippets').getOne(rec.id, { expand: 'user' });
-    return this.mapSnippetDetail(saved);
+    const rec = await this.pb.collection('snippets').update(
+      snippetId,
+      {
+        name: body.name,
+        description: body.description ?? '',
+        isPrivate: !!body.isPrivate,
+        tags: body.tags ?? [],
+        cdnResources: body.cdnResources ?? [],
+      },
+      { expand: 'user' }
+    );
+    const fileRecords = await this.syncFiles(snippetId, body.snippetFiles);
+    return mapSnippet(this.pb, rec, fileRecords, this.me);
   }
 
   /** Delete a snippet (API rules require owner). Cascades files via PocketBase. */
@@ -343,13 +368,18 @@ export class SnippyApi {
     await this.pb.collection('snippets').delete(snippetId);
   }
 
-  /** Upload a PNG to `snippets.snapshot` (list-card thumbnail). */
-  async uploadSnippetSnapshot(snippetId: string, file: Blob): Promise<Snippet> {
+  /** Upload a thumbnail to `snippets.snapshot`. Returns only the fields the editor patches. */
+  async uploadSnippetSnapshot(
+    snippetId: string,
+    file: Blob
+  ): Promise<{ snapshotUrl: string | null; updatedAt?: string }> {
     const form = new FormData();
     form.append('snapshot', file, 'snapshot.png');
     const rec = await this.pb.collection('snippets').update(snippetId, form);
-    const saved = await this.pb.collection('snippets').getOne(rec.id, { expand: 'user' });
-    return this.mapSnippetDetail(saved);
+    return {
+      snapshotUrl: fileUrl(this.pb, rec, 'snapshot'),
+      updatedAt: rec['updated'],
+    };
   }
 
   //#endregion Snippets — detail

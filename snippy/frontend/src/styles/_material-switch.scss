@@ -1,0 +1,88 @@
+/* Slide toggles and layout button-toggles.
+ * Off state is an opaque track plus a solid knob — never a hairline stadium. */
+
+.mat-mdc-slide-toggle {
+  --mat-slide-toggle-unselected-track-color: var(--switch-track-off);
+  --mat-slide-toggle-unselected-hover-track-color: var(--switch-track-off-hover);
+  --mat-slide-toggle-unselected-focus-track-color: var(--switch-track-off-hover);
+  --mat-slide-toggle-unselected-pressed-track-color: var(--switch-track-off-hover);
+  --mat-slide-toggle-unselected-track-outline-color: var(--switch-track-off-outline);
+  --mat-slide-toggle-unselected-hover-track-outline-color: var(--switch-track-off-outline);
+  --mat-slide-toggle-unselected-focus-track-outline-color: var(--focus-ring);
+  --mat-slide-toggle-unselected-pressed-track-outline-color: var(--switch-track-off-outline);
+  --mat-slide-toggle-track-outline-color: var(--switch-track-off-outline);
+  --mat-slide-toggle-unselected-handle-color: var(--switch-handle-off);
+  --mat-slide-toggle-unselected-hover-handle-color: var(--switch-handle-off);
+  --mat-slide-toggle-unselected-focus-handle-color: var(--switch-handle-off);
+  --mat-slide-toggle-unselected-pressed-handle-color: var(--switch-handle-off);
+  --mat-slide-toggle-unselected-handle-size: 20px;
+  --mat-slide-toggle-unselected-handle-horizontal-margin: 0 6px;
+  --mat-slide-toggle-selected-handle-size: 22px;
+  --mat-slide-toggle-selected-track-color: var(--accent);
+  --mat-slide-toggle-selected-hover-track-color: var(--accent-hover);
+  --mat-slide-toggle-selected-focus-track-color: var(--accent);
+  --mat-slide-toggle-selected-pressed-track-color: var(--accent-hover);
+  --mat-slide-toggle-selected-track-outline-color: transparent;
+  --mat-slide-toggle-selected-handle-color: var(--switch-handle-on);
+  --mat-slide-toggle-selected-hover-handle-color: var(--switch-handle-on);
+  --mat-slide-toggle-selected-focus-handle-color: var(--switch-handle-on);
+  --mat-slide-toggle-selected-pressed-handle-color: var(--switch-handle-on);
+  --mat-slide-toggle-disabled-track-opacity: 1;
+  --mat-slide-toggle-disabled-unselected-handle-opacity: 0.55;
+  --mat-slide-toggle-disabled-selected-handle-opacity: 0.7;
+  --mat-slide-toggle-disabled-unselected-track-color: var(--switch-track-off);
+  --mat-slide-toggle-disabled-unselected-handle-color: var(--switch-handle-off);
+  --mat-slide-toggle-disabled-unselected-track-outline-color: var(--switch-track-off-outline);
+  --mat-slide-toggle-disabled-selected-track-color: var(--accent);
+  --mat-slide-toggle-disabled-selected-handle-color: var(--switch-handle-on);
+  --mat-slide-toggle-label-text-color: var(--text-primary);
+
+  .mdc-switch--unselected .mdc-switch__track::before {
+    background: var(--switch-track-off);
+  }
+
+  .mdc-switch--unselected:hover .mdc-switch__track::before {
+    background: var(--switch-track-off-hover);
+  }
+
+  .mdc-switch--selected .mdc-switch__track::after {
+    background: var(--accent);
+  }
+}
+
+.mat-mdc-slide-toggle .mdc-switch:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.mat-mdc-slide-toggle.mdc-switch--disabled,
+.mat-mdc-slide-toggle .mdc-switch--disabled {
+  opacity: 0.72;
+}
+
+.mat-button-toggle-group {
+  border: 1px solid var(--hairline-strong) !important;
+  border-radius: var(--btn-radius) !important;
+  overflow: hidden;
+  background: var(--card-bg);
+}
+
+.mat-button-toggle {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-body);
+}
+
+.mat-button-toggle .mat-button-toggle-label-content {
+  line-height: 2.25rem;
+}
+
+.mat-button-toggle-checked {
+  background: var(--accent) !important;
+  color: var(--accent-ink) !important;
+}
+
+.mat-button-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}

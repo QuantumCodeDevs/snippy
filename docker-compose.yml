@@ -38,12 +38,13 @@ services:
       - --poll
       - "1000"
       - --proxy-config
-      - proxy.conf.json
+      - proxy.conf.js
     ports:
       - "4200:4200"
     environment:
       CHOKIDAR_USEPOLLING: "true"
       POCKETBASE_URL: ${POCKETBASE_URL:-}
+      POCKETBASE_PROXY_TARGET: http://pocketbase:8090
     depends_on:
       pocketbase:
         condition: service_healthy

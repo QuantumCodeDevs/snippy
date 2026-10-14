@@ -4,17 +4,31 @@
   @apply border-b border-line bg-page text-ink;
 }
 
+.feed-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--btn-radius);
+  background: var(--card-bg);
+  padding: 2px;
+}
+
 .nav-pill {
   display: inline-flex;
-  padding: 0.45rem 0.8rem;
-  border-radius: 9999px;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
   text-decoration: none;
   color: var(--text-muted);
   font-size: 0.875rem;
   font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
   transition:
-    background 180ms ease,
-    color 180ms ease;
+    background var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out);
   cursor: pointer;
   background: transparent;
   border: 1px solid transparent;
@@ -34,4 +48,60 @@
 .nav-pill-active:hover {
   background: var(--nav-active-bg);
   color: var(--nav-active-text);
+}
+
+.nav-pill:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.cmdk-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.5rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--btn-radius);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cmdk-button:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.cmdk-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.cmdk-button__icon {
+  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+@media (max-width: 640px) {
+  .cmdk-button__keys {
+    display: none;
+  }
+
+  .cmdk-button {
+    width: 2.5rem;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .header-secondary {
+    display: none !important;
+  }
 }

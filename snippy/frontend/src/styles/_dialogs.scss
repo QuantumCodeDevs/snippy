@@ -124,7 +124,8 @@
 }
 
 .embed-preview {
-  height: min(var(--embed-preview-h, 300px), 36vh, 12rem);
+  height: var(--embed-preview-h, 300px);
+  min-height: 16rem;
   overflow: hidden;
 }
 
@@ -153,10 +154,6 @@
 }
 
 @media (max-height: 700px), (max-width: 640px) {
-  .embed-preview {
-    height: min(var(--embed-preview-h, 300px), 28vh, 9rem);
-  }
-
   .embed-code {
     max-height: 5.5rem;
   }

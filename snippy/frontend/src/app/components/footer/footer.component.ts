@@ -64,7 +64,7 @@ export class FooterComponent {
   }
 
   openEmbed() {
-    this.dialogService.open(EmbedDialogComponent, 'lg');
+    this.dialogService.open(EmbedDialogComponent, 'xl');
   }
 
   openShare() {

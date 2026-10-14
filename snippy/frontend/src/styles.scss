@@ -1,7 +1,9 @@
-/* -------------------------------------------------------
-   Snippy global styles — entry point
-   Partials live in src/styles/ and are grouped by concern.
--------------------------------------------------------- */
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app
+ * pre-emit critique: P5 H4 E5 S4 R4 V4
+ * -------------------------------------------------------
+ * Snippy global styles — entry point
+ * Partials live in src/styles/ and are grouped by concern.
+ * ------------------------------------------------------- */
 
 @use '@angular/material' as mat;
 
@@ -10,13 +12,13 @@ html {
   @include mat.theme(
     (
       color: (
-        primary: mat.$rose-palette,
+        primary: mat.$azure-palette,
         tertiary: mat.$azure-palette,
         theme-type: color-scheme,
       ),
       typography: (
         plain-family: (
-          'Space Grotesk',
+          'Inter',
           sans-serif,
         ),
         brand-family: (
@@ -28,25 +30,27 @@ html {
     )
   );
 
-  /* Warm studio surfaces. light-dark() follows color-scheme on html. */
-  --mat-sys-background: light-dark(#f3eee6, #312f2f);
-  --mat-sys-surface: light-dark(#fffaf4, #3a3634);
-  --mat-sys-surface-container: light-dark(#fffaf4, #3a3634);
-  --mat-sys-surface-container-low: light-dark(#f3eee6, #312f2f);
-  --mat-sys-surface-container-high: light-dark(#fffaf4, #45403d);
-  --mat-sys-surface-container-highest: light-dark(#e7dfd4, #45403d);
-  --mat-sys-on-surface: light-dark(#2a2624, #f6f1ea);
-  --mat-sys-on-surface-variant: light-dark(#5c554e, #d4cbc2);
-  --mat-sys-on-background: light-dark(#2a2624, #f6f1ea);
-  --mat-sys-primary: light-dark(#b56b5d, #e4b1a4);
-  --mat-sys-on-primary: light-dark(#fffaf4, #2a2624);
-  --mat-sys-primary-container: light-dark(#b56b5d, #e4b1a4);
-  --mat-sys-on-primary-container: light-dark(#fffaf4, #2a2624);
-  --mat-sys-tertiary: light-dark(#3f7a6b, #9dcec0);
-  --mat-sys-on-tertiary: light-dark(#fffaf4, #2a2624);
-  --mat-sys-outline: light-dark(#e4dcd2, #4a4542);
-  --mat-sys-outline-variant: light-dark(#e4dcd2, #4a4542);
+  /* Cobalt pair. Values follow [data-theme] tokens, not a second palette. */
+  --mat-sys-background: var(--page-bg);
+  --mat-sys-surface: var(--card-bg);
+  --mat-sys-surface-container: var(--card-bg);
+  --mat-sys-surface-container-low: var(--page-bg);
+  --mat-sys-surface-container-high: var(--surface-hover);
+  --mat-sys-surface-container-highest: var(--surface-hover);
+  --mat-sys-on-surface: var(--text-primary);
+  --mat-sys-on-surface-variant: var(--text-muted);
+  --mat-sys-on-background: var(--text-primary);
+  --mat-sys-primary: var(--accent);
+  --mat-sys-on-primary: var(--accent-ink);
+  --mat-sys-primary-container: var(--accent);
+  --mat-sys-on-primary-container: var(--accent-ink);
+  --mat-sys-tertiary: var(--accent);
+  --mat-sys-on-tertiary: var(--accent-ink);
+  --mat-sys-outline: var(--hairline-strong);
+  --mat-sys-outline-variant: var(--hairline);
   --mat-sys-surface-tint: transparent;
+  --mat-sys-error: var(--warn-fill);
+  --mat-sys-on-error: var(--text-white);
 }
 
 @import 'tailwindcss';
@@ -61,9 +65,10 @@ html {
   --color-surface: var(--card-bg);
   --color-raised: var(--surface-hover);
   --color-line: var(--hairline);
-  --color-mint: var(--accent-mint);
-  --color-clay: var(--accent-clay);
-  --color-sky: var(--accent-sky);
+  --color-accent: var(--accent);
+  --color-mint: var(--accent);
+  --color-clay: var(--accent);
+  --color-sky: var(--accent);
 }
 
 /* Design system */
@@ -82,6 +87,7 @@ html {
 @import 'styles/material-dialogs';
 @import 'styles/material-chips-menus';
 @import 'styles/material-forms';
+@import 'styles/material-switch';
 @import 'styles/material-tabs';
 @import 'styles/material-buttons';
 @import 'styles/material-snackbar';

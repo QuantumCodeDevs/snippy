@@ -12,12 +12,13 @@
 html,
 body {
   height: 100%;
+  overflow-x: clip;
 }
 
 body {
   min-height: 100vh;
   line-height: 1.6;
-  font-family: var(--font-ui);
+  font-family: var(--font-body);
   background-color: var(--page-bg);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -27,8 +28,9 @@ h1,
 h2,
 h3,
 .brand-mark {
-  font-family: var(--font-ui);
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-style: normal;
+  letter-spacing: -0.03em;
 }
 
 .brand-mark {
@@ -39,7 +41,7 @@ h3,
   font-size: 1rem;
   text-decoration: none;
   color: var(--text-bright);
-  transition: opacity 220ms ease;
+  transition: opacity var(--dur-short) var(--ease-out);
 }
 
 .brand-mark:hover {
@@ -52,11 +54,18 @@ h3,
   justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
-  border-radius: 9999px;
+  border-radius: var(--btn-radius);
   color: var(--brand-mark-fg);
   background: var(--brand-mark-bg);
   font-size: 0.8rem;
   line-height: 1;
+}
+
+.brand-mark:focus-visible,
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .text-link {

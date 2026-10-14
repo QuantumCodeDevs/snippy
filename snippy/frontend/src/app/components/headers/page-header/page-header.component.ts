@@ -24,6 +24,7 @@ import { NavigationService } from '@app/services/ui/navigation.service';
 import { SnippetActionsService } from '@app/services/ui/snippet-actions.service';
 import { ForkAttributionComponent } from '@app/components/ui/fork-attribution/fork-attribution.component';
 import { SnippetStatBarComponent } from '@app/components/ui/snippet-stat-bar/snippet-stat-bar.component';
+import { CommandPaletteComponent } from '@app/components/dialogs/command-palette/command-palette.component';
 import { DraftAutosaveService } from '@app/services/ui/draft-autosave.service';
 
 @Component({
@@ -108,6 +109,10 @@ export class PageHeaderComponent implements OnInit {
     if (url === '/try' || url === '/snippet' || /\/snippet\//.test(url)) return 'editor';
     if (/\/fullpage\//.test(url)) return 'minimal';
     return 'feed';
+  }
+
+  openCommandPalette() {
+    this.dialogService.open(CommandPaletteComponent, 'md');
   }
 
   login() {

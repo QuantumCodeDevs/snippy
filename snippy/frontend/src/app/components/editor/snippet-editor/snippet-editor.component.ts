@@ -277,18 +277,47 @@ export class SnippetEditorComponent implements OnInit, AfterViewInit, OnDestroy 
     }
   }
 
-  /** Flag when open/close tag counts disagree. */
+  /** Flag tags whose open and close counts disagree. Void and self-closing tags are balanced. */
   private analyzeHTML(html: string): string[] {
-    const issues: string[] = [];
-
-    // Check for unclosed tags
-    const openTags = html.match(/<([a-z]+)[^>]*>/gi) || [];
-    const closeTags = html.match(/<\/([a-z]+)>/gi) || [];
-
-    if (openTags.length !== closeTags.length) {
-      issues.push('Potential unclosed tags detected');
+    const voidTags = new Set([
+      'area',
+      'base',
+      'br',
+      'col',
+      'embed',
+      'hr',
+      'img',
+      'input',
+      'link',
+      'meta',
+      'param',
+      'source',
+      'track',
+      'wbr',
+    ]);
+    const stripped = html
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
+    const counts = new Map<string, number>();
+    const tagRe = /<\/?([a-zA-Z][\w:-]*)\b[^>]*?\/?>/g;
+    let match: RegExpExecArray | null;
+    while ((match = tagRe.exec(stripped))) {
+      const raw = match[0];
+      const name = match[1].toLowerCase();
+      if (raw.startsWith('</')) {
+        counts.set(name, (counts.get(name) ?? 0) - 1);
+      } else if (raw.endsWith('/>') || voidTags.has(name)) {
+        continue;
+      } else {
+        counts.set(name, (counts.get(name) ?? 0) + 1);
+      }
     }
 
+    const issues: string[] = [];
+    for (const [name, count] of counts) {
+      if (count > 0) issues.push(`Unclosed <${name}> tag`);
+      if (count < 0) issues.push(`Unexpected </${name}> tag`);
+    }
     return issues;
   }
 

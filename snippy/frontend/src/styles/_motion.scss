@@ -2,7 +2,7 @@
 
 .content-stagger > * {
   opacity: 0;
-  animation: fadeRise 650ms ease both;
+  animation: fadeRise 360ms var(--ease-out) both;
   animation-delay: var(--entry-delay, 0ms);
 }
 

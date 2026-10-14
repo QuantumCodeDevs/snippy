@@ -16,6 +16,9 @@ describe('nginx CSP for PocketBase proxy and snippet previews', () => {
   it('allows snapshot capture and CDN assets without opening default-src', () => {
     assert.match(csp, /connect-src[^"]*blob:/);
     assert.match(csp, /connect-src[^"]*data:/);
+    assert.match(csp, /connect-src[^"]*https:\/\/api\.cdnjs\.com/);
+    assert.match(csp, /connect-src[^"]*https:\/\/cdnjs\.cloudflare\.com/);
+    assert.doesNotMatch(csp, /connect-src[^"]*https:(?!\/\/)/);
     assert.match(csp, /script-src[^"]*https:/);
     assert.match(csp, /style-src[^"]*https:/);
     assert.match(csp, /img-src[^"]*'self' data: blob: https:/);

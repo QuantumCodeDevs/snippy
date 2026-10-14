@@ -18,7 +18,7 @@
     background: var(--card-bg);
     border: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline) !important;
-    border-radius: 9999px;
+    border-radius: var(--btn-radius);
     padding: 0.25rem;
   }
 
@@ -45,7 +45,7 @@
     min-height: 2.25rem;
     height: 2.25rem;
     padding: 0 0.85rem;
-    border-radius: 9999px;
+    border-radius: var(--btn-radius);
     border: 1px solid transparent;
     opacity: 1;
     transition: all 200ms ease;

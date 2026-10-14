@@ -23,9 +23,9 @@
   color: $text !important;
   box-shadow: none !important;
   transition:
-    background 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease;
+    background var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out);
 
   .mdc-button__label,
   .mat-icon {
@@ -43,11 +43,18 @@
     opacity: 0 !important;
   }
 
-  &:hover:not([disabled]),
+  &:hover:not([disabled]) {
+    background: $bg-hover !important;
+    border-color: $border-hover !important;
+    box-shadow: none !important;
+  }
+
   &:focus-visible:not([disabled]) {
     background: $bg-hover !important;
     border-color: $border-hover !important;
     box-shadow: none !important;
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
   &[disabled],
@@ -69,6 +76,7 @@
   padding: 0 1.1rem !important;
   letter-spacing: 0.01em;
   font-weight: 600 !important;
+  white-space: nowrap;
   --mdc-protected-button-container-elevation-shadow: none;
   --mdc-protected-button-hover-container-elevation-shadow: none;
   --mdc-protected-button-focus-container-elevation-shadow: none;
@@ -161,7 +169,7 @@ button.mat-mdc-raised-button.mat-warn {
   border: 1px solid var(--hairline);
   background: var(--card-bg);
   color: var(--text-primary);
-  border-radius: 9999px;
+  border-radius: var(--btn-radius);
 }
 
 .theme-toggle.mat-mdc-icon-button:hover {
