@@ -11,12 +11,16 @@
     }
   </div>
 } @else if (error) {
-  <div class="flex min-h-32 flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-dim">
+  <div
+    class="flex min-h-32 flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-dim"
+  >
     <mat-icon>{{ errorIcon }}</mat-icon>
     <p class="m-0">{{ error }}</p>
   </div>
 } @else if (empty) {
-  <div class="flex min-h-32 flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-dim">
+  <div
+    class="flex min-h-32 flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-dim"
+  >
     <mat-icon>{{ emptyIcon }}</mat-icon>
     <p class="m-0">{{ emptyText }}</p>
   </div>

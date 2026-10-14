@@ -12,7 +12,7 @@ import {
   Component,
   DestroyRef,
   EventEmitter,
-  Input,  
+  Input,
   Output,
   inject,
   OnInit,
