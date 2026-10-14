@@ -1,0 +1,85 @@
+:host {
+  display: block;
+}
+
+.site-footer {
+  border-top: 1px solid var(--glass-border-mid);
+  background: var(--page-bg);
+  color: var(--text-soft);
+}
+
+.footer-inner {
+  padding-block: 0.75rem;
+}
+
+.site-footer.editor-footer .footer-inner {
+  padding-block: 0.25rem;
+}
+
+.editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+}
+
+.copyright {
+  font-size: 0.875rem;
+}
+
+.footer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1.25rem;
+  text-align: center;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  font-size: 0.8125rem;
+}
+
+.footer-links a {
+  color: var(--text-link, var(--text-soft));
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: var(--text-link-accent, var(--text-bright));
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+:host ::ng-deep .editor-footer {
+  .mat-mdc-button {
+    min-height: 1.75rem;
+    height: 1.75rem;
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .mat-mdc-button .mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.25rem;
+  }
+
+  .mat-mdc-button .mdc-button__label {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .mat-mdc-button.active-console {
+    color: var(--text-bright, #f8fafc);
+    background: var(--surface-hover);
+  }
+}

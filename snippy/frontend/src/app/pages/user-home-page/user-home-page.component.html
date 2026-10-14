@@ -1,0 +1,87 @@
+@if (user()) {
+  <div class="flex h-full flex-col overflow-auto">
+    <div class="page-shell">
+      <app-user-identity-header
+        [pictureUrl]="user()?.pictureUrl"
+        [displayName]="user()?.displayName"
+        [userName]="user()?.userName"
+      />
+
+      <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start">
+        <mat-tab label="Snippets">
+          <app-async-state
+            class="mt-4 block"
+            [loading]="isLoading"
+            [error]="listError"
+            loadingText="Loading snippets..."
+          >
+            <app-snippet-list
+              class="mt-4 block"
+              [snippets]="snippets"
+              [total]="total"
+              [pageSize]="snippetState.pageSize"
+              [pageIndex]="snippetState.pageIndex"
+              (searchChange)="snippetState.onSearch($event)"
+              (pageChange)="snippetState.onPageChange($event)"
+            >
+            </app-snippet-list>
+          </app-async-state>
+        </mat-tab>
+
+        <mat-tab label="Collections">
+          <app-async-state
+            class="mt-4 block"
+            [loading]="collectionsLoading"
+            [error]="collectionsError"
+            loadingText="Loading collections..."
+          >
+            <app-collection-list
+              class="mt-4 block"
+              [collections]="collections"
+              [total]="collectionsTotal"
+              [pageSize]="collectionState.pageSize"
+              [pageIndex]="collectionState.pageIndex"
+              [showNewButton]="true"
+              [showDelete]="true"
+              (searchChange)="collectionState.onSearch($event)"
+              (pageChange)="collectionState.onPageChange($event)"
+              (createNew)="openCreateCollection()"
+              (openCollection)="openCollection($event)"
+              (deleteCollection)="deleteCollection($event)"
+            >
+            </app-collection-list>
+          </app-async-state>
+        </mat-tab>
+
+        <mat-tab label="Favorites">
+          <app-async-state
+            class="mt-4 block"
+            [loading]="favoritesLoading"
+            [error]="favoritesError"
+            loadingText="Loading favorites..."
+          >
+            <app-snippet-list
+              class="mt-4 block"
+              [snippets]="favorites"
+              [total]="favoritesTotal"
+              [pageSize]="favoritesState.pageSize"
+              [pageIndex]="favoritesState.pageIndex"
+              [showNewButton]="false"
+              (searchChange)="favoritesState.onSearch($event)"
+              (pageChange)="favoritesState.onPageChange($event)"
+            >
+            </app-snippet-list>
+          </app-async-state>
+        </mat-tab>
+
+        <mat-tab label="Projects">
+          <div class="panel p-5 mt-4 text-center text-muted">
+            <p>Projects feature coming soon!</p>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </div>
+} @else {
+  <app-async-state [loading]="true" loadingText="Loading user data..." />
+}

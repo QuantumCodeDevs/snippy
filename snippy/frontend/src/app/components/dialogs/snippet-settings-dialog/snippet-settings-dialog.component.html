@@ -1,0 +1,75 @@
+<h2 mat-dialog-title>{{ guestMode ? 'CDN Libraries' : 'Snippet Settings' }}</h2>
+
+<mat-dialog-content>
+  <mat-tab-group class="dialog-tabs" dynamicHeight>
+    @if (!guestMode) {
+      <mat-tab label="General">
+        <div class="flex flex-col gap-3 pt-4">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Description</mat-label>
+            <textarea matInput [(ngModel)]="description" rows="3"></textarea>
+          </mat-form-field>
+
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <div class="font-semibold text-ink">{{ isPrivate ? 'Private' : 'Public' }}</div>
+              <small class="text-faint">
+                {{ isPrivate ? 'Only you can view this snippet' : 'Anyone can view this snippet' }}
+              </small>
+            </div>
+            <mat-slide-toggle [(ngModel)]="isPrivate"></mat-slide-toggle>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="block font-semibold text-ink">Tags</label>
+
+            <div class="flex items-center gap-2">
+              <mat-form-field appearance="outline" class="flex-1">
+                <mat-label>Add tag</mat-label>
+                <input matInput [(ngModel)]="newTag" (keyup.enter)="addTag()" />
+              </mat-form-field>
+              <button mat-raised-button color="primary" (click)="addTag()">
+                <mat-icon>add</mat-icon>
+                Add
+              </button>
+            </div>
+
+            @if (tags.length > 0) {
+              <mat-chip-set>
+                @for (tag of tags; track tag) {
+                  <mat-chip (removed)="removeTag(tag)">
+                    {{ tag }}
+                    <button matChipRemove>
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  </mat-chip>
+                }
+              </mat-chip-set>
+            } @else {
+              <p class="text-faint">No tags added</p>
+            }
+          </div>
+        </div>
+      </mat-tab>
+    }
+    <mat-tab label="CSS">
+      <div class="pt-4">
+        <app-external-resources-list [(resources)]="cssResources" [resourceType]="'css'">
+        </app-external-resources-list>
+      </div>
+    </mat-tab>
+    <mat-tab label="JS">
+      <div class="pt-4">
+        <app-external-resources-list [(resources)]="jsResources" [resourceType]="'js'">
+        </app-external-resources-list>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</mat-dialog-content>
+
+<mat-divider></mat-divider>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSave()">Save</button>
+</mat-dialog-actions>

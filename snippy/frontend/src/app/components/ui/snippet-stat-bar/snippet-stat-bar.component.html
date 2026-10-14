@@ -1,0 +1,71 @@
+@if (variant === 'card') {
+  <div class="flex flex-wrap gap-1">
+    <span matTooltip="Views" matTooltipPosition="above" (click)="$event.stopPropagation()">
+      <button matButton="tonal" class="stat-btn" disabled>
+        <mat-icon>visibility</mat-icon>
+        <span>{{ stats.viewCount }}</span>
+      </button>
+    </span>
+    @if (stats.embedCount && stats.embedCount > 0) {
+      <span matTooltip="Embeds" matTooltipPosition="above" (click)="$event.stopPropagation()">
+        <button matButton="tonal" class="stat-btn" disabled>
+          <mat-icon>code</mat-icon>
+          <span>{{ stats.embedCount }}</span>
+        </button>
+      </span>
+    }
+    <button
+      matButton="tonal"
+      class="stat-btn"
+      [matTooltip]="stats.isFavorited ? 'Unfavorite' : 'Favorite'"
+      matTooltipPosition="above"
+      (click)="favorite.emit($event)"
+    >
+      <mat-icon>{{ stats.isFavorited ? 'favorite' : 'favorite_border' }}</mat-icon>
+      <span>{{ stats.favoriteCount }}</span>
+    </button>
+    <button
+      matButton="tonal"
+      class="stat-btn"
+      matTooltip="Comments"
+      matTooltipPosition="above"
+      (click)="comment.emit($event)"
+    >
+      <mat-icon>comment</mat-icon>
+      <span>{{ stats.commentCount }}</span>
+    </button>
+    <button
+      matButton="tonal"
+      class="stat-btn"
+      matTooltip="Forks"
+      matTooltipPosition="above"
+      (click)="forks.emit($event); $event.stopPropagation()"
+    >
+      <mat-icon>account_tree</mat-icon>
+      <span>{{ stats.forkCount ?? 0 }}</span>
+    </button>
+  </div>
+} @else {
+  <div class="flex items-center gap-1">
+    <button
+      mat-icon-button
+      [matTooltip]="stats.isFavorited ? 'Unfavorite' : 'Favorite'"
+      (click)="favorite.emit($event)"
+    >
+      <mat-icon>{{ stats.isFavorited ? 'favorite' : 'favorite_border' }}</mat-icon>
+    </button>
+    <button mat-icon-button matTooltip="Comments" (click)="comment.emit($event)">
+      <mat-icon>comment</mat-icon>
+    </button>
+    @if (showFork) {
+      <button mat-icon-button matTooltip="Fork" (click)="fork.emit($event)">
+        <mat-icon>fork_right</mat-icon>
+      </button>
+    }
+    @if (showForksList) {
+      <button mat-icon-button matTooltip="View forks" (click)="forks.emit($event)">
+        <mat-icon>account_tree</mat-icon>
+      </button>
+    }
+  </div>
+}

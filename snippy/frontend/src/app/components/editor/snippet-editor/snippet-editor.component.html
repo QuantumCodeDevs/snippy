@@ -1,0 +1,24 @@
+<div class="editor-shell">
+  <div class="editor-toolbar">
+    <span class="editor-type-label">{{ editorType.toUpperCase() }}</span>
+    <button
+      mat-icon-button
+      [matMenuTriggerFor]="menu"
+      matTooltip="Pane actions"
+      (click)="$event.stopPropagation()"
+    >
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu" xPosition="before">
+      <button mat-menu-item (click)="formatCode()">
+        <mat-icon>code</mat-icon>
+        <span>Format Code</span>
+      </button>
+      <button mat-menu-item (click)="analyzeCode()">
+        <mat-icon>analytics</mat-icon>
+        <span>Analyze Code</span>
+      </button>
+    </mat-menu>
+  </div>
+  <div #editor class="editor-pane"></div>
+</div>

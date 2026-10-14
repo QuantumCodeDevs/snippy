@@ -1,0 +1,86 @@
+<h2 mat-dialog-title>My Assets</h2>
+
+<mat-dialog-content>
+  <input
+    #fileInput
+    type="file"
+    hidden
+    accept="image/png,image/jpeg,image/gif,image/webp,font/woff,font/woff2,text/plain,text/css,application/javascript,audio/mpeg,audio/ogg,video/mp4"
+    (change)="onFileSelected($event)"
+  />
+
+  <div class="upload-bar">
+    <button mat-raised-button color="primary" [disabled]="uploading()" (click)="triggerUpload()">
+      @if (uploading()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        <span class="inline-flex items-center gap-1">
+          <mat-icon>upload</mat-icon>
+          Upload
+        </span>
+      }
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="dialog-loading">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+  } @else if (assets().length === 0) {
+    <div class="dialog-empty">
+      <mat-icon>image_not_supported</mat-icon>
+      <p>No assets uploaded yet.</p>
+    </div>
+  } @else {
+    <div class="asset-grid">
+      @for (asset of assets(); track asset.assetId) {
+        <div class="asset-card glass">
+          <div class="asset-thumb">
+            @if (isImage(asset)) {
+              <img [src]="asset.url" [alt]="asset.fileName" />
+            } @else {
+              <mat-icon>insert_drive_file</mat-icon>
+            }
+          </div>
+          <div class="asset-meta">
+            <span class="asset-name" [matTooltip]="asset.fileName">{{ asset.fileName }}</span>
+            <span class="asset-usage text-xs text-faint">{{ usageLabel(asset) }}</span>
+            <div class="asset-actions">
+              @if (canInsert) {
+                <button
+                  mat-icon-button
+                  matTooltip="Insert into editor"
+                  (click)="insertIntoEditor(asset)"
+                >
+                  <mat-icon>add_photo_alternate</mat-icon>
+                </button>
+              }
+              <button mat-icon-button matTooltip="Copy URL" (click)="copyUrl(asset)">
+                <mat-icon>content_copy</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                class="icon-btn-danger"
+                matTooltip="Delete"
+                [disabled]="deletingId() === asset.assetId"
+                (click)="deleteAsset(asset)"
+              >
+                @if (deletingId() === asset.assetId) {
+                  <mat-spinner diameter="16"></mat-spinner>
+                } @else {
+                  <mat-icon>delete</mat-icon>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-divider></mat-divider>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

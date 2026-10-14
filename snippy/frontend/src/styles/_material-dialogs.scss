@@ -1,0 +1,171 @@
+/* Dialog chrome + .snippy-dialog layout */
+
+/* Dialogs — container chrome (surface fill is dialog-scoped below) */
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: transparent !important;
+  --mdc-dialog-container-shape: 1.1rem;
+  --mat-dialog-container-elevation-shadow: none !important;
+  --mat-dialog-container-small-max-width: 100vw;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 1.1rem !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh !important;
+  min-height: 0;
+}
+
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(100svh - 1.5rem - env(safe-area-inset-bottom, 0px));
+  --mdc-dialog-container-color: transparent !important;
+  background: var(--dialog-surface) !important;
+  border: 1px solid var(--hairline) !important;
+  outline: none !important;
+  border-radius: 1.1rem !important;
+  box-shadow: none !important;
+  padding: 0.5rem !important;
+  overflow: hidden;
+}
+
+.cdk-overlay-pane.mat-mdc-dialog-panel {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.cdk-overlay-pane.snippy-dialog {
+  max-height: calc(100svh - 1.5rem - env(safe-area-inset-bottom, 0px)) !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Shared dialog layout (panelClass: snippy-dialog) */
+.snippy-dialog {
+  /* Cascade form/field tokens so Material fields contrast on dark dialogs */
+  --form-label: var(--dialog-form-label);
+  --form-label-focus: var(--dialog-form-label-focus);
+  --glass-border: var(--dialog-field-border);
+  --glass-border-bright: var(--hairline-strong);
+  --glass-border-subtle: var(--hairline);
+  --glass-white: var(--dialog-field-bg);
+
+  /* MDC draws its own divider lines on scrollable content; dialogs use
+     an explicit <mat-divider> above actions instead. */
+  --mat-dialog-with-divider-divider-color: transparent;
+
+  .mat-mdc-dialog-container,
+  .mdc-dialog,
+  .mdc-dialog__container,
+  .mdc-dialog__surface {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0 !important;
+    max-height: calc(100svh - 1.5rem - env(safe-area-inset-bottom, 0px));
+  }
+
+  .mat-mdc-dialog-title {
+    margin: 0;
+    padding: 1.25rem 1.25rem 0.5rem;
+    font-family: var(--font-ui);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-bright);
+    flex: 0 0 auto;
+  }
+
+  .mat-mdc-dialog-title.alert-success {
+    color: var(--text-success);
+  }
+
+  .mat-mdc-dialog-title.alert-error {
+    color: var(--danger-soft);
+  }
+
+  .mat-mdc-dialog-title.alert-warning {
+    color: var(--text-warning);
+  }
+
+  .mat-mdc-dialog-title.alert-info {
+    color: var(--text-info);
+  }
+
+  .mat-mdc-dialog-content {
+    padding: 0.5rem 1.75rem 1rem 1.25rem !important;
+    color: var(--text-soft);
+    /* Leave room for title + divider + actions inside the surface. */
+    max-height: calc(100svh - 14rem - env(safe-area-inset-bottom, 0px)) !important;
+    flex: 1 1 auto;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .mdc-dialog__content {
+    border-top: none !important;
+    border-bottom: none !important;
+  }
+
+  .mat-mdc-dialog-actions {
+    margin: 0;
+    padding: 0.75rem 1.25rem max(1.1rem, env(safe-area-inset-bottom, 0px)) !important;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    background: transparent;
+  }
+
+  .mat-divider {
+    flex-shrink: 0;
+  }
+
+  .mat-mdc-dialog-content,
+  .mat-mdc-dialog-title {
+    background: transparent;
+  }
+}
+
+/*
+ * Tall / tabbed dialogs (snippet settings):
+ * grow with content up to 50vh, then scroll the body above pinned actions.
+ */
+.cdk-overlay-pane.snippy-dialog-tall {
+  max-height: 50vh !important;
+  overflow: hidden;
+}
+
+.snippy-dialog-tall {
+  .mat-mdc-dialog-container {
+    max-height: 100%;
+    overflow: hidden !important;
+  }
+
+  .mdc-dialog__surface {
+    min-height: 50vh;
+    max-height: 50vh;
+  }
+
+  .mat-mdc-dialog-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .mat-mdc-dialog-actions {
+    flex: 0 0 auto;
+  }
+}

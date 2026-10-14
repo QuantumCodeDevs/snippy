@@ -1,0 +1,113 @@
+/* Page shells and shared Tailwind component utilities */
+
+@layer components {
+  /* Align utility CTAs with Material glass buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg border px-5 py-3 text-sm font-semibold transition-colors duration-200;
+    background: var(--btn-primary-bg);
+    border-color: var(--btn-primary-border);
+    color: var(--btn-primary-text);
+
+    &:hover {
+      background: var(--btn-primary-bg-hover);
+      border-color: var(--btn-primary-border-hover);
+    }
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border px-5 py-3 text-sm font-semibold transition-colors duration-200;
+    background: var(--btn-neutral-bg);
+    border-color: var(--btn-neutral-border);
+    color: var(--btn-neutral-text);
+
+    &:hover {
+      background: var(--btn-neutral-bg-hover);
+      border-color: var(--btn-neutral-border-hover);
+      color: var(--text-primary);
+    }
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center rounded-lg border px-5 py-3 text-sm font-semibold transition-colors duration-200;
+    background: var(--btn-accent-bg);
+    border-color: var(--btn-accent-border);
+    color: var(--btn-accent-text);
+
+    &:hover {
+      background: var(--btn-accent-bg-hover);
+      border-color: var(--btn-accent-border-hover);
+    }
+  }
+
+  .section-title {
+    @apply text-4xl font-bold text-bright md:text-5xl;
+  }
+
+  .section-subtitle {
+    @apply text-lg text-muted;
+  }
+
+  .panel {
+    @apply relative overflow-hidden rounded-2xl border border-line bg-surface;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium tracking-[0.22em] text-sky uppercase;
+  }
+}
+
+/* Unlayered so padding always wins over base resets.
+   Replaces Bootstrap `.container` + former `p-5` gutters. */
+.page-container {
+  width: 100%;
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.page-shell {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .page-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .page-shell {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .page-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+
+  .page-shell {
+    padding: 3rem 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+
+  .page-shell {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}

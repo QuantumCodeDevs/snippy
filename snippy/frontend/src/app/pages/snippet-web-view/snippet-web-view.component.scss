@@ -1,0 +1,29 @@
+$transparent-gutter-icon: url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+
+:host {
+  --as-gutter-background-color: var(--hairline);
+  --snippy-gutter-hover: var(--hairline-strong);
+  --as-gutter-icon-horizontal: #{$transparent-gutter-icon};
+  --as-gutter-icon-vertical: #{$transparent-gutter-icon};
+  --as-gutter-icon-disabled: #{$transparent-gutter-icon};
+}
+
+:host ::ng-deep .as-split-gutter {
+  background-color: var(--as-gutter-background-color) !important;
+  background-image: none !important;
+  border: 0 !important;
+}
+
+:host ::ng-deep .as-split-gutter:hover {
+  background-color: var(--snippy-gutter-hover) !important;
+}
+
+:host ::ng-deep .as-split-gutter-icon {
+  display: none !important;
+  background-image: none !important;
+}
+
+header a {
+  color: var(--mat-sys-on-primary-container);
+  text-decoration: none;
+}

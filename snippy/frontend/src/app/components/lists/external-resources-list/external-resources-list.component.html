@@ -1,0 +1,60 @@
+<div class="cdn-search mb-3">
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Search cdnjs libraries</mat-label>
+    <input matInput [formControl]="searchControl" [matAutocomplete]="cdnAuto" autocomplete="off" />
+    @if (searching) {
+      <mat-spinner matSuffix diameter="20"></mat-spinner>
+    } @else {
+      <mat-icon matSuffix>search</mat-icon>
+    }
+    <mat-autocomplete
+      #cdnAuto="matAutocomplete"
+      [displayWith]="displayLibrary"
+      (optionSelected)="onLibrarySelected($event)"
+    >
+      @for (hit of searchResults; track hit.name) {
+        <mat-option [value]="hit">
+          <div class="cdn-option">
+            <span class="cdn-option__name">{{ hit.name }}</span>
+            @if (hit.version) {
+              <span class="cdn-option__version">v{{ hit.version }}</span>
+            }
+          </div>
+          @if (hit.description) {
+            <small class="cdn-option__desc">{{ hit.description }}</small>
+          }
+        </mat-option>
+      }
+      @if (!searching && searchQuery && searchResults.length === 0) {
+        <mat-option disabled>No libraries found</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+</div>
+
+<mat-list cdkDropList (cdkDropListDropped)="drop($event)">
+  @for (resource of resources; track resource; let i = $index) {
+    <mat-list-item cdkDrag>
+      <div class="flex w-full items-center gap-2">
+        <span cdkDragHandle class="drag-handle cursor-grab text-faint" title="Drag to reorder">
+          <mat-icon>drag_indicator</mat-icon>
+        </span>
+        <mat-form-field appearance="outline" class="flex-1">
+          <input
+            matInput
+            [(ngModel)]="resource.url"
+            (ngModelChange)="resourcesChange.emit(resources)"
+            [placeholder]="`https://yourwebsite.com/script.${resourceType}`"
+          />
+        </mat-form-field>
+        <button mat-button (click)="removeResource(i)" title="Remove">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </mat-list-item>
+  }
+</mat-list>
+
+<button mat-raised-button color="primary" class="w-full" (click)="addResource()">
+  + add another CDN library
+</button>

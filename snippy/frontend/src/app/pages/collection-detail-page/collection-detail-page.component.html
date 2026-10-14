@@ -1,0 +1,47 @@
+<div class="flex h-full flex-col overflow-auto">
+  <div class="page-shell">
+    <button mat-button class="mb-4 text-muted" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+
+    <app-async-state
+      [loading]="loading()"
+      [spinnerOnly]="true"
+      [empty]="notFound() || !collection"
+      emptyIcon="collections_bookmark"
+      emptyText="Collection not found."
+    >
+      @if (collection) {
+        <div class="mb-6">
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-3xl font-semibold text-bright">{{ collection.name }}</h1>
+            <mat-chip>{{ collection.isPrivate ? 'Private' : 'Public' }}</mat-chip>
+          </div>
+          @if (collection.description) {
+            <p class="mt-2 text-muted">{{ collection.description }}</p>
+          }
+          <p class="mt-1 text-sm text-faint">
+            {{ penCount }} {{ penCount === 1 ? 'pen' : 'pens' }}
+            @if (collection.userName) {
+              · by &#64;{{ collection.userName }}
+            }
+          </p>
+        </div>
+
+        <app-snippet-list
+          [snippets]="snippets"
+          [total]="total"
+          [pageSize]="state.pageSize"
+          [pageIndex]="state.pageIndex"
+          [showNewButton]="false"
+          [showRemoveFromCollection]="!!collection.isOwner"
+          (searchChange)="state.onSearch($event)"
+          (pageChange)="state.setPage($event)"
+          (removeFromCollection)="removeSnippet($event)"
+        >
+        </app-snippet-list>
+      }
+    </app-async-state>
+  </div>
+</div>

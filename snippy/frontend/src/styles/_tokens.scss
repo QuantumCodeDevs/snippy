@@ -1,0 +1,277 @@
+/* Palettes, type, and self-hosted fonts. */
+
+@import '@fontsource/ibm-plex-sans/latin-400.css';
+@import '@fontsource/ibm-plex-sans/latin-500.css';
+@import '@fontsource/ibm-plex-sans/latin-600.css';
+@import '@fontsource/space-grotesk/latin-400.css';
+@import '@fontsource/space-grotesk/latin-500.css';
+@import '@fontsource/space-grotesk/latin-600.css';
+@import '@fontsource/space-grotesk/latin-700.css';
+@import '@fontsource/fira-code/latin-400.css';
+@import '@fontsource/fira-code/latin-500.css';
+@import '@fontsource/jetbrains-mono/latin-400.css';
+@import '@fontsource/jetbrains-mono/latin-500.css';
+@import '@fontsource/source-code-pro/latin-400.css';
+@import '@fontsource/source-code-pro/latin-500.css';
+@import '@fontsource/material-icons/latin-400.css';
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  --font-ui: 'Space Grotesk', sans-serif;
+  --font-mono: 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --btn-radius: 0.5rem;
+  --scrollbar-size: 8px;
+  --blur-sm: none;
+  --blur-md: none;
+  --blur-lg: none;
+  --shadow-glass: none;
+  --shadow-float: none;
+  --btn-glass-shadow: none;
+  --btn-glass-radius: var(--btn-radius);
+  --reflection-top: none;
+  --inset-highlight: transparent;
+  --inset-highlight-md: transparent;
+  --inset-highlight-sm: transparent;
+  --inset-highlight-xs: transparent;
+  --inset-highlight-faint: transparent;
+  --inset-highlight-hairline: transparent;
+  --grid-line: transparent;
+
+  color-scheme: dark;
+
+  /* Dark — earthy charcoal, mint, sky, clay */
+  --page-bg: #312f2f;
+  --card-bg: #3a3634;
+  --surface-hover: #45403d;
+  --hairline: #4a4542;
+  --hairline-strong: #5c554f;
+  --fallback-solid: #3a3634;
+  --fallback-solid-strong: #3a3634;
+  --thumb-bg: #2a2726;
+
+  --dialog-surface: #3a3634;
+  --dialog-border: #4a4542;
+  --dialog-field-bg: #312f2f;
+  --dialog-field-border: #4a4542;
+  --dialog-form-label: #d4cbc2;
+  --dialog-form-label-focus: #e4b1a4;
+
+  --text-primary: #f6f1ea;
+  --text-bright: #fbf7f2;
+  --text-white: #fffaf4;
+  --text-muted: #d4cbc2;
+  --text-soft: #d4cbc2;
+  --text-dim: #b7aea4;
+  --text-faint: #9c938a;
+  --text-link: #a8c5d4;
+  --text-link-accent: #e4b1a4;
+  --form-label: #b7aea4;
+  --form-label-focus: #e4b1a4;
+  --text-accent: #a8c5d4;
+  --text-accent-bright: #9dcec0;
+  --text-success: #9dcec0;
+  --text-warning: #e4b1a4;
+  --text-info: #a8c5d4;
+
+  --accent-mint: #9dcec0;
+  --accent-sky: #a8c5d4;
+  --accent-clay: #e4b1a4;
+  --brand-violet: #e4b1a4;
+  --brand-cyan: #9dcec0;
+  --brand-violet-focus: #e4b1a4;
+  --brand-violet-selection: rgba(228, 177, 164, 0.35);
+  --brand-mark-bg: #e4b1a4;
+  --brand-mark-fg: #2a2624;
+
+  --nav-active-bg: #e4b1a4;
+  --nav-active-text: #2a2624;
+
+  --glass-white-xs: #312f2f;
+  --glass-white: #3a3634;
+  --glass-white-md: #45403d;
+  --glass-white-lg: #4a4542;
+  --glass-dark: #312f2f;
+  --glass-dark-md: #3a3634;
+  --glass-border: #4a4542;
+  --glass-border-subtle: #4a4542;
+  --glass-border-mid: #4a4542;
+  --glass-border-bright: #5c554f;
+
+  --danger-soft: #f0b4ae;
+  --danger-label: #f0b4ae;
+  --danger-hover-bg: #4a3330;
+  --danger-zone-border: #6b403c;
+  --danger-zone-bg: #3f302e;
+  --warn-fill: #a85a52;
+  --warn-fill-hover: #c16b62;
+  --warn-outline-fill: transparent;
+  --warn-outline-fill-hover: #4a3330;
+  --warn-border: #a85a52;
+  --warn-outline-color: #a85a52;
+  --warn-border-hover: #c16b62;
+
+  --btn-neutral-bg: #3a3634;
+  --btn-neutral-bg-hover: #45403d;
+  --btn-neutral-border: #4a4542;
+  --btn-neutral-border-hover: #5c554f;
+  --btn-neutral-text: #f6f1ea;
+
+  --btn-primary-bg: #e4b1a4;
+  --btn-primary-bg-hover: #efc4b8;
+  --btn-primary-border: #e4b1a4;
+  --btn-primary-border-hover: #efc4b8;
+  --btn-primary-text: #2a2624;
+
+  --btn-accent-bg: #9dcec0;
+  --btn-accent-bg-hover: #b4ddd2;
+  --btn-accent-border: #9dcec0;
+  --btn-accent-border-hover: #b4ddd2;
+  --btn-accent-text: #2a2624;
+
+  --orb-cyan: none;
+  --orb-violet: none;
+
+  --snackbar-bg: #3a3634;
+  --snackbar-success-bg: #2f4a40;
+  --snackbar-success-border: #9dcec0;
+  --snackbar-error-bg: #4a3330;
+  --snackbar-error-border: #f0b4ae;
+  --snackbar-info-bg: #33424a;
+  --snackbar-info-border: #a8c5d4;
+  --snackbar-warning-bg: #4a3b32;
+  --snackbar-warning-border: #e4b1a4;
+  --snackbar-text: #f6f1ea;
+
+  --scrollbar-thumb: #9dcec0;
+  --scrollbar-thumb-hover: #b4ddd2;
+  --scrollbar-track: transparent;
+
+  --card-bg-glass: var(--card-bg);
+  --card-border: var(--hairline);
+  --header-bg: var(--page-bg);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --page-bg: #f3eee6;
+  --card-bg: #fffaf4;
+  --surface-hover: #e7dfd4;
+  --hairline: #e4dcd2;
+  --hairline-strong: #c9bfb3;
+  --fallback-solid: #fffaf4;
+  --fallback-solid-strong: #fffaf4;
+  --thumb-bg: #e7dfd4;
+
+  --dialog-surface: #fffaf4;
+  --dialog-border: #e4dcd2;
+  --dialog-field-bg: #f3eee6;
+  --dialog-field-border: #e4dcd2;
+  --dialog-form-label: #5c554e;
+  --dialog-form-label-focus: #b56b5d;
+
+  --text-primary: #2a2624;
+  --text-bright: #1f1c1a;
+  --text-white: #fffaf4;
+  --text-muted: #5c554e;
+  --text-soft: #5c554e;
+  --text-dim: #6f675f;
+  --text-faint: #6f675f;
+  --text-link: #3d6478;
+  --text-link-accent: #b56b5d;
+  --form-label: #6f675f;
+  --form-label-focus: #b56b5d;
+  --text-accent: #3d6478;
+  --text-accent-bright: #3f7a6b;
+  --text-success: #2f6a5a;
+  --text-warning: #8a5348;
+  --text-info: #3d6478;
+
+  --accent-mint: #3f7a6b;
+  --accent-sky: #3d6478;
+  --accent-clay: #b56b5d;
+  --brand-violet: #b56b5d;
+  --brand-cyan: #3f7a6b;
+  --brand-violet-focus: #b56b5d;
+  --brand-violet-selection: rgba(181, 107, 93, 0.28);
+  --brand-mark-bg: #b56b5d;
+  --brand-mark-fg: #fffaf4;
+
+  --nav-active-bg: #b56b5d;
+  --nav-active-text: #fffaf4;
+
+  --glass-white-xs: #f3eee6;
+  --glass-white: #fffaf4;
+  --glass-white-md: #e7dfd4;
+  --glass-white-lg: #e4dcd2;
+  --glass-dark: #f3eee6;
+  --glass-dark-md: #fffaf4;
+  --glass-border: #e4dcd2;
+  --glass-border-subtle: #e4dcd2;
+  --glass-border-mid: #e4dcd2;
+  --glass-border-bright: #c9bfb3;
+
+  --danger-soft: #8a3d36;
+  --danger-label: #8a3d36;
+  --danger-hover-bg: #f6e4e0;
+  --danger-zone-border: #e4c4be;
+  --danger-zone-bg: #f8eeeb;
+  --warn-fill: #a85a52;
+  --warn-fill-hover: #8f4b44;
+  --warn-outline-fill: transparent;
+  --warn-outline-fill-hover: #f6e4e0;
+  --warn-border: #a85a52;
+  --warn-outline-color: #a85a52;
+  --warn-border-hover: #8f4b44;
+
+  --btn-neutral-bg: #fffaf4;
+  --btn-neutral-bg-hover: #e7dfd4;
+  --btn-neutral-border: #e4dcd2;
+  --btn-neutral-border-hover: #c9bfb3;
+  --btn-neutral-text: #2a2624;
+
+  --btn-primary-bg: #b56b5d;
+  --btn-primary-bg-hover: #a15d50;
+  --btn-primary-border: #b56b5d;
+  --btn-primary-border-hover: #a15d50;
+  --btn-primary-text: #fffaf4;
+
+  --btn-accent-bg: #3f7a6b;
+  --btn-accent-bg-hover: #346657;
+  --btn-accent-border: #3f7a6b;
+  --btn-accent-border-hover: #346657;
+  --btn-accent-text: #fffaf4;
+
+  --snackbar-bg: #2a2624;
+  --snackbar-success-bg: #2f4a40;
+  --snackbar-success-border: #9dcec0;
+  --snackbar-error-bg: #4a3330;
+  --snackbar-error-border: #f0b4ae;
+  --snackbar-info-bg: #33424a;
+  --snackbar-info-border: #a8c5d4;
+  --snackbar-warning-bg: #4a3b32;
+  --snackbar-warning-border: #e4b1a4;
+  --snackbar-text: #f6f1ea;
+
+  --scrollbar-thumb: #3f7a6b;
+  --scrollbar-thumb-hover: #346657;
+  --scrollbar-track: transparent;
+
+  --header-bg: var(--page-bg);
+}

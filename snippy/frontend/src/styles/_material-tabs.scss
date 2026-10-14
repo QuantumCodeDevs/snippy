@@ -1,0 +1,77 @@
+/* Pill-style Material tabs */
+
+.mat-mdc-tab-header {
+  --mat-tab-header-active-label-text-color: var(--nav-active-text);
+  --mat-tab-header-active-ripple-color: transparent;
+  --mat-tab-header-active-focus-label-text-color: var(--nav-active-text);
+  --mat-tab-header-active-hover-label-text-color: var(--nav-active-text);
+  --mat-tab-header-inactive-label-text-color: var(--text-muted);
+  --mat-tab-header-inactive-ripple-color: transparent;
+  --mat-tab-header-pagination-icon-color: var(--text-muted);
+  --mdc-tab-indicator-active-indicator-color: transparent;
+}
+
+.mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    width: fit-content;
+    max-width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline) !important;
+    border-radius: 9999px;
+    padding: 0.25rem;
+  }
+
+  .mat-mdc-tab-label-container {
+    border: none !important;
+  }
+
+  .mat-mdc-tab-labels {
+    gap: 0.25rem;
+  }
+
+  .mat-mdc-tab-list,
+  .mdc-tab-scroller__scroll-content {
+    gap: 0.25rem;
+  }
+
+  .mdc-tab-indicator,
+  .mdc-tab-indicator__content {
+    display: none !important;
+  }
+
+  .mat-mdc-tab {
+    min-width: auto;
+    min-height: 2.25rem;
+    height: 2.25rem;
+    padding: 0 0.85rem;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    opacity: 1;
+    transition: all 200ms ease;
+  }
+
+  .mat-mdc-tab:hover:not(.mdc-tab--active) {
+    background: var(--surface-hover);
+  }
+
+  .mat-mdc-tab.mdc-tab--active {
+    background: var(--nav-active-bg);
+    border: 1px solid var(--nav-active-bg);
+  }
+
+  .mat-mdc-tab .mdc-tab__text-label {
+    letter-spacing: normal;
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+
+  .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+    color: var(--nav-active-text);
+  }
+
+  .mat-mdc-tab .mat-ripple,
+  .mat-mdc-tab .mdc-tab__ripple {
+    display: none;
+  }
+}

@@ -1,0 +1,41 @@
+# Production deployment example — pull pre-built images from Docker Hub.
+# Built and published by GitHub Actions (.github/workflows/docker-image.yml).
+# Use with Portainer or: docker compose -f docker-compose.prod.example.yml up -d
+#
+# PocketBase reads .env (or Portainer stack.env copied as .env).
+# Frontend only gets POCKETBASE_URL — never admin / SMTP / OAuth secrets.
+
+services:
+  pocketbase:
+    # One process. pb_data is SQLite plus files, so do not scale this service.
+    image: kennyl777/snippy-pocketbase:latest
+    container_name: snippy-pocketbase
+    env_file:
+      - .env
+    volumes:
+      - pb_data:/pb_data
+    ports:
+      - "127.0.0.1:8090:8090"
+    restart: unless-stopped
+    networks:
+      - NPM
+
+  frontend:
+    image: kennyl777/snippy-frontend:latest
+    container_name: snippy-frontend
+    environment:
+      POCKETBASE_URL: ${POCKETBASE_URL:-}
+    ports:
+      - "${FRONTEND_PORT:-4200}:8080"
+    depends_on:
+      - pocketbase
+    restart: unless-stopped
+    networks:
+      - NPM
+
+volumes:
+  pb_data:
+
+networks:
+  NPM:
+    external: true

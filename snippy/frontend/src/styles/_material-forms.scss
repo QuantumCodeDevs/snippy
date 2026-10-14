@@ -1,0 +1,98 @@
+/* Outlined form fields (glass) */
+
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-outline-color: var(--glass-border);
+  --mdc-outlined-text-field-hover-outline-color: var(--glass-border-bright);
+  --mdc-outlined-text-field-focus-outline-color: var(--brand-violet-focus);
+  --mdc-outlined-text-field-disabled-outline-color: var(--glass-border-subtle);
+  --mdc-outlined-text-field-label-text-color: var(--form-label);
+  --mdc-outlined-text-field-hover-label-text-color: var(--form-label);
+  --mdc-outlined-text-field-focus-label-text-color: var(--form-label-focus);
+  --mdc-outlined-text-field-input-text-color: var(--text-primary);
+  --mdc-outlined-text-field-input-text-placeholder-color: var(--text-dim);
+  --mdc-outlined-text-field-caret-color: var(--brand-violet-focus);
+  --mdc-outlined-text-field-container-shape: 0.75rem;
+  --mat-form-field-outlined-container-shape: 0.75rem;
+  --mat-form-field-container-height: 3rem;
+  --mat-form-field-focus-select-arrow: var(--brand-violet-focus);
+
+  /* Single glass surface — no fill + outline double-edge */
+  .mdc-text-field--outlined {
+    background: var(--dialog-field-bg) !important;
+    border-radius: 0.75rem !important;
+  }
+
+  .mdc-text-field--focused .mdc-floating-label .mat-mdc-floating-label {
+    color: var(--form-label-focus) !important;
+  }
+
+  .mdc-text-field--outlined:not(.mdc-text-field--disabled) {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--glass-border) !important;
+      border-width: 1px !important;
+    }
+  }
+
+  .mdc-text-field--outlined.mdc-text-field--focused:not(.mdc-text-field--disabled) {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--brand-violet-focus) !important;
+      border-width: 1px !important;
+    }
+  }
+
+  /* Floating / resting labels — blue when idle, violet when focused */
+  .mdc-floating-label,
+  .mat-mdc-floating-label {
+    color: var(--form-label) !important;
+    font-weight: 600 !important;
+  }
+
+  .mdc-text-field--focused .mdc-floating-label,
+  .mdc-text-field--focused .mat-mdc-floating-label {
+    color: var(--form-label-focus) !important;
+  }
+
+  /* Continuous outline: notch sides must not draw (Tailwind + MDC clash) */
+  .mdc-notched-outline__notch {
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  .mdc-notched-outline__leading {
+    border-right: none !important;
+  }
+
+  .mdc-notched-outline__trailing {
+    border-left: none !important;
+  }
+
+  input,
+  textarea {
+    caret-color: var(--brand-violet-focus);
+
+    &::placeholder {
+      color: var(--text-dim);
+      opacity: 1;
+    }
+
+    &::selection {
+      background: var(--brand-violet-selection);
+      color: var(--text-primary);
+    }
+  }
+}
+
+/* Never reserve hint/error space — it adds empty gap under every field */
+.mat-mdc-form-field-subscript-wrapper,
+.mat-mdc-form-field-bottom-align {
+  display: none !important;
+}
+
+.snippy-dialog .mat-mdc-form-field .mdc-text-field--outlined,
+.panel .mat-mdc-form-field .mdc-text-field--outlined {
+  background: var(--dialog-field-bg) !important;
+}

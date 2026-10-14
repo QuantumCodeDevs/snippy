@@ -1,0 +1,78 @@
+<footer class="site-footer" [class.editor-footer]="showEditorActions()">
+  <div class="page-container footer-inner">
+    @if (showEditorActions()) {
+      <div class="editor-actions">
+        <button
+          mat-button
+          type="button"
+          (click)="toggleConsole()"
+          [class.active-console]="previewConsole.open()"
+          matTooltip="Toggle JavaScript console"
+        >
+          <mat-icon>terminal</mat-icon>
+          Console
+        </button>
+
+        @if (!isGuest() && hasSavedSnippet()) {
+          <button mat-button type="button" (click)="forkSnippet()" matTooltip="Fork this snippet">
+            <mat-icon>fork_right</mat-icon>
+            Fork
+          </button>
+        }
+
+        <button
+          mat-button
+          type="button"
+          (click)="exportZip()"
+          matTooltip="Download HTML/CSS/JS as ZIP"
+        >
+          <mat-icon>download</mat-icon>
+          Export
+        </button>
+        <button
+          mat-button
+          type="button"
+          (click)="triggerImportZip()"
+          matTooltip="Import ZIP into this pen"
+        >
+          <mat-icon>upload</mat-icon>
+          Import
+        </button>
+        <input
+          #zipInput
+          type="file"
+          hidden
+          accept=".zip,application/zip"
+          (change)="onZipSelected($event)"
+        />
+
+        @if (!isGuest()) {
+          <button mat-button type="button" (click)="openAssets()" matTooltip="Manage assets">
+            <mat-icon>perm_media</mat-icon>
+            Assets
+          </button>
+          <button mat-button type="button" (click)="openEmbed()" matTooltip="Get embed code">
+            <mat-icon>code</mat-icon>
+            Embed
+          </button>
+          @if (isOwner()) {
+            <button mat-button type="button" (click)="openShare()" matTooltip="Secret share link">
+              <mat-icon>share</mat-icon>
+              Share
+            </button>
+          }
+        }
+      </div>
+    } @else {
+      <div class="footer-meta">
+        <span class="copyright">© 2026 Snippy. All rights reserved.</span>
+        <nav class="footer-links" aria-label="Legal and project links">
+          <a routerLink="/privacy">Privacy Policy</a>
+          <a routerLink="/terms">Terms</a>
+          <a [href]="licenseUrl" target="_blank" rel="noopener noreferrer">License</a>
+          <a [href]="githubUrl" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+      </div>
+    }
+  </div>
+</footer>

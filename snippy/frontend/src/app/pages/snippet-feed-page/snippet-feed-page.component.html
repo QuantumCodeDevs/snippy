@@ -1,0 +1,22 @@
+<div class="flex h-full flex-col overflow-auto">
+  <div class="page-shell">
+    <app-sort-page-header
+      [title]="title"
+      [sort]="state.sort"
+      (sortChange)="state.onSortChange($event)"
+    />
+
+    <app-async-state [loading]="isLoading" [error]="listError" loadingText="Loading snippets...">
+      <app-snippet-list
+        [snippets]="snippets"
+        [total]="total"
+        [pageSize]="state.pageSize"
+        [pageIndex]="state.pageIndex"
+        [showNewButton]="false"
+        (searchChange)="state.onSearch($event)"
+        (pageChange)="state.onPageChange($event)"
+      >
+      </app-snippet-list>
+    </app-async-state>
+  </div>
+</div>

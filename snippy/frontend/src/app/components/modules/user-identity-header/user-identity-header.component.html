@@ -1,0 +1,35 @@
+<div class="identity">
+  @if (pictureUrl) {
+    <img [src]="pictureUrl" alt="" class="identity__avatar" />
+  } @else {
+    <div class="identity__avatar identity__avatar--initials" aria-hidden="true">{{ initials }}</div>
+  }
+
+  <div class="identity__body">
+    <div class="identity__title-row">
+      <h1 class="identity__name">{{ displayName || userName }}</h1>
+      <ng-content select="[identityActions]"></ng-content>
+    </div>
+
+    @if (userName) {
+      <p class="identity__username">&#64;{{ userName }}</p>
+    }
+
+    @if (bio) {
+      <p class="identity__bio">{{ bio }}</p>
+    }
+
+    @if (showStats) {
+      <div class="identity__stats">
+        <span
+          ><strong>{{ followerCount ?? 0 }}</strong> Followers</span
+        >
+        <span
+          ><strong>{{ followingCount ?? 0 }}</strong> Following</span
+        >
+      </div>
+    }
+
+    <ng-content></ng-content>
+  </div>
+</div>

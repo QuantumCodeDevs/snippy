@@ -1,0 +1,14 @@
+{
+  "/api": {
+    "target": "http://pocketbase:8090",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true
+  },
+  "/_/": {
+    "target": "http://pocketbase:8090",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true
+  }
+}

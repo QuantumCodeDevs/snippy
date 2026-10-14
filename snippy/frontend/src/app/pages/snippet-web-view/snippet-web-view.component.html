@@ -1,0 +1,61 @@
+<div class="flex h-full flex-col">
+  @if (snippetStoreService.loading()) {
+    <div class="flex h-full items-center justify-center text-muted">Loading snippet...</div>
+  } @else if (error) {
+    <div class="flex h-full items-center justify-center text-muted">{{ error }}</div>
+  } @else if (snippetStoreService.snippet()) {
+    <div class="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      @if (selectedLayout === 'top') {
+        <as-split direction="vertical" unit="percent" [gutterSize]="14" class="h-full">
+          <as-split-area size="50" [minSize]="0">
+            <ng-container *ngTemplateOutlet="editorsSplit" />
+          </as-split-area>
+          <as-split-area size="50" [minSize]="0">
+            <app-snippet-preview></app-snippet-preview>
+          </as-split-area>
+        </as-split>
+      } @else if (selectedLayout === 'bottom') {
+        <as-split direction="vertical" unit="percent" [gutterSize]="14" class="h-full">
+          <as-split-area size="50" [minSize]="0">
+            <app-snippet-preview></app-snippet-preview>
+          </as-split-area>
+          <as-split-area size="50" [minSize]="0">
+            <ng-container *ngTemplateOutlet="editorsSplit" />
+          </as-split-area>
+        </as-split>
+      } @else if (selectedLayout === 'left') {
+        <as-split direction="horizontal" unit="percent" [gutterSize]="14" class="h-full">
+          <as-split-area size="50" [minSize]="0">
+            <ng-container *ngTemplateOutlet="editorsSplit" />
+          </as-split-area>
+          <as-split-area size="50" [minSize]="0">
+            <app-snippet-preview></app-snippet-preview>
+          </as-split-area>
+        </as-split>
+      } @else if (selectedLayout === 'right') {
+        <as-split direction="horizontal" unit="percent" [gutterSize]="14" class="h-full">
+          <as-split-area size="50" [minSize]="0">
+            <app-snippet-preview></app-snippet-preview>
+          </as-split-area>
+          <as-split-area size="50" [minSize]="0">
+            <ng-container *ngTemplateOutlet="editorsSplit" />
+          </as-split-area>
+        </as-split>
+      }
+    </div>
+  }
+</div>
+
+<ng-template #editorsSplit>
+  <as-split class="h-full" [direction]="editorsDirection" unit="percent" [gutterSize]="14">
+    <as-split-area size="33" [minSize]="0">
+      <app-snippet-editor editorType="html"></app-snippet-editor>
+    </as-split-area>
+    <as-split-area size="33" [minSize]="0">
+      <app-snippet-editor editorType="css"></app-snippet-editor>
+    </as-split-area>
+    <as-split-area size="34" [minSize]="0">
+      <app-snippet-editor editorType="js"></app-snippet-editor>
+    </as-split-area>
+  </as-split>
+</ng-template>

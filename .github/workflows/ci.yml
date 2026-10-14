@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: snippy/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: snippy/frontend
+        run: npm ci
+
+      - name: Audit frontend dependencies
+        working-directory: snippy/frontend
+        run: npm audit --audit-level=high
+
+      - name: Check frontend formatting
+        working-directory: snippy/frontend
+        run: npm run format:check
+
+      - name: Typecheck frontend
+        working-directory: snippy/frontend
+        run: npm run typecheck
+
+      - name: Build frontend (production)
+        working-directory: snippy/frontend
+        run: npm run build -- --configuration production
+
+      - name: Rule and CSP tests
+        run: node --test snippy/frontend/nginx-csp.test.mjs snippy/pocketbase/tests/rules.test.mjs

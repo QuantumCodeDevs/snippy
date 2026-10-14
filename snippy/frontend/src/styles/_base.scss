@@ -1,0 +1,92 @@
+/* Document reset, body shell, headings, brand mark */
+
+/* Must live in @layer base — an unlayered `* { padding: 0 }` beats
+   Tailwind @layer components and wiped all page padding. */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  line-height: 1.6;
+  font-family: var(--font-ui);
+  background-color: var(--page-bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.brand-mark {
+  font-family: var(--font-ui);
+  letter-spacing: -0.02em;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  color: var(--text-bright);
+  transition: opacity 220ms ease;
+}
+
+.brand-mark:hover {
+  opacity: 0.85;
+}
+
+.brand-star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  color: var(--brand-mark-fg);
+  background: var(--brand-mark-bg);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.text-link {
+  color: var(--text-link);
+}
+
+.text-link-accent {
+  color: var(--text-link-accent);
+}
+
+/* Purple scrollbars (Firefox + WebKit) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}

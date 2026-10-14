@@ -1,0 +1,23 @@
+/* Material cards → flat surfaces */
+
+.mat-mdc-card {
+  --mdc-elevated-card-container-color: transparent !important;
+  --mdc-outlined-card-container-color: transparent !important;
+  --mdc-outlined-card-outline-color: var(--hairline) !important;
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.1rem !important;
+  border: 1px solid var(--hairline) !important;
+  background: var(--card-bg) !important;
+  box-shadow: none !important;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.mat-mdc-card:hover {
+  --mdc-outlined-card-outline-color: var(--hairline-strong) !important;
+  background: var(--surface-hover) !important;
+  border-color: var(--hairline-strong) !important;
+  box-shadow: none !important;
+}

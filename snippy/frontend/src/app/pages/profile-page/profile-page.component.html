@@ -1,0 +1,83 @@
+<div class="flex h-full flex-col overflow-auto">
+  <app-async-state
+    [loading]="loading()"
+    [spinnerOnly]="true"
+    [error]="errorMessage()"
+    errorIcon="lock"
+  >
+    @if (profileUser(); as user) {
+      <div class="page-shell">
+        <app-user-identity-header
+          [pictureUrl]="user.pictureUrl"
+          [displayName]="user.displayName"
+          [userName]="user.userName"
+          [bio]="user.bio"
+          [followerCount]="user.followerCount"
+          [followingCount]="user.followingCount"
+          [showStats]="true"
+        >
+          <ng-container identityActions>
+            @if (!isSelf() && authStoreService.isAuthenticated()) {
+              <button
+                mat-raised-button
+                [color]="user.isFollowing ? undefined : 'primary'"
+                [disabled]="followLoading()"
+                (click)="toggleFollow()"
+              >
+                @if (followLoading()) {
+                  <mat-spinner diameter="16"></mat-spinner>
+                } @else {
+                  {{ user.isFollowing ? 'Unfollow' : 'Follow' }}
+                }
+              </button>
+            }
+          </ng-container>
+        </app-user-identity-header>
+
+        <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start">
+          <mat-tab label="Pens">
+            <app-async-state
+              class="mt-4 block"
+              [loading]="isLoadingPens"
+              loadingText="Loading pens..."
+            >
+              <app-snippet-list
+                class="mt-4 block"
+                [snippets]="snippets"
+                [total]="total"
+                [pageSize]="penState.pageSize"
+                [pageIndex]="penState.pageIndex"
+                [showNewButton]="false"
+                (searchChange)="penState.onSearch($event)"
+                (pageChange)="penState.onPageChange($event)"
+              >
+              </app-snippet-list>
+            </app-async-state>
+          </mat-tab>
+
+          <mat-tab label="Collections">
+            <app-async-state
+              class="mt-4 block"
+              [loading]="collectionsLoading"
+              loadingText="Loading collections..."
+            >
+              <app-collection-list
+                class="mt-4 block"
+                [collections]="collections"
+                [total]="collectionsTotal"
+                [pageSize]="collectionState.pageSize"
+                [pageIndex]="collectionState.pageIndex"
+                [showNewButton]="false"
+                [showDelete]="false"
+                (searchChange)="collectionState.onSearch($event)"
+                (pageChange)="collectionState.onPageChange($event)"
+                (openCollection)="openCollection($event)"
+              >
+              </app-collection-list>
+            </app-async-state>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+    }
+  </app-async-state>
+</div>

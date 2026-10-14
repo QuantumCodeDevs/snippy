@@ -1,0 +1,35 @@
+<h2 mat-dialog-title>Forks of {{ data.snippetName }}</h2>
+
+<mat-dialog-content>
+  @if (loading()) {
+    <div class="flex justify-center py-8">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+  } @else if (forks().length === 0) {
+    <p class="py-6 text-center text-faint">No forks yet.</p>
+  } @else {
+    <p class="mb-3 text-sm text-faint">
+      {{ totalCount() }} fork{{ totalCount() === 1 ? '' : 's' }}
+    </p>
+    <ul class="space-y-2">
+      @for (fork of forks(); track fork.snippetId) {
+        <li>
+          <button
+            type="button"
+            class="flex w-full flex-col items-start rounded-md px-3 py-2 text-left hover:bg-raised"
+            (click)="openFork(fork)"
+          >
+            <span class="font-medium text-ink">{{ fork.name }}</span>
+            <span class="text-xs text-faint">@{{ fork.userName || 'unknown' }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</mat-dialog-content>
+
+<mat-divider></mat-divider>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="dialogRef.close()">Close</button>
+</mat-dialog-actions>

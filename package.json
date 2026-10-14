@@ -1,0 +1,20 @@
+{
+  "name": "snippy",
+  "version": "0.15.0",
+  "private": true,
+  "description": "Snippy monorepo - Angular frontend and PocketBase.",
+  "scripts": {
+    "format:all": "npm run format --prefix snippy/frontend",
+    "check:format": "npm run format:check --prefix snippy/frontend",
+    "check:types": "npm run typecheck --prefix snippy/frontend",
+    "check:audit": "npm audit --audit-level=high --prefix snippy/frontend",
+    "check:build": "npm run build --prefix snippy/frontend -- --configuration production",
+    "check:test": "node --test snippy/frontend/nginx-csp.test.mjs snippy/pocketbase/tests/rules.test.mjs",
+    "check:all": "npm run check:audit && npm run check:format && npm run check:types && npm run check:build && npm run check:test",
+    "test:all": "npm run check:test && npm run test --prefix snippy/frontend",
+    "dev:frontend": "npm run start --prefix snippy/frontend",
+    "build:frontend": "npm run build --prefix snippy/frontend",
+    "docker:compose:clear": "docker compose down -v && docker compose build && docker compose up",
+    "docker:compose:up": "docker compose build && docker compose up"
+  }
+}

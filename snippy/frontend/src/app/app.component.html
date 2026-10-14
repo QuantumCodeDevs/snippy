@@ -1,0 +1,17 @@
+<div
+  class="relative flex h-screen flex-col overflow-hidden bg-page text-ink"
+  [class.embed-shell]="isEmbedShell"
+>
+  @if (!isEmbedShell) {
+    <app-page-header class="relative z-20 shrink-0"></app-page-header>
+  }
+
+  <main class="relative z-10 min-h-0 flex-1 overflow-hidden" [class.bg-transparent]="isEmbedShell">
+    <router-outlet />
+  </main>
+
+  @if (!isEmbedShell) {
+    <app-preview-console-panel class="relative z-20 shrink-0"></app-preview-console-panel>
+    <app-footer class="relative z-20 shrink-0"></app-footer>
+  }
+</div>

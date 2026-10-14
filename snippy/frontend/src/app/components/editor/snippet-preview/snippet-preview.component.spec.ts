@@ -1,0 +1,401 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import {
+  buildPreviewSrcdoc,
+  PREVIEW_IFRAME_SANDBOX,
+  CAPTURE_IFRAME_SANDBOX,
+  dataUrlToBlob,
+  SnippetPreviewComponent,
+} from '@app/components/editor/snippet-preview/snippet-preview.component';
+
+describe('SnippetPreviewComponent', () => {
+  let component: SnippetPreviewComponent;
+  let fixture: ComponentFixture<SnippetPreviewComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SnippetPreviewComponent],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SnippetPreviewComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  describe('XSS mitigation - sandbox attribute', () => {
+    it('should have sandbox attribute on preview iframe', () => {
+      const iframe = fixture.nativeElement.querySelector('iframe');
+      expect(iframe).toBeTruthy();
+      expect(iframe.hasAttribute('sandbox')).toBe(true);
+    });
+
+    it('should NOT include allow-same-origin in sandbox to prevent same-origin XSS', () => {
+      const iframe = fixture.nativeElement.querySelector('iframe');
+      const sandboxValue = iframe.getAttribute('sandbox');
+      expect(sandboxValue).toBe(PREVIEW_IFRAME_SANDBOX);
+      expect(sandboxValue).not.toContain('allow-same-origin');
+      expect(sandboxValue).not.toContain('allow-top-navigation');
+      expect(sandboxValue).not.toContain('allow-popups-to-escape-sandbox');
+    });
+
+    it('should include allow-scripts in sandbox to allow snippet execution', () => {
+      const iframe = fixture.nativeElement.querySelector('iframe');
+      const sandboxValue = iframe.getAttribute('sandbox');
+      expect(sandboxValue).toContain('allow-scripts');
+    });
+
+    it('should include allow-forms in sandbox for form functionality', () => {
+      const iframe = fixture.nativeElement.querySelector('iframe');
+      const sandboxValue = iframe.getAttribute('sandbox');
+      expect(sandboxValue).toContain('allow-forms');
+    });
+
+    it('should include allow-modals in sandbox for modal functionality', () => {
+      const iframe = fixture.nativeElement.querySelector('iframe');
+      const sandboxValue = iframe.getAttribute('sandbox');
+      expect(sandboxValue).toContain('allow-modals');
+    });
+
+    it('should include allow-popups in sandbox for popup functionality', () => {
+      const iframe = fixture.nativeElement.querySelector('iframe');
+      const sandboxValue = iframe.getAttribute('sandbox');
+      expect(sandboxValue).toContain('allow-popups');
+    });
+  });
+
+  describe('XSS mitigation - origin isolation', () => {
+    it('should render snippet content in isolated origin (not same-origin)', (done) => {
+      component.ngAfterViewInit();
+
+      const testHtml = '<div id="test">Test Content</div>';
+      const testCss = 'body { background: red; }';
+      const testJs = 'console.log("test");';
+
+      component.updatePreview(testHtml, testCss, testJs, null, []);
+
+      // Wait for iframe to load
+      setTimeout(() => {
+        const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+        expect(iframe).toBeTruthy();
+
+        // Verify srcdoc is set (content is rendered)
+        expect(iframe.srcdoc).toContain(testHtml);
+        expect(iframe.srcdoc).toContain(testCss);
+        expect(iframe.srcdoc).toContain(testJs);
+
+        // Verify sandbox prevents same-origin access
+        // In a sandboxed iframe without allow-same-origin, contentDocument should be null
+        // or accessing it should throw a SecurityError
+        try {
+          const doc = iframe.contentDocument;
+          // If we can access contentDocument, verify it's not same-origin
+          if (doc) {
+            // The document should exist but origin should be different
+            // We can't directly check origin in tests, but we verify sandbox is set
+            expect(iframe.hasAttribute('sandbox')).toBe(true);
+            expect(iframe.getAttribute('sandbox')).not.toContain('allow-same-origin');
+          }
+        } catch (e) {
+          // SecurityError is expected and acceptable - it means sandbox is working
+          expect(e).toBeDefined();
+        }
+
+        done();
+      }, 100);
+    });
+
+    it('should prevent snippet code from accessing parent window storage', (done) => {
+      component.ngAfterViewInit();
+
+      // Malicious JS that attempts to access parent storage
+      const maliciousJs = `
+        try {
+          parent.localStorage.setItem('xss', 'pwned');
+          parent.sessionStorage.setItem('xss', 'pwned');
+        } catch (e) {
+          // Expected to fail due to sandbox
+        }
+      `;
+
+      component.updatePreview('<div>test</div>', '', maliciousJs, null, []);
+
+      setTimeout(() => {
+        // Verify parent storage was not modified
+        expect(localStorage.getItem('xss')).toBeNull();
+        expect(sessionStorage.getItem('xss')).toBeNull();
+        done();
+      }, 100);
+    });
+  });
+
+  describe('XSS mitigation - message validation', () => {
+    it('should only accept messages from preview iframe', () => {
+      component.ngAfterViewInit();
+
+      const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+      const consoleSpy = spyOn(component['previewConsole'], 'append');
+
+      // Create a fake message event from a different source
+      const fakeEvent = new MessageEvent('message', {
+        data: {
+          source: 'snippy-console',
+          level: 'log',
+          args: ['malicious message'],
+        },
+        source: window as any, // Wrong source - not from iframe
+        origin: window.location.origin,
+      });
+
+      // Trigger the message handler
+      component['onConsoleMessage'](fakeEvent);
+
+      // Should not process message from wrong source
+      expect(consoleSpy).not.toHaveBeenCalled();
+    });
+
+    it('should accept valid messages from preview iframe', (done) => {
+      component.ngAfterViewInit();
+      component.updatePreview('<div>test</div>', '', '', null, []);
+
+      setTimeout(() => {
+        const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+        const consoleSpy = spyOn(component['previewConsole'], 'append');
+
+        // Create a valid message event from iframe
+        const validEvent = new MessageEvent('message', {
+          data: {
+            source: 'snippy-console',
+            level: 'log',
+            args: ['valid message'],
+          },
+          source: iframe.contentWindow,
+          origin: 'null', // Sandboxed iframes have null origin
+        });
+
+        component['onConsoleMessage'](validEvent);
+
+        // Should process message from correct source
+        expect(consoleSpy).toHaveBeenCalledWith('log', ['valid message']);
+        done();
+      }, 100);
+    });
+
+    it('should reject messages without snippy-console source marker', () => {
+      component.ngAfterViewInit();
+
+      const consoleSpy = spyOn(component['previewConsole'], 'append');
+
+      const invalidEvent = new MessageEvent('message', {
+        data: {
+          // Missing 'source: snippy-console'
+          level: 'log',
+          args: ['message'],
+        },
+        source: null,
+        origin: window.location.origin,
+      });
+
+      component['onConsoleMessage'](invalidEvent);
+
+      expect(consoleSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('XSS mitigation - CSS-only update fallback', () => {
+    it('should fall back to full reload when CSS-only update fails', () => {
+      component.ngAfterViewInit();
+
+      // First, do a full load
+      component.updatePreview('<div>test</div>', 'body { color: red; }', '', null, []);
+
+      // Spy on the private methods
+      const updateCssOnlySpy = spyOn<any>(component, 'updateCssOnly').and.returnValue(false);
+      const fullReloadSpy = spyOn<any>(component, 'fullReload');
+
+      // Try a partial update that will fail
+      component.updatePreview('<div>test</div>', 'body { color: blue; }', '', 'partial', []);
+
+      // Should attempt CSS-only update
+      expect(updateCssOnlySpy).toHaveBeenCalled();
+
+      // Should fall back to full reload when CSS-only fails
+      expect(fullReloadSpy).toHaveBeenCalled();
+    });
+
+    it('should not fall back to full reload when CSS-only update succeeds', () => {
+      component.ngAfterViewInit();
+
+      // First, do a full load
+      component.updatePreview('<div>test</div>', 'body { color: red; }', '', null, []);
+
+      // Spy on the private methods
+      const updateCssOnlySpy = spyOn<any>(component, 'updateCssOnly').and.returnValue(true);
+      const fullReloadSpy = spyOn<any>(component, 'fullReload');
+
+      // Try a partial update that will succeed
+      component.updatePreview('<div>test</div>', 'body { color: blue; }', '', 'partial', []);
+
+      // Should attempt CSS-only update
+      expect(updateCssOnlySpy).toHaveBeenCalled();
+
+      // Should NOT fall back to full reload when CSS-only succeeds
+      expect(fullReloadSpy).not.toHaveBeenCalled();
+    });
+
+    it('should return false from updateCssOnly when contentDocument is inaccessible', () => {
+      component.ngAfterViewInit();
+
+      // Mock iframe with no contentDocument (simulating sandbox restriction)
+      const mockIframe = {
+        nativeElement: {
+          contentDocument: null,
+        },
+      };
+      component['previewIframe'] = mockIframe as any;
+
+      const result = component['updateCssOnly']('body { color: red; }');
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('XSS mitigation - content rendering', () => {
+    it('should render user-supplied HTML in sandboxed context', () => {
+      component.ngAfterViewInit();
+
+      const userHtml = '<script>alert("xss")</script><div>User Content</div>';
+      component.updatePreview(userHtml, '', '', null, []);
+
+      const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+
+      // Content should be in srcdoc
+      expect(iframe.srcdoc).toContain(userHtml);
+
+      // But iframe should be sandboxed
+      expect(iframe.hasAttribute('sandbox')).toBe(true);
+      expect(iframe.getAttribute('sandbox')).not.toContain('allow-same-origin');
+    });
+
+    it('should render user-supplied CSS in sandboxed context', () => {
+      component.ngAfterViewInit();
+
+      const userCss = 'body { background: url("javascript:alert(1)"); }';
+      component.updatePreview('<div>test</div>', userCss, '', null, []);
+
+      const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+
+      // Content should be in srcdoc
+      expect(iframe.srcdoc).toContain(userCss);
+
+      // But iframe should be sandboxed
+      expect(iframe.hasAttribute('sandbox')).toBe(true);
+    });
+
+    it('should render user-supplied JavaScript in sandboxed context', () => {
+      component.ngAfterViewInit();
+
+      const userJs = 'window.top.location = "https://evil.com";';
+      component.updatePreview('<div>test</div>', '', userJs, null, []);
+
+      const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+
+      // Content should be in srcdoc
+      expect(iframe.srcdoc).toContain(userJs);
+
+      // But iframe should be sandboxed (preventing top navigation)
+      expect(iframe.hasAttribute('sandbox')).toBe(true);
+      expect(iframe.getAttribute('sandbox')).not.toContain('allow-top-navigation');
+    });
+  });
+
+  describe('card snapshot capture', () => {
+    it('does not add allow-same-origin to the live preview iframe', async () => {
+      component.updatePreview(
+        '<div id="snap">Hi</div>',
+        'body { color: red; }',
+        'alert(1)',
+        null,
+        []
+      );
+      const live = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+      expect(live.getAttribute('sandbox')).not.toContain('allow-same-origin');
+    });
+
+    it('captures from a scriptless same-origin iframe and removes it', async () => {
+      const sandboxes: string[] = [];
+      const nativeCreate = document.createElement.bind(document);
+      spyOn(document, 'createElement').and.callFake(
+        (tagName: string, options?: string | ElementCreationOptions) => {
+          const el = nativeCreate(tagName, options as ElementCreationOptions);
+          if (tagName.toLowerCase() === 'iframe') {
+            const iframe = el as HTMLIFrameElement;
+            const nativeSet = iframe.setAttribute.bind(iframe);
+            iframe.setAttribute = (name: string, value: string) => {
+              nativeSet(name, value);
+              if (name === 'sandbox') sandboxes.push(value);
+            };
+          }
+          return el;
+        }
+      );
+
+      component.updatePreview(
+        '<div id="snap">Hi</div>',
+        'body { color: red; }',
+        'alert(1)',
+        null,
+        []
+      );
+      await (component as unknown as { captureJpeg: () => Promise<Blob | null> }).captureJpeg();
+
+      expect(sandboxes).toContain(CAPTURE_IFRAME_SANDBOX);
+      expect(sandboxes.every((value) => !value.includes('allow-scripts'))).toBeTrue();
+      expect(document.querySelectorAll('iframe[aria-hidden="true"]').length).toBe(0);
+
+      const live = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+      expect(live.getAttribute('sandbox')).not.toContain('allow-same-origin');
+    });
+  });
+});
+
+describe('dataUrlToBlob', () => {
+  it('decodes a JPEG data URL without fetch', async () => {
+    const dataUrl = 'data:image/jpeg;base64,QQ==';
+    const blob = dataUrlToBlob(dataUrl);
+    expect(blob.type).toBe('image/jpeg');
+    expect(blob.size).toBe(1);
+    expect(await blob.text()).toBe('A');
+  });
+
+  it('rejects a string that is not a data URL', () => {
+    expect(() => dataUrlToBlob('not-a-data-url')).toThrow('Invalid data URL');
+  });
+});
+
+describe('buildPreviewSrcdoc', () => {
+  it('includes runtime JS only when requested', () => {
+    const withRuntime = buildPreviewSrcdoc({
+      html: '<div id="box">Hi</div>',
+      css: 'body { color: red; }',
+      js: 'window.__snippy = 1',
+      includeRuntime: true,
+    });
+    const forCapture = buildPreviewSrcdoc({
+      html: '<div id="box">Hi</div>',
+      css: 'body { color: red; }',
+      js: 'window.__snippy = 1',
+      includeRuntime: false,
+    });
+
+    expect(withRuntime).toContain('window.__snippy = 1');
+    expect(withRuntime).toContain('snippy-console');
+    expect(forCapture).toContain('<div id="box">Hi</div>');
+    expect(forCapture).toContain('body { color: red; }');
+    expect(forCapture).not.toContain('window.__snippy = 1');
+    expect(forCapture).not.toContain('snippy-console');
+  });
+});

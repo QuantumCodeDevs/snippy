@@ -1,0 +1,89 @@
+/* -------------------------------------------------------
+   Snippy global styles — entry point
+   Partials live in src/styles/ and are grouped by concern.
+-------------------------------------------------------- */
+
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: dark;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$rose-palette,
+        tertiary: mat.$azure-palette,
+        theme-type: color-scheme,
+      ),
+      typography: (
+        plain-family: (
+          'Space Grotesk',
+          sans-serif,
+        ),
+        brand-family: (
+          'Space Grotesk',
+          sans-serif,
+        ),
+      ),
+      density: 0,
+    )
+  );
+
+  /* Warm studio surfaces. light-dark() follows color-scheme on html. */
+  --mat-sys-background: light-dark(#f3eee6, #312f2f);
+  --mat-sys-surface: light-dark(#fffaf4, #3a3634);
+  --mat-sys-surface-container: light-dark(#fffaf4, #3a3634);
+  --mat-sys-surface-container-low: light-dark(#f3eee6, #312f2f);
+  --mat-sys-surface-container-high: light-dark(#fffaf4, #45403d);
+  --mat-sys-surface-container-highest: light-dark(#e7dfd4, #45403d);
+  --mat-sys-on-surface: light-dark(#2a2624, #f6f1ea);
+  --mat-sys-on-surface-variant: light-dark(#5c554e, #d4cbc2);
+  --mat-sys-on-background: light-dark(#2a2624, #f6f1ea);
+  --mat-sys-primary: light-dark(#b56b5d, #e4b1a4);
+  --mat-sys-on-primary: light-dark(#fffaf4, #2a2624);
+  --mat-sys-primary-container: light-dark(#b56b5d, #e4b1a4);
+  --mat-sys-on-primary-container: light-dark(#fffaf4, #2a2624);
+  --mat-sys-tertiary: light-dark(#3f7a6b, #9dcec0);
+  --mat-sys-on-tertiary: light-dark(#fffaf4, #2a2624);
+  --mat-sys-outline: light-dark(#e4dcd2, #4a4542);
+  --mat-sys-outline-variant: light-dark(#e4dcd2, #4a4542);
+  --mat-sys-surface-tint: transparent;
+}
+
+@import 'tailwindcss';
+
+@theme inline {
+  --color-ink: var(--text-primary);
+  --color-bright: var(--text-bright);
+  --color-muted: var(--text-soft);
+  --color-faint: var(--text-faint);
+  --color-dim: var(--text-dim);
+  --color-page: var(--page-bg);
+  --color-surface: var(--card-bg);
+  --color-raised: var(--surface-hover);
+  --color-line: var(--hairline);
+  --color-mint: var(--accent-mint);
+  --color-clay: var(--accent-clay);
+  --color-sky: var(--accent-sky);
+}
+
+/* Design system */
+@import 'styles/tokens';
+@import 'styles/base';
+@import 'styles/brand-nav';
+@import 'styles/layout';
+@import 'styles/motion';
+@import 'styles/dialogs';
+
+/* Shared list card chrome */
+@import 'styles/list-card';
+
+/* Angular Material overrides */
+@import 'styles/material-cards';
+@import 'styles/material-dialogs';
+@import 'styles/material-chips-menus';
+@import 'styles/material-forms';
+@import 'styles/material-tabs';
+@import 'styles/material-buttons';
+@import 'styles/material-snackbar';
+@import 'styles/material-overlays';
+@import 'styles/material-tailwind-fixes';

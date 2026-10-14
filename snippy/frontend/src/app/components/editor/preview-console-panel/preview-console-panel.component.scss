@@ -1,0 +1,117 @@
+:host {
+  display: block;
+}
+
+.preview-console {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 80px;
+  border-top: 1px solid var(--hairline);
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.preview-console__resize {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  cursor: ns-resize;
+  z-index: 2;
+}
+
+.preview-console__resize:hover,
+.preview-console__resize:active {
+  background: var(--surface-hover);
+}
+
+.preview-console__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+
+.preview-console__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.preview-console__title .mat-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.preview-console__actions {
+  display: flex;
+  align-items: center;
+}
+
+.preview-console__body {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  padding: 0.35rem 0.5rem 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.preview-console__empty {
+  margin: 0.5rem 0;
+  color: var(--text-dim);
+}
+
+.preview-console__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.preview-console__line {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid var(--hairline);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.preview-console__time {
+  color: var(--text-dim);
+}
+
+.preview-console__level {
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-faint);
+}
+
+.preview-console__line[data-level='warn'] .preview-console__level,
+.preview-console__line[data-level='warn'] .preview-console__text {
+  color: var(--text-warning);
+}
+
+.preview-console__line[data-level='error'] .preview-console__level,
+.preview-console__line[data-level='error'] .preview-console__text {
+  color: var(--danger-soft);
+}
+
+.preview-console__line[data-level='info'] .preview-console__level {
+  color: var(--text-info);
+}

@@ -1,0 +1,13 @@
+<h2 mat-dialog-title [class]="'alert-' + (data.type || 'info')">
+  {{ data.title }}
+</h2>
+
+<mat-dialog-content>
+  <p>{{ data.message }}</p>
+</mat-dialog-content>
+
+<mat-divider></mat-divider>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onClose()">Close</button>
+</mat-dialog-actions>

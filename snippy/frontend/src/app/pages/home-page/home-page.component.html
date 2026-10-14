@@ -1,0 +1,186 @@
+<div class="relative z-10 flex h-full flex-col overflow-auto">
+  <main class="page-shell content-stagger flex-1 !py-10 md:!py-14">
+    <!-- Hero -->
+    <section class="grid items-center gap-10 lg:grid-cols-[1.25fr_0.75fr]">
+      <div>
+        <span class="eyebrow mb-4">Code · Create · Share</span>
+        <h1 class="mt-4 text-4xl font-semibold text-bright md:text-6xl">
+          Build and share snippets that look as good as they run.
+        </h1>
+        <p class="mt-5 max-w-xl text-lg text-muted">
+          Write HTML, CSS, and JavaScript in a live editor, preview instantly, and publish with
+          privacy controls, favorites, and community feedback.
+        </p>
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="login()"
+            class="!px-6 !py-2 text-sm font-semibold"
+          >
+            Get Started for Free
+          </button>
+          <a
+            mat-stroked-button
+            routerLink="/try"
+            class="!px-6 !py-2 text-sm font-semibold no-underline"
+          >
+            Try the editor
+          </a>
+          <a
+            mat-stroked-button
+            routerLink="/public"
+            class="!px-6 !py-2 text-sm font-semibold no-underline"
+          >
+            View snippets
+          </a>
+          <a mat-button href="#features" class="!px-6 !py-2 text-sm font-semibold no-underline">
+            Explore Features
+          </a>
+        </div>
+      </div>
+
+      <aside class="panel p-5 transition-colors hover:bg-raised">
+        <h2 class="text-lg font-semibold text-bright">Product Snapshot</h2>
+        <ul class="mt-4 space-y-3 text-sm text-muted">
+          <li class="flex gap-2">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mint"></span>Live WYSIWYG
+            editor with split layouts
+          </li>
+          <li class="flex gap-2">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-clay"></span>Public feeds,
+            follows, and favorites
+          </li>
+          <li class="flex gap-2">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mint"></span>Collections,
+            comments, and forking
+          </li>
+          <li class="flex gap-2">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-clay"></span>Asset uploads and
+            ZIP export
+          </li>
+        </ul>
+        <div class="mt-5 overflow-hidden rounded-lg border border-line">
+          <img
+            src="/images/example-snippet.png"
+            alt="Snippet Preview"
+            class="h-auto w-full object-cover"
+          />
+        </div>
+      </aside>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="mt-16 md:mt-20">
+      <p class="text-xs font-medium uppercase tracking-[0.2em] text-clay">Capabilities</p>
+      <h2 class="section-title mt-3">Powerful features for everyday shipping</h2>
+      <p class="section-subtitle mt-3 max-w-2xl">
+        Everything you need to draft, polish, and share front-end experiments.
+      </p>
+
+      <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <article class="panel p-5 transition-colors hover:bg-raised text-center lg:col-span-2">
+          <mat-icon class="mb-3 text-4xl text-mint">code</mat-icon>
+          <h3 class="text-xl font-semibold text-bright">Live Editor</h3>
+          <p class="mt-2 text-sm text-muted">
+            Write HTML, CSS, and JavaScript with instant preview and flexible split layouts.
+          </p>
+        </article>
+        <article class="panel p-5 transition-colors hover:bg-raised text-center">
+          <mat-icon class="mb-3 text-4xl text-clay">share</mat-icon>
+          <h3 class="text-xl font-semibold text-bright">Share &amp; Privacy</h3>
+          <p class="mt-2 text-sm text-muted">
+            Publish with a link or keep snippets private. You control who can see your work.
+          </p>
+        </article>
+        <article class="panel p-5 transition-colors hover:bg-raised text-center">
+          <mat-icon class="mb-3 text-4xl text-mint">favorite</mat-icon>
+          <h3 class="text-xl font-semibold text-bright">Favorites &amp; Comments</h3>
+          <p class="mt-2 text-sm text-muted">
+            Favorite snippets you love and leave feedback for creators.
+          </p>
+        </article>
+        <article class="panel p-5 transition-colors hover:bg-raised text-center">
+          <mat-icon class="mb-3 text-4xl text-clay">people</mat-icon>
+          <h3 class="text-xl font-semibold text-bright">Follow Creators</h3>
+          <p class="mt-2 text-sm text-muted">
+            Follow developers and catch their latest work in your following feed.
+          </p>
+        </article>
+        <article class="panel p-5 transition-colors hover:bg-raised text-center">
+          <mat-icon class="mb-3 text-4xl text-mint">folder_copy</mat-icon>
+          <h3 class="text-xl font-semibold text-bright">Collections &amp; Forks</h3>
+          <p class="mt-2 text-sm text-muted">
+            Organize snippets into collections and fork public work into your own editor.
+          </p>
+        </article>
+        <article class="panel p-5 transition-colors hover:bg-raised text-center">
+          <mat-icon class="mb-3 text-4xl text-clay">upload_file</mat-icon>
+          <h3 class="text-xl font-semibold text-bright">Upload Assets</h3>
+          <p class="mt-2 text-sm text-muted">
+            Add images from your library and drop them into HTML or CSS.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="mt-16 md:mt-20">
+      <p class="text-xs font-medium uppercase tracking-[0.2em] text-mint">How it works</p>
+      <h2 class="section-title mt-3">A practical flow for shipping snippets</h2>
+      <div class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <article class="panel p-5 transition-colors hover:bg-raised">
+          <p class="text-xs font-medium uppercase tracking-[0.16em] text-clay">01 Create</p>
+          <h3 class="mt-2 text-xl font-semibold text-bright">Open the editor</h3>
+          <p class="mt-2 text-sm text-muted">
+            Start a new snippet and write HTML, CSS, and JS side by side.
+          </p>
+        </article>
+        <article class="panel p-5 transition-colors hover:bg-raised">
+          <p class="text-xs font-medium uppercase tracking-[0.16em] text-clay">02 Preview</p>
+          <h3 class="mt-2 text-xl font-semibold text-bright">See it live</h3>
+          <p class="mt-2 text-sm text-muted">
+            Instant preview updates as you type — flip layouts to match your workflow.
+          </p>
+        </article>
+        <article class="panel p-5 transition-colors hover:bg-raised">
+          <p class="text-xs font-medium uppercase tracking-[0.16em] text-clay">03 Share</p>
+          <h3 class="mt-2 text-xl font-semibold text-bright">Publish your way</h3>
+          <p class="mt-2 text-sm text-muted">
+            Go public, keep it private, or organize work into collections.
+          </p>
+        </article>
+        <article class="panel p-5 transition-colors hover:bg-raised">
+          <p class="text-xs font-medium uppercase tracking-[0.16em] text-clay">04 Grow</p>
+          <h3 class="mt-2 text-xl font-semibold text-bright">Engage</h3>
+          <p class="mt-2 text-sm text-muted">
+            Follow creators, favorite work, comment, and fork ideas into your own.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="panel mt-16 mb-8 px-6 py-12 text-center md:mt-20">
+      <h2 class="text-3xl font-semibold text-bright md:text-4xl">Ready to start coding?</h2>
+      <p class="mx-auto mt-3 max-w-xl text-muted">
+        Join developers sharing and learning together on Snippy.
+      </p>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="login()"
+        class="mt-6 !px-6 !py-2 text-sm font-semibold"
+      >
+        Create Your First Snippet
+      </button>
+      <a
+        mat-stroked-button
+        routerLink="/try"
+        class="mt-6 ml-3 !px-6 !py-2 text-sm font-semibold no-underline"
+      >
+        Try without signing in
+      </a>
+    </section>
+  </main>
+</div>

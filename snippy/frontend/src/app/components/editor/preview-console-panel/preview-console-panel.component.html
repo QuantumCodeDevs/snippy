@@ -1,0 +1,53 @@
+@if (console.open()) {
+  <aside
+    class="preview-console"
+    [style.height.px]="console.height()"
+    aria-label="JavaScript console"
+  >
+    <div
+      class="preview-console__resize"
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="Resize console"
+      (pointerdown)="onResizeStart($event)"
+    ></div>
+    <div class="preview-console__toolbar">
+      <span class="preview-console__title">
+        <mat-icon>terminal</mat-icon>
+        Console
+      </span>
+      <div class="preview-console__actions">
+        <button mat-button type="button" (click)="console.clear()" matTooltip="Clear console">
+          <mat-icon>delete_outline</mat-icon>
+          Clear
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          (click)="console.setOpen(false)"
+          matTooltip="Close console"
+          aria-label="Close console"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div class="preview-console__body">
+      @if (console.messages().length === 0) {
+        <p class="preview-console__empty">
+          No messages yet. Use console.log in your JavaScript pane.
+        </p>
+      } @else {
+        <ul class="preview-console__list">
+          @for (msg of console.messages(); track msg.id) {
+            <li class="preview-console__line" [attr.data-level]="msg.level">
+              <span class="preview-console__time">{{ formatTime(msg.timestamp) }}</span>
+              <span class="preview-console__level">{{ msg.level }}</span>
+              <span class="preview-console__text">{{ msg.text }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </aside>
+}

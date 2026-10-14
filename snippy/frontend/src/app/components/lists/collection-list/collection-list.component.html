@@ -1,0 +1,60 @@
+<section>
+  <app-list-toolbar
+    searchLabel="Search collections"
+    [actionLabel]="showNewButton ? 'New Collection' : null"
+    actionIcon="add"
+    (search)="searchChange.emit($event)"
+    (action)="onCreate()"
+  />
+
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    @for (collection of collections; track collection.collectionId) {
+      <mat-card class="list-card h-full cursor-pointer" (click)="onOpen(collection)">
+        <mat-card-header>
+          <mat-card-title class="truncate">{{ collection.name }}</mat-card-title>
+          <mat-card-subtitle class="text-faint">
+            {{ collection.isPrivate ? 'Private' : 'Public' }}
+            · {{ collection.snippetCount ?? 0 }}
+            {{ (collection.snippetCount ?? 0) === 1 ? 'pen' : 'pens' }}
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content class="list-card-body">
+          <p class="line-clamp-3 text-sm text-muted">
+            {{ collection.description || 'No description' }}
+          </p>
+        </mat-card-content>
+
+        <mat-divider></mat-divider>
+
+        <div class="list-card-actions list-card-actions--end">
+          @if (showDelete) {
+            <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu" xPosition="before">
+              <button mat-menu-item class="menu-item-danger" (click)="onDelete(collection, $event)">
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            </mat-menu>
+          }
+        </div>
+      </mat-card>
+    } @empty {
+      <app-list-empty-state
+        class="col-span-full"
+        icon="folder_open"
+        message="No collections found"
+      />
+    }
+  </div>
+
+  <app-list-paginator
+    [total]="total"
+    [pageSize]="pageSize"
+    [pageIndex]="pageIndex"
+    [hideWhenSinglePage]="true"
+    (pageChange)="pageChange.emit($event)"
+  />
+</section>

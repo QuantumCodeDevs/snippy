@@ -1,0 +1,126 @@
+<section>
+  <app-list-toolbar
+    searchLabel="Search snippets"
+    [actionLabel]="showNewButton ? 'New Snippet' : null"
+    (search)="searchChange.emit($event)"
+    (action)="createNewSnippet()"
+  />
+
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    @for (snippet of snippets; track snippet.shortId) {
+      <mat-card class="list-card h-full cursor-pointer" (click)="openSnippet(snippet)">
+        <div class="list-card-thumb">
+          @if (snippet.snapshotUrl && !snapshotFailed(snippet.shortId)) {
+            <img
+              [src]="snapshotSrc(snippet)"
+              [alt]="snippet.name"
+              (error)="onSnapshotError(snippet.shortId)"
+            />
+          } @else {
+            <div class="list-card-thumb__placeholder">
+              <mat-icon>code</mat-icon>
+            </div>
+          }
+        </div>
+        <mat-card-header>
+          <mat-card-title>{{ snippet.name }}</mat-card-title>
+          <mat-card-subtitle class="flex flex-col gap-1.5 text-faint">
+            <a
+              class="text-link no-underline hover:underline"
+              (click)="goToProfile(snippet.userName, $event)"
+              href="javascript:void(0)"
+            >
+              {{ snippet.userName || 'unknown' }}
+            </a>
+            @if (snippet.parentShortId) {
+              <app-fork-attribution
+                [parentShortId]="snippet.parentShortId"
+                [parentName]="snippet.parentName"
+                [parentUserName]="snippet.parentUserName"
+                [parentDeleted]="!!snippet.parentDeleted"
+              />
+            }
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content class="list-card-body">
+          <p class="line-clamp-3 text-sm text-muted">
+            {{ snippet.description || 'No description' }}
+          </p>
+        </mat-card-content>
+
+        @if (snippet.tags && snippet.tags.length > 0) {
+          <div class="list-card-chips">
+            <mat-chip-set>
+              @for (tag of snippet.tags; track tag) {
+                <a [routerLink]="['/tags', tag]" (click)="$event.stopPropagation()">
+                  <mat-chip>{{ tag }}</mat-chip>
+                </a>
+              }
+            </mat-chip-set>
+          </div>
+        }
+
+        <mat-divider></mat-divider>
+
+        <div class="list-card-actions">
+          <app-snippet-stat-bar
+            [stats]="snippet"
+            (favorite)="favoriteSnippet(snippet, $event)"
+            (comment)="commentOnSnippet(snippet, $event)"
+            (forks)="openForks(snippet, $event)"
+          />
+
+          <button
+            mat-icon-button
+            matTooltip="More actions"
+            [matMenuTriggerFor]="menu"
+            (click)="$event.stopPropagation()"
+          >
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu" xPosition="before">
+            <button mat-menu-item (click)="addToCollection(snippet)">
+              <mat-icon>dashboard</mat-icon>
+              <span>Add to Collection</span>
+            </button>
+            <button mat-menu-item (click)="forkSnippet(snippet)">
+              <mat-icon>fork_right</mat-icon>
+              <span>Fork</span>
+            </button>
+            @if (!snippet.isOwner && snippet.userName) {
+              <button mat-menu-item (click)="toggleFollow(snippet)">
+                <mat-icon>{{ snippet.isFollowing ? 'person_remove' : 'person_add' }}</mat-icon>
+                <span
+                  >{{ snippet.isFollowing ? 'Unfollow' : 'Follow' }} @{{ snippet.userName }}</span
+                >
+              </button>
+            }
+            @if (showRemoveFromCollection) {
+              <button mat-menu-item (click)="emitRemoveFromCollection(snippet)">
+                <mat-icon>remove_circle_outline</mat-icon>
+                <span>Remove from Collection</span>
+              </button>
+            }
+            @if (snippet.isOwner) {
+              <mat-divider></mat-divider>
+              <button mat-menu-item class="menu-item-danger" (click)="deleteSnippet(snippet)">
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            }
+          </mat-menu>
+        </div>
+      </mat-card>
+    } @empty {
+      <app-list-empty-state class="col-span-full" icon="code_off" message="No snippets found" />
+    }
+  </div>
+
+  <app-list-paginator
+    [total]="total"
+    [pageSize]="pageSize"
+    [pageIndex]="pageIndex"
+    (pageChange)="pageChange.emit($event)"
+  />
+</section>

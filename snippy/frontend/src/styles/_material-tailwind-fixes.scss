@@ -1,0 +1,55 @@
+/* Tailwind preflight clashes with Material controls */
+
+/* Tailwind preflight sets border-style:solid on everything, which breaks
+   Material outline notches (inputs + selects). Keep floating labels. */
+.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field
+  .mdc-notched-outline__notch {
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* Tailwind also styles native form controls; neutralize inside Material */
+.mat-mdc-form-field {
+  [type='text'],
+  [type='email'],
+  [type='url'],
+  [type='password'],
+  [type='number'],
+  [type='search'],
+  [type='tel'],
+  [multiple],
+  textarea,
+  select {
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+.search-field .mat-mdc-form-field-icon-prefix {
+  padding-right: 0.25rem;
+}
+
+/* Tailwind preflight skews Material icon buttons — force centered icons */
+.mat-mdc-icon-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.mat-mdc-icon-button .mat-mdc-button-touch-target {
+  height: 100%;
+  width: 100%;
+}
+
+.mat-mdc-icon-button .mat-icon,
+.mat-mdc-icon-button .material-icons {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  margin: 0 !important;
+  line-height: 1 !important;
+  overflow: visible;
+}

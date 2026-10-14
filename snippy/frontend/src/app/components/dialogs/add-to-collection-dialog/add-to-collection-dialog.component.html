@@ -1,0 +1,55 @@
+<h2 mat-dialog-title>Add to Collection</h2>
+
+<mat-dialog-content>
+  @if (loading) {
+    <div class="dialog-loading">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+  } @else if (collections.length === 0) {
+    <div class="dialog-empty">
+      <mat-icon>collections_bookmark</mat-icon>
+      <p>You don't have any collections yet.</p>
+    </div>
+  } @else {
+    <div class="collection-list">
+      @for (collection of collections; track collection.collectionId) {
+        <div class="collection-row">
+          <div class="collection-row__info">
+            <div class="collection-row__name">{{ collection.name }}</div>
+            <small class="collection-row__meta"
+              >{{ collection.snippetCount ?? 0 }} snippet(s)</small
+            >
+          </div>
+          @if (isInCollection(collection)) {
+            <span class="collection-row__in">
+              <mat-icon>check</mat-icon>
+              In collection
+            </span>
+          } @else {
+            <button
+              mat-stroked-button
+              [disabled]="addingId() === collection.collectionId"
+              (click)="addTo(collection)"
+            >
+              @if (addingId() === collection.collectionId) {
+                <mat-spinner diameter="16"></mat-spinner>
+              } @else {
+                Add
+              }
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-divider></mat-divider>
+
+<mat-dialog-actions class="dialog-actions-split">
+  <button mat-button (click)="createNewCollection()">
+    <mat-icon>add</mat-icon>
+    New Collection
+  </button>
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

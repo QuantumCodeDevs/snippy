@@ -1,0 +1,370 @@
+<div class="flex h-full flex-col overflow-auto">
+  <div class="page-shell max-w-3xl">
+    <div class="mb-6">
+      <h1 class="text-3xl font-semibold text-bright">Settings</h1>
+      <p class="mt-1 text-muted">Manage your profile, editor, and account.</p>
+    </div>
+
+    @if (!user()) {
+      <div class="p-8 text-center text-muted">Loading…</div>
+    } @else {
+      <mat-tab-group
+        mat-stretch-tabs="false"
+        mat-align-tabs="start"
+        (selectedIndexChange)="onSettingsTabChange($event)"
+      >
+        <mat-tab label="Profile">
+          <div class="panel p-5 mt-4 space-y-4">
+            <div class="profile-image">
+              <p class="section-label">Profile Image</p>
+              <div class="profile-image__row">
+                <img
+                  class="profile-image__preview"
+                  [src]="avatarPreviewUrl"
+                  alt="Profile image"
+                  width="96"
+                  height="96"
+                />
+                <div class="profile-image__actions">
+                  <input
+                    #pictureInput
+                    type="file"
+                    hidden
+                    accept="image/png,image/jpeg,image/gif,image/webp"
+                    (change)="onPictureSelected($event)"
+                  />
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="triggerPictureUpload()"
+                    [disabled]="pictureUploading() || pictureRemoving()"
+                  >
+                    @if (pictureUploading()) {
+                      <mat-spinner diameter="18"></mat-spinner>
+                    } @else {
+                      Choose File
+                    }
+                  </button>
+                  <button
+                    mat-button
+                    color="warn"
+                    type="button"
+                    (click)="removePicture()"
+                    [disabled]="!user()?.pictureUrl || pictureUploading() || pictureRemoving()"
+                  >
+                    @if (pictureRemoving()) {
+                      <mat-spinner diameter="18"></mat-spinner>
+                    } @else {
+                      Remove Profile Image
+                    }
+                  </button>
+                </div>
+              </div>
+              <p class="profile-image__hint">Ideal size is 500×500. Maximum file size is 5 MB.</p>
+            </div>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Display name</mat-label>
+              <input matInput [(ngModel)]="displayName" maxlength="100" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Bio</mat-label>
+              <textarea matInput rows="4" [(ngModel)]="bio" maxlength="500"></textarea>
+              <mat-hint align="end">{{ bio.length }}/500</mat-hint>
+            </mat-form-field>
+
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="saveProfile()"
+              [disabled]="!isProfileDirty() || profileSaving()"
+            >
+              @if (profileSaving()) {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else {
+                Save profile
+              }
+            </button>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Editor">
+          <div class="panel p-5 mt-4 space-y-6">
+            <div>
+              <p class="section-label">Editor preview</p>
+              <div class="preview-lang-tabs" role="tablist">
+                <button
+                  type="button"
+                  class="preview-lang-tabs__btn"
+                  [class.preview-lang-tabs__btn--active]="previewLang === 'html'"
+                  (click)="setPreviewLang('html')"
+                >
+                  HTML
+                </button>
+                <button
+                  type="button"
+                  class="preview-lang-tabs__btn"
+                  [class.preview-lang-tabs__btn--active]="previewLang === 'css'"
+                  (click)="setPreviewLang('css')"
+                >
+                  CSS
+                </button>
+                <button
+                  type="button"
+                  class="preview-lang-tabs__btn"
+                  [class.preview-lang-tabs__btn--active]="previewLang === 'js'"
+                  (click)="setPreviewLang('js')"
+                >
+                  JS
+                </button>
+              </div>
+              <div class="editor-preview" #previewHost></div>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div>
+              <p class="section-label">Syntax theme</p>
+              <mat-radio-group
+                class="theme-group"
+                [(ngModel)]="editorDraft.theme"
+                (ngModelChange)="onEditorDraftChange()"
+              >
+                <div class="theme-group__block">
+                  <span class="theme-group__heading">Dark</span>
+                  @for (t of darkThemes; track t.key) {
+                    <mat-radio-button [value]="t.key">{{ t.label }}</mat-radio-button>
+                  }
+                </div>
+                <div class="theme-group__block">
+                  <span class="theme-group__heading">Light</span>
+                  @for (t of lightThemes; track t.key) {
+                    <mat-radio-button [value]="t.key">{{ t.label }}</mat-radio-button>
+                  }
+                </div>
+              </mat-radio-group>
+            </div>
+
+            <div>
+              <p class="section-label">Keymap</p>
+              <mat-radio-group
+                class="theme-group"
+                [(ngModel)]="editorDraft.keymap"
+                (ngModelChange)="onEditorDraftChange()"
+              >
+                @for (key of keymapKeys; track key) {
+                  <mat-radio-button [value]="key">{{
+                    key === 'vim' ? 'Vim' : 'Default'
+                  }}</mat-radio-button>
+                }
+              </mat-radio-group>
+            </div>
+
+            <div class="editor-row">
+              <mat-form-field appearance="outline" class="editor-row__grow">
+                <mat-label>Font family</mat-label>
+                <mat-select
+                  [(ngModel)]="editorDraft.fontFamily"
+                  (ngModelChange)="onEditorDraftChange()"
+                >
+                  @for (key of fontKeys; track key) {
+                    <mat-option [value]="key">{{ fontLabel(key) }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="editor-row__size">
+                <mat-label>Font size</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  min="10"
+                  max="24"
+                  [(ngModel)]="editorDraft.fontSize"
+                  (ngModelChange)="onEditorDraftChange()"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="editor-row">
+              <mat-form-field appearance="outline" class="editor-row__grow">
+                <mat-label>Indent with</mat-label>
+                <mat-select
+                  [(ngModel)]="editorDraft.indentWith"
+                  (ngModelChange)="onEditorDraftChange()"
+                >
+                  <mat-option value="spaces">Spaces</mat-option>
+                  <mat-option value="tabs">Tabs</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="editor-row__size">
+                <mat-label>Indent width</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  min="1"
+                  max="8"
+                  [(ngModel)]="editorDraft.indentWidth"
+                  (ngModelChange)="onEditorDraftChange()"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="editor-options">
+              <p class="section-label">Editor options</p>
+              <mat-checkbox
+                [(ngModel)]="editorDraft.lineNumbers"
+                (ngModelChange)="onEditorDraftChange()"
+              >
+                Line numbers
+              </mat-checkbox>
+              <mat-checkbox
+                [(ngModel)]="editorDraft.lineWrapping"
+                (ngModelChange)="onEditorDraftChange()"
+              >
+                Line wrapping
+              </mat-checkbox>
+              <mat-checkbox
+                [(ngModel)]="editorDraft.codeFolding"
+                (ngModelChange)="onEditorDraftChange()"
+              >
+                Code folding
+              </mat-checkbox>
+              <mat-checkbox
+                [(ngModel)]="editorDraft.matchBrackets"
+                (ngModelChange)="onEditorDraftChange()"
+              >
+                Match brackets
+              </mat-checkbox>
+              <mat-checkbox
+                [(ngModel)]="editorDraft.autocomplete"
+                (ngModelChange)="onEditorDraftChange()"
+              >
+                Autocomplete
+              </mat-checkbox>
+            </div>
+
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="saveEditorPreferences()"
+              [disabled]="!isEditorDirty() || editorSaving()"
+            >
+              @if (editorSaving()) {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else {
+                Save editor preferences
+              }
+            </button>
+
+            <mat-divider></mat-divider>
+            <div>
+              <p class="section-label">Keyboard shortcuts</p>
+              <ul class="space-y-1 text-sm text-muted">
+                <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>K</kbd> — Command palette</li>
+                <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>S</kbd> — Save snippet</li>
+              </ul>
+            </div>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Account">
+          <div class="panel p-5 mt-4 space-y-4">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Username</mat-label>
+              <input
+                matInput
+                [ngModel]="userName"
+                (ngModelChange)="onUsernameInput($event)"
+                maxlength="50"
+              />
+              <span matSuffix class="username-status" [attr.aria-label]="usernameStatusLabel()">
+                @switch (usernameStatus()) {
+                  @case ('checking') {
+                    <mat-spinner diameter="18"></mat-spinner>
+                  }
+                  @case ('available') {
+                    <mat-icon class="username-status--ok">check_circle</mat-icon>
+                  }
+                  @case ('current') {
+                    <mat-icon class="username-status--ok">check_circle</mat-icon>
+                  }
+                  @case ('taken') {
+                    <mat-icon class="username-status--bad">cancel</mat-icon>
+                  }
+                  @case ('invalid') {
+                    <mat-icon class="username-status--bad">cancel</mat-icon>
+                  }
+                }
+              </span>
+            </mat-form-field>
+
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="saveUsername()"
+              [disabled]="!canSaveUsername()"
+            >
+              @if (usernameSaving()) {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else {
+                Update username
+              }
+            </button>
+
+            <div class="privacy-section">
+              <p class="section-label">Privacy</p>
+              <div class="privacy-row">
+                <div>
+                  <div class="privacy-row__title">{{ isPrivate ? 'Private' : 'Public' }}</div>
+                  <p class="privacy-row__copy">
+                    {{
+                      isPrivate
+                        ? 'Only you can view your profile. Others cannot follow you or see your public profile page.'
+                        : 'Anyone can view your profile and follow you.'
+                    }}
+                  </p>
+                </div>
+                <mat-slide-toggle [(ngModel)]="isPrivate"></mat-slide-toggle>
+              </div>
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="savePrivacy()"
+                [disabled]="!isPrivacyDirty() || privacySaving()"
+              >
+                @if (privacySaving()) {
+                  <mat-spinner diameter="18"></mat-spinner>
+                } @else {
+                  Save privacy
+                }
+              </button>
+            </div>
+
+            <div class="danger-zone">
+              <h3 class="danger-zone__title">Danger zone</h3>
+              <p class="danger-zone__copy">
+                Permanently delete your account and all associated data. This cannot be undone.
+              </p>
+              <button
+                mat-stroked-button
+                color="warn"
+                class="danger-zone__action"
+                (click)="confirmDeleteAccount()"
+                [disabled]="deleting()"
+              >
+                @if (deleting()) {
+                  <mat-spinner diameter="18"></mat-spinner>
+                } @else {
+                  Delete account
+                }
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    }
+  </div>
+</div>

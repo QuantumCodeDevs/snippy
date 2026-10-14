@@ -1,0 +1,84 @@
+<h2 mat-dialog-title>Embed this snippet</h2>
+
+<mat-dialog-content>
+  @if (!canEmbed()) {
+    <p class="text-muted">{{ blockReason() }}</p>
+    <p class="mt-2 text-sm text-faint">
+      Paste the iframe on any site that allows embeds. Only public, saved snippets can be embedded.
+    </p>
+  } @else {
+    <p class="mb-3 text-sm text-faint">
+      Customize the player, then copy the iframe. Viewers can switch code tabs and preview the
+      result.
+    </p>
+
+    <div
+      class="embed-preview mb-4 overflow-hidden rounded border border-line bg-page"
+      [style.--embed-preview-h.px]="height()"
+    >
+      @if (safeEmbedUrl(); as src) {
+        <iframe [src]="src" class="embed-preview__frame" title="Embed preview"> </iframe>
+      }
+    </div>
+
+    <div class="mb-4">
+      <div class="mb-2 text-sm font-medium text-ink">Default tabs</div>
+      <div class="flex flex-wrap gap-2">
+        @for (tab of ['html', 'css', 'js', 'result']; track tab) {
+          <button
+            type="button"
+            mat-stroked-button
+            [class.tab-active]="isTabSelected($any(tab))"
+            (click)="toggleTab($any(tab))"
+          >
+            {{ tab | uppercase }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="mb-4 flex items-center justify-between gap-4">
+      <div>
+        <div class="text-sm font-medium text-ink">Make code editable</div>
+        <small class="text-faint">Local edits only — does not save to your snippet</small>
+      </div>
+      <mat-slide-toggle [checked]="editable()" (change)="onEditableChange($event.checked)">
+      </mat-slide-toggle>
+    </div>
+
+    <mat-form-field appearance="outline" class="w-full mb-4">
+      <mat-label>Editor theme</mat-label>
+      <mat-select [value]="theme()" (selectionChange)="onThemeChange($event.value)">
+        @for (t of themes; track t.key) {
+          <mat-option [value]="t.key">{{ t.label }} ({{ t.group }})</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <label class="mb-1 block text-sm font-medium text-ink">Height: {{ height() }}px</label>
+    <mat-slider class="w-full mb-4" min="150" max="800" step="10" discrete>
+      <input matSliderThumb [value]="height()" (valueChange)="onHeightChange($event)" />
+    </mat-slider>
+
+    <div class="mb-2 flex items-center justify-between gap-2">
+      <span class="text-sm font-medium text-ink">HTML</span>
+      <button mat-stroked-button type="button" (click)="copyCode()">
+        <mat-icon>content_copy</mat-icon>
+        Copy code
+      </button>
+    </div>
+    <textarea
+      class="embed-code"
+      readonly
+      rows="8"
+      [value]="embedCode()"
+      (click)="$any($event.target).select()"
+    ></textarea>
+  }
+</mat-dialog-content>
+
+<mat-divider></mat-divider>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

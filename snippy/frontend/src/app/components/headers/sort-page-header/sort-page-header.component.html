@@ -1,0 +1,12 @@
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="m-0 text-3xl font-semibold text-bright">{{ title }}</h1>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="min-w-40">
+    <mat-label>Sort by</mat-label>
+    <mat-select [value]="sort" (selectionChange)="sortChange.emit($event.value)">
+      @for (option of sortOptions; track option.value) {
+        <mat-option [value]="option.value">{{ option.label }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>

@@ -1,0 +1,72 @@
+name: Build and Deploy
+
+on:
+  workflow_dispatch: # Allow manual trigger
+  # push:
+  #   branches:
+  #     - main
+
+jobs:
+  build-and-deploy:
+    if: github.actor == 'slurrps-mcgee' # Only run for specific user
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Extract version from package.json
+      id: version
+      shell: bash
+      run: |
+        validate_version() {
+          local version="$1"
+          local name="$2"
+
+          if [[ "$version" =~ [[:cntrl:]] ]]; then
+            echo "ERROR: $name contains control characters (possible injection attack)" >&2
+            exit 1
+          fi
+
+          if [[ ! "$version" =~ ^[0-9a-zA-Z.\+\-]+$ ]]; then
+            echo "ERROR: $name contains invalid characters: $version" >&2
+            exit 1
+          fi
+
+          echo "Validated $name: $version"
+        }
+
+        FE_VERSION=$(node -p "require('./snippy/frontend/package.json').version")
+        validate_version "$FE_VERSION" "FE_VERSION"
+        echo "FE_VERSION=$FE_VERSION" >> $GITHUB_ENV
+        echo "Using FE version: $FE_VERSION"
+
+        PB_VERSION="$FE_VERSION"
+        echo "PB_VERSION=$PB_VERSION" >> $GITHUB_ENV
+        echo "Using PocketBase image version: $PB_VERSION"
+
+    - name: Build and push FrontEnd image
+      uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5.4.0
+      with:
+        context: ./snippy/frontend
+        file: ./snippy/frontend/Dockerfile
+        push: true
+        tags: |
+          kennyl777/snippy-frontend:${{ env.FE_VERSION }}
+          kennyl777/snippy-frontend:latest
+
+    - name: Build and push PocketBase image
+      uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5.4.0
+      with:
+        context: ./snippy/pocketbase
+        file: ./snippy/pocketbase/Dockerfile
+        push: true
+        tags: |
+          kennyl777/snippy-pocketbase:${{ env.PB_VERSION }}
+          kennyl777/snippy-pocketbase:latest

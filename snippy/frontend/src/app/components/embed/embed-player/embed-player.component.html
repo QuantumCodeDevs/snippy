@@ -1,0 +1,127 @@
+@if (loading()) {
+  <div class="embed-player embed-player--status">Loading…</div>
+} @else if (error()) {
+  <div class="embed-player embed-player--status">{{ error() }}</div>
+} @else {
+  <div
+    class="embed-player"
+    [class.embed-player--code-only]="showCodePane() && !showResult()"
+    [class.embed-player--result-only]="!showCodePane() && showResult()"
+  >
+    <header class="embed-player__bar">
+      <div class="embed-player__tabs">
+        @for (tab of codeTabs(); track tab) {
+          <button
+            type="button"
+            class="embed-tab"
+            [class.embed-tab--active]="activeCodeTab() === tab && !showResources()"
+            (click)="selectCodeTab(tab)"
+          >
+            {{ tab | uppercase }}
+          </button>
+        }
+      </div>
+      <div class="embed-player__tabs embed-player__tabs--right">
+        @if (showResult()) {
+          <span class="embed-tab embed-tab--static">Result</span>
+        }
+        <a class="embed-edit-link" [routerLink]="editUrl()" target="_blank" rel="noopener">
+          Edit on Snippy
+        </a>
+      </div>
+    </header>
+
+    <div class="embed-player__body">
+      @if (showCodePane()) {
+        <section class="embed-player__code">
+          @if (showResources()) {
+            <div class="embed-resources">
+              <h3>External CSS</h3>
+              @if (cssResources().length === 0) {
+                <p class="embed-resources__empty">None</p>
+              } @else {
+                <ul>
+                  @for (r of cssResources(); track r.url) {
+                    <li>
+                      <a [href]="r.url" target="_blank" rel="noopener noreferrer">{{ r.url }}</a>
+                    </li>
+                  }
+                </ul>
+              }
+              <h3>External JavaScript</h3>
+              @if (jsResources().length === 0) {
+                <p class="embed-resources__empty">None</p>
+              } @else {
+                <ul>
+                  @for (r of jsResources(); track r.url) {
+                    <li>
+                      <a [href]="r.url" target="_blank" rel="noopener noreferrer">{{ r.url }}</a>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          } @else {
+            <app-embed-code-pane
+              class="embed-player__editor"
+              [language]="activeCodeTab()"
+              [content]="
+                activeCodeTab() === 'html' ? html() : activeCodeTab() === 'css' ? css() : js()
+              "
+              [editable]="editable()"
+              [theme]="theme()"
+              (contentChange)="onCodeChange(activeCodeTab(), $event)"
+            >
+            </app-embed-code-pane>
+          }
+
+          <footer class="embed-player__pane-footer">
+            <button type="button" class="embed-chip" (click)="toggleResources()">Resources</button>
+            @if (editable()) {
+              <span class="embed-hint">Editable</span>
+            }
+          </footer>
+        </section>
+      }
+
+      @if (showResult()) {
+        <section class="embed-player__result">
+          <div class="embed-player__preview-wrap" [style.--zoom]="zoom()">
+            <div class="embed-player__preview-scale">
+              <app-snippet-preview></app-snippet-preview>
+            </div>
+          </div>
+          <footer class="embed-player__pane-footer embed-player__pane-footer--result">
+            <div class="embed-zoom">
+              <button
+                type="button"
+                class="embed-chip"
+                [class.embed-chip--active]="zoom() === 1"
+                (click)="setZoom(1)"
+              >
+                1x
+              </button>
+              <button
+                type="button"
+                class="embed-chip"
+                [class.embed-chip--active]="zoom() === 0.5"
+                (click)="setZoom(0.5)"
+              >
+                0.5x
+              </button>
+              <button
+                type="button"
+                class="embed-chip"
+                [class.embed-chip--active]="zoom() === 0.25"
+                (click)="setZoom(0.25)"
+              >
+                0.25x
+              </button>
+            </div>
+            <button type="button" class="embed-chip" (click)="rerun()">Rerun</button>
+          </footer>
+        </section>
+      }
+    </div>
+  </div>
+}

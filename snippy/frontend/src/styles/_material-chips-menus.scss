@@ -1,0 +1,39 @@
+/* Chips, menus, destructive hover affordances */
+
+.mat-mdc-chip {
+  --mdc-chip-container-shape-radius: 9999px !important;
+  background: var(--card-bg) !important;
+  border: 1px solid var(--hairline) !important;
+}
+
+.mat-mdc-standard-chip .mdc-evolution-chip__text-label,
+.mat-mdc-chip .mdc-evolution-chip__text-label {
+  color: var(--text-muted) !important;
+}
+
+.mat-mdc-menu-panel {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: 0.9rem !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+/* Destructive actions read red on hover so deletes feel deliberate */
+.mat-mdc-menu-item.menu-item-danger:hover:not([disabled]) {
+  background: var(--danger-hover-bg) !important;
+
+  .mat-icon,
+  .mat-mdc-menu-item-text,
+  span {
+    color: var(--danger-soft) !important;
+  }
+}
+
+.mat-mdc-icon-button.icon-btn-danger:hover:not([disabled]) {
+  background: var(--danger-hover-bg) !important;
+
+  .mat-icon {
+    color: var(--danger-soft) !important;
+  }
+}

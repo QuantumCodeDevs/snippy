@@ -1,0 +1,246 @@
+<h2 mat-dialog-title>
+  Comments
+  <span class="font-normal text-muted">on "{{ data.snippetName }}"</span>
+</h2>
+
+<mat-dialog-content>
+  <div class="flex items-start gap-2 pb-3 pt-2">
+    <mat-form-field appearance="outline" class="flex-1">
+      <mat-label>{{ replyTo() ? 'Reply' : 'Add a comment' }}</mat-label>
+      <textarea
+        matInput
+        [(ngModel)]="newComment"
+        rows="2"
+        maxlength="2000"
+        [disabled]="posting() || !isAuthenticated()"
+        (ngModelChange)="onComposerInput()"
+        (keydown.enter)="$event.stopPropagation()"
+      ></textarea>
+      @if (replyTo(); as parent) {
+        <mat-hint
+          >Replying to @{{ parent.userName }}
+          <button type="button" class="text-link-accent" (click)="cancelReply()">Cancel</button>
+        </mat-hint>
+      } @else if (!isAuthenticated()) {
+        <mat-hint>Log in to comment. Use @username to mention someone.</mat-hint>
+      } @else {
+        <mat-hint>Use @username to mention someone.</mat-hint>
+      }
+    </mat-form-field>
+    <button
+      mat-raised-button
+      color="primary"
+      class="mt-1"
+      [disabled]="!newComment.trim() || posting() || !isAuthenticated()"
+      (click)="postComment()"
+    >
+      @if (posting()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        Post
+      }
+    </button>
+  </div>
+  @if (mentionSuggestions().length) {
+    <div class="mb-2 flex flex-wrap gap-1">
+      @for (name of mentionSuggestions(); track name) {
+        <button
+          type="button"
+          class="rounded-full border border-line px-2 py-0.5 text-xs"
+          (click)="applyMention(name)"
+        >
+          @{{ name }}
+        </button>
+      }
+    </div>
+  }
+
+  <mat-divider></mat-divider>
+
+  <div class="pt-3">
+    @if (loading()) {
+      <div class="flex justify-center p-6">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (roots().length === 0) {
+      <div class="flex flex-col items-center gap-2 p-6 text-faint">
+        <mat-icon>chat_bubble_outline</mat-icon>
+        <p>No comments yet. Be the first to say something!</p>
+      </div>
+    } @else {
+      <div class="flex flex-col gap-3">
+        @for (comment of roots(); track comment.commentId; let isLast = $last) {
+          <div class="comment-item">
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="font-semibold text-ink">{{
+                  comment.displayName || comment.userName
+                }}</span>
+                @if (comment.userName) {
+                  <a
+                    class="pl-1 text-faint no-underline hover:underline"
+                    [routerLink]="['/', comment.userName]"
+                    (click)="close()"
+                    >&#64;{{ comment.userName }}</a
+                  >
+                }
+              </div>
+              <div class="flex gap-1">
+                @if (isAuthenticated() && !comment.isDeleted) {
+                  <button mat-icon-button matTooltip="Reply" (click)="startReply(comment)">
+                    <mat-icon>reply</mat-icon>
+                  </button>
+                }
+                @if (
+                  canEdit(comment) && editingCommentId() !== comment.commentId && !comment.isDeleted
+                ) {
+                  <button mat-icon-button matTooltip="Edit comment" (click)="startEdit(comment)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                }
+                @if (canDelete(comment) && !comment.isDeleted) {
+                  <button
+                    mat-icon-button
+                    class="icon-btn-danger"
+                    matTooltip="Delete comment"
+                    (click)="deleteComment(comment)"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                }
+              </div>
+            </div>
+            @if (editingCommentId() === comment.commentId) {
+              <div class="flex items-start gap-2 pt-2">
+                <mat-form-field appearance="outline" class="flex-1">
+                  <textarea matInput [(ngModel)]="editContent" rows="2" maxlength="2000"></textarea>
+                </mat-form-field>
+                <div class="mt-1 flex flex-col gap-1">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    matTooltip="Save"
+                    [disabled]="!editContent.trim()"
+                    (click)="saveEdit(comment)"
+                  >
+                    <mat-icon>check</mat-icon>
+                  </button>
+                  <button mat-icon-button matTooltip="Cancel" (click)="cancelEdit()">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </div>
+            } @else if (comment.isDeleted) {
+              <p class="pt-1 italic text-faint">Comment deleted</p>
+            } @else {
+              <p class="pt-1 text-muted">
+                @for (part of mentionParts(comment.content); track $index) {
+                  @if (part.user) {
+                    <a
+                      class="text-link-accent no-underline hover:underline"
+                      [routerLink]="['/', part.user]"
+                      (click)="close()"
+                      >{{ part.text }}</a
+                    >
+                  } @else {
+                    <span>{{ part.text }}</span>
+                  }
+                }
+              </p>
+            }
+          </div>
+          @for (reply of repliesOf(comment.commentId); track reply.commentId) {
+            <div class="comment-item ml-6 border-l border-line pl-3">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="font-semibold text-ink">{{
+                    reply.displayName || reply.userName
+                  }}</span>
+                  @if (reply.userName) {
+                    <a
+                      class="pl-1 text-faint no-underline hover:underline"
+                      [routerLink]="['/', reply.userName]"
+                      (click)="close()"
+                      >&#64;{{ reply.userName }}</a
+                    >
+                  }
+                </div>
+                <div class="flex gap-1">
+                  @if (
+                    canEdit(reply) && editingCommentId() !== reply.commentId && !reply.isDeleted
+                  ) {
+                    <button mat-icon-button matTooltip="Edit comment" (click)="startEdit(reply)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+                  @if (canDelete(reply) && !reply.isDeleted) {
+                    <button
+                      mat-icon-button
+                      class="icon-btn-danger"
+                      matTooltip="Delete comment"
+                      (click)="deleteComment(reply)"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
+                </div>
+              </div>
+              @if (editingCommentId() === reply.commentId) {
+                <div class="flex items-start gap-2 pt-2">
+                  <mat-form-field appearance="outline" class="flex-1">
+                    <textarea
+                      matInput
+                      [(ngModel)]="editContent"
+                      rows="2"
+                      maxlength="2000"
+                    ></textarea>
+                  </mat-form-field>
+                  <div class="mt-1 flex flex-col gap-1">
+                    <button
+                      mat-icon-button
+                      color="primary"
+                      matTooltip="Save"
+                      [disabled]="!editContent.trim()"
+                      (click)="saveEdit(reply)"
+                    >
+                      <mat-icon>check</mat-icon>
+                    </button>
+                    <button mat-icon-button matTooltip="Cancel" (click)="cancelEdit()">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              } @else if (reply.isDeleted) {
+                <p class="pt-1 italic text-faint">Comment deleted</p>
+              } @else {
+                <p class="pt-1 text-muted">
+                  @for (part of mentionParts(reply.content); track $index) {
+                    @if (part.user) {
+                      <a
+                        class="text-link-accent no-underline hover:underline"
+                        [routerLink]="['/', part.user]"
+                        (click)="close()"
+                        >{{ part.text }}</a
+                      >
+                    } @else {
+                      <span>{{ part.text }}</span>
+                    }
+                  }
+                </p>
+              }
+            </div>
+          }
+          @if (!isLast) {
+            <mat-divider></mat-divider>
+          }
+        }
+      </div>
+    }
+  </div>
+</mat-dialog-content>
+
+<mat-divider></mat-divider>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

@@ -1,0 +1,27 @@
+<button
+  [matMenuTriggerFor]="beforeMenu"
+  class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-line bg-surface p-0 transition hover:bg-raised"
+  [attr.aria-label]="'Account menu'"
+>
+  @if (user()?.pictureUrl) {
+    <img
+      [src]="user()?.pictureUrl"
+      alt=""
+      width="40"
+      height="40"
+      class="h-10 w-10 rounded-full object-cover"
+    />
+  } @else if (user()) {
+    <span class="text-sm font-semibold tracking-wide text-ink">{{ initials() }}</span>
+  } @else {
+    <span class="px-3 py-2 text-sm text-ink">Menu</span>
+  }
+</button>
+<mat-menu #beforeMenu="matMenu" xPosition="before">
+  <button mat-menu-item (click)="home()">Home</button>
+  <button mat-menu-item (click)="profile()">Profile</button>
+  <button mat-menu-item (click)="createNewSnippet()">New Snippet</button>
+  <button mat-menu-item (click)="assets()">Assets</button>
+  <button mat-menu-item (click)="settings()">Settings</button>
+  <button mat-menu-item (click)="logout()">Log out</button>
+</mat-menu>

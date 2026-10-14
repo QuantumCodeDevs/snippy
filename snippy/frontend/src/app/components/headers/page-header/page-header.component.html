@@ -1,0 +1,212 @@
+@switch (mode) {
+  @case ('landing') {
+    <header class="site-header">
+      <div class="page-container flex items-center justify-between py-3">
+        @if (user()) {
+          <a routerLink="/home" class="brand-mark">
+            <span class="brand-star" aria-hidden="true">✦</span>
+            Snippy
+          </a>
+          <div class="flex items-center gap-1">
+            <app-theme-toggle></app-theme-toggle>
+            <app-user-menu></app-user-menu>
+          </div>
+        } @else {
+          <a routerLink="/" class="brand-mark">
+            <span class="brand-star" aria-hidden="true">✦</span>
+            Snippy
+          </a>
+          <div class="flex items-center gap-2">
+            <app-theme-toggle></app-theme-toggle>
+            <a mat-stroked-button routerLink="/public">View snippets</a>
+            <button mat-raised-button color="primary" (click)="login()">Log in</button>
+          </div>
+        }
+      </div>
+    </header>
+  }
+
+  @case ('feed') {
+    <header class="site-header">
+      <div class="page-container flex flex-wrap items-center justify-between gap-3 py-3">
+        <a [routerLink]="user() ? '/home' : '/'" class="brand-mark">
+          <span class="brand-star" aria-hidden="true">✦</span>
+          Snippy
+        </a>
+
+        <nav
+          class="flex flex-wrap items-center gap-1 rounded-full border border-line bg-surface p-1"
+        >
+          @if (user()) {
+            <a
+              routerLink="/home"
+              routerLinkActive="nav-pill-active"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="nav-pill"
+              >Your Snippets</a
+            >
+            <a routerLink="/following" routerLinkActive="nav-pill-active" class="nav-pill"
+              >Following</a
+            >
+          }
+          <a routerLink="/public" routerLinkActive="nav-pill-active" class="nav-pill">Public</a>
+        </nav>
+
+        @if (user()) {
+          <div class="flex items-center gap-1">
+            <app-theme-toggle></app-theme-toggle>
+            <app-user-menu></app-user-menu>
+          </div>
+        } @else {
+          <div class="flex items-center gap-1">
+            <app-theme-toggle></app-theme-toggle>
+            <button mat-raised-button color="primary" (click)="login()">Log in</button>
+          </div>
+        }
+      </div>
+    </header>
+  }
+
+  @case ('editor') {
+    <header class="site-header">
+      <div class="page-container flex flex-wrap items-center justify-between gap-3 py-2">
+        <div class="flex min-w-0 flex-1 items-center gap-3">
+          <a [routerLink]="isGuest ? '/' : '/home'" class="brand-mark shrink-0">
+            <span class="brand-star" aria-hidden="true">✦</span>
+            Snippy
+          </a>
+          @if (snippetStore.snippet(); as snippet) {
+            @if (canEdit) {
+              <div class="min-w-0 flex-1">
+                <mat-form-field appearance="outline" class="min-w-[12rem] max-w-md w-full">
+                  <input
+                    matInput
+                    [ngModel]="snippet.name"
+                    (ngModelChange)="onSnippetNameChange($event)"
+                    placeholder="Snippet name"
+                  />
+                  <mat-icon matSuffix>mode_edit</mat-icon>
+                </mat-form-field>
+              </div>
+              @if (snippet.parentShortId) {
+                <p class="truncate text-xs text-muted">
+                  <app-fork-attribution
+                    [parentShortId]="snippet.parentShortId"
+                    [parentName]="snippet.parentName"
+                    [parentUserName]="snippet.parentUserName"
+                    [parentDeleted]="!!snippet.parentDeleted"
+                  />
+                </p>
+              }
+            } @else {
+              <div class="min-w-0 flex-1">
+                <h3 class="truncate text-lg font-semibold text-ink">{{ snippet.name }}</h3>
+                @if (snippet.parentShortId) {
+                  <p class="truncate text-xs text-muted">
+                    <app-fork-attribution
+                      [parentShortId]="snippet.parentShortId"
+                      [parentName]="snippet.parentName"
+                      [parentUserName]="snippet.parentUserName"
+                      [parentDeleted]="!!snippet.parentDeleted"
+                    />
+                  </p>
+                }
+              </div>
+            }
+          }
+        </div>
+
+        @if (!isGuest && snippetStore.snippet(); as snippet) {
+          @if (hasSavedSnippet) {
+            <app-snippet-stat-bar
+              variant="toolbar"
+              [stats]="snippet"
+              [showFork]="true"
+              [showForksList]="true"
+              (favorite)="toggleFavorite()"
+              (comment)="openComments()"
+              (fork)="forkSnippet()"
+              (forks)="openForks()"
+            />
+          }
+        }
+
+        <div class="flex items-center gap-2">
+          @if (canEdit && !isGuest) {
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="snippetSaveUI.saveSnippetWithUI(snippetStore, user)"
+              [disabled]="!snippetStore.isDirty()"
+            >
+              <mat-icon>save</mat-icon>
+              {{ snippetStore.isDirty() ? 'Save Changes' : 'Saved' }}
+            </button>
+          }
+
+          <button mat-icon-button [matMenuTriggerFor]="layoutMenu">
+            <mat-icon>dashboard</mat-icon>
+          </button>
+          <mat-menu #layoutMenu="matMenu" xPosition="before">
+            <div mat-menu-item (click)="$event.stopPropagation()">
+              <mat-button-toggle-group
+                name="editorLayout"
+                aria-label="Editor Layout"
+                hideSingleSelectionIndicator="true"
+                [value]="editorUi.layout()"
+                (change)="onLayoutChange($event.value)"
+              >
+                <mat-button-toggle value="left">Left</mat-button-toggle>
+                <mat-button-toggle value="top">Top</mat-button-toggle>
+                <mat-button-toggle value="right">Right</mat-button-toggle>
+                <mat-button-toggle value="bottom">Bottom</mat-button-toggle>
+              </mat-button-toggle-group>
+            </div>
+            @if (!isGuest) {
+              <button mat-menu-item (click)="viewFullPage()">Full Page View</button>
+            }
+          </mat-menu>
+
+          @if (canEdit) {
+            <button mat-icon-button (click)="openSettings()">
+              <mat-icon>settings</mat-icon>
+            </button>
+          }
+
+          <app-theme-toggle></app-theme-toggle>
+          @if (isGuest || !user()) {
+            <button mat-raised-button color="primary" (click)="login()">Log in</button>
+          } @else {
+            <app-user-menu></app-user-menu>
+          }
+        </div>
+      </div>
+    </header>
+  }
+
+  @case ('minimal') {
+    <header class="site-header">
+      <div class="page-container flex items-center justify-between py-3">
+        <a [routerLink]="user() ? '/home' : '/'" class="brand-mark">
+          <span class="brand-star" aria-hidden="true">✦</span>
+          Snippy
+        </a>
+        @if (user()) {
+          <div class="flex items-center gap-1">
+            <app-theme-toggle></app-theme-toggle>
+            <app-user-menu></app-user-menu>
+          </div>
+        } @else {
+          <div class="flex items-center gap-1">
+            <app-theme-toggle></app-theme-toggle>
+            <button mat-raised-button color="primary" (click)="login()">Log in</button>
+          </div>
+        }
+      </div>
+    </header>
+  }
+
+  @case ('embed') {
+    <!-- Embed player provides its own chrome -->
+  }
+}
