@@ -44,8 +44,8 @@ export class FooterComponent {
 
   @ViewChild('zipInput') zipInput?: ElementRef<HTMLInputElement>;
 
-  readonly githubUrl = 'https://github.com/slurrps-mcgee/Snippy';
-  readonly licenseUrl = 'https://github.com/slurrps-mcgee/Snippy/blob/main/LICENSE';
+  readonly githubUrl = 'https://github.com/QuantumCodeDevs/snippy';
+  readonly licenseUrl = 'https://github.com/QuantumCodeDevs/snippy/blob/main/LICENSE';
 
   readonly showEditorActions = computed(
     () => this.editorUi.guestMode() || !!this.snippetStoreService.snippet()
