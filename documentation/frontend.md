@@ -1,6 +1,6 @@
 # Snippy frontend
 
-Angular 22 standalone SPA in [`snippy/frontend`](../snippy/frontend). There is **no Node/Express API**. The browser talks to **PocketBase** (auth, SQLite, files, collection rules, hooks) through a same-origin proxy on `/api/`. Production nginx does not proxy the Admin UI (`/_/`).
+Angular 22 standalone SPA in [`snippy/frontend`](../snippy/frontend). There is **no Node/Express API**. The browser talks to **PocketBase** (auth, SQLite, files, collection rules, hooks) through a same-origin proxy on `/api/`. Production nginx does not proxy the Admin UI. `/_/` is the OAuth popup close page.
 
 Signals hold domain state. Angular Material + Tailwind draw chrome. The [PocketBase JS SDK](https://github.com/pocketbase/js-sdk) is the only backend client, except cdnjs for extra CSS/JS libraries.
 
@@ -31,7 +31,7 @@ Related: [PocketBase collections and rules](db.md) · [self-host README](../READ
 
 Dev: [`proxy.conf.js`](../snippy/frontend/proxy.conf.js) forwards `/api` and `/_/` to PocketBase (`http://127.0.0.1:8090`, or `POCKETBASE_PROXY_TARGET` inside Compose). `ng serve` loads it from `angular.json`. The Admin UI is still the PocketBase process.
 
-Prod: [`nginx.site.conf`](../snippy/frontend/nginx.site.conf) forwards `/api/` only. CSP `connect-src` is `'self' blob: data:` plus `https://api.cdnjs.com` and `https://cdnjs.cloudflare.com`. `script-src` keeps `'unsafe-inline'`, `'unsafe-eval'`, and `https:` because the editor and CDN libraries need them. Snippet HTML and JS run only in the preview `srcdoc` iframe (`allow-scripts`, no `allow-same-origin`, no `allow-top-navigation`, no `allow-popups-to-escape-sandbox`). Snapshot capture uses a second iframe with `allow-same-origin` and no scripts. Embed sandbox headers stay on `/embed/`.
+Prod: [`nginx.site.conf`](../snippy/frontend/nginx.site.conf) forwards `/api/` only. `/_/` is not the Admin UI. PocketBase sends the OAuth popup there to close it, so nginx serves [`oauth2-popup-close.html`](../snippy/frontend/public/oauth2-popup-close.html) for that path. The Admin UI stays on `127.0.0.1:8090/_/`. CSP `connect-src` is `'self' blob: data:` plus `https://api.cdnjs.com` and `https://cdnjs.cloudflare.com`. `script-src` keeps `'unsafe-inline'`, `'unsafe-eval'`, and `https:` because the editor and CDN libraries need them. Snippet HTML and JS run only in the preview `srcdoc` iframe (`allow-scripts`, no `allow-same-origin`, no `allow-top-navigation`, no `allow-popups-to-escape-sandbox`). Snapshot capture uses a second iframe with `allow-same-origin` and no scripts. Embed sandbox headers stay on `/embed/`.
 
 ```mermaid
 flowchart LR

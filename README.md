@@ -181,7 +181,7 @@ Migrations and hooks bind-mount from `snippy/pocketbase/pb_migrations` and `pb_h
 
 ## Production deployment
 
-Use [`docker-compose.prod.example.yml`](docker-compose.prod.example.yml). Set `PB_APP_URL` to your HTTPS origin. Put TLS in front (any reverse proxy works). Point the proxy at the frontend container. nginx forwards `/api/` to PocketBase on the compose network. It does not forward `/_/`.
+Use [`docker-compose.prod.example.yml`](docker-compose.prod.example.yml). Set `PB_APP_URL` to your HTTPS origin. Put TLS in front (any reverse proxy works). Point the proxy at the frontend container. nginx forwards `/api/` to PocketBase on the compose network. It does not forward the Admin UI. `/_/` serves a static page that closes the OAuth popup (PocketBase redirects the popup there after GitHub login).
 
 The Admin UI stays on the PocketBase port, which the example compose file binds to `127.0.0.1:8090`. Reach it with an SSH tunnel or from the host. Do not publish that port on the public interface.
 

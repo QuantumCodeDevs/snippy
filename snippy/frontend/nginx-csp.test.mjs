@@ -35,10 +35,24 @@ describe('nginx CSP for PocketBase proxy and snippet previews', () => {
     assert.match(site, /client_max_body_size 6m;/);
     assert.match(site, /location \/api\//);
     assert.match(site, /X-Content-Type-Options "nosniff"/);
-    assert.doesNotMatch(site, /location \/_\/ /);
+    assert.match(site, /location \^~ \/_\/ \{/);
+    assert.match(site, /try_files \/oauth2-popup-close\.html =404;/);
+    const oauthClose = site.slice(site.indexOf('location ^~ /_/'), site.indexOf('location /api/'));
+    assert.doesNotMatch(oauthClose, /proxy_pass/);
+    assert.match(oauthClose, /script-src 'self'/);
     assert.match(site, /proxy_pass http:\/\/pocketbase:8090/);
-    assert.doesNotMatch(site, /add_header Content-Security-Policy/);
+    const withoutOauthClose = site.replace(oauthClose, '');
+    assert.doesNotMatch(withoutOauthClose, /add_header Content-Security-Policy/);
     assert.doesNotMatch(site, /minio/i);
+  });
+
+  it('closes the OAuth popup from the static /_/ page', () => {
+    const html = readFrontend('public/oauth2-popup-close.html');
+    const js = readFrontend('public/oauth2-popup-close.js');
+    assert.match(html, /src="\/oauth2-popup-close\.js"/);
+    assert.doesNotMatch(html, /<script(?![^>]*\ssrc=)/);
+    assert.match(js, /window\.close\(\)/);
+    assert.match(js, /oauth2-redirect-failure/);
   });
 
   it('keeps clickjacking protection on the app and allows embed framing', () => {
