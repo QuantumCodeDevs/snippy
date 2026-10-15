@@ -42,6 +42,7 @@ describe('nginx CSP for PocketBase proxy and snippet previews', () => {
     assert.match(oauthClose, /script-src 'self'/);
     assert.match(site, /proxy_pass http:\/\/pocketbase:8090/);
     assert.match(site, /proxy_redirect default;/);
+    assert.match(site, /absolute_redirect off;/);
     const redirect = site.match(/proxy_redirect '([^']+)'/);
     assert.ok(redirect);
     const oauthLocation = new RegExp(redirect[1].replace(/^~\*/, ''));
