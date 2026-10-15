@@ -2,10 +2,10 @@
 
 Snippy is an open-source [CodePen](https://codepen.io/)-style app for writing, previewing, and sharing HTML, CSS, and JavaScript snippets.
 
-- **Version:** 0.15.0 (PocketBase backend)
+- **Version:** 0.5.2
 - **Repository:** [github.com/slurrps-mcgee/Snippy](https://github.com/slurrps-mcgee/Snippy)
 - **License:** [MIT](https://github.com/slurrps-mcgee/Snippy/blob/main/LICENSE)
-- **Docker Hub images:** `kennyl777/snippy-frontend`, `kennyl777/snippy-pocketbase`
+- **Docker Hub images:** `slurrps/snippy-frontend`, `slurrps/snippy-pocketbase` (tags `0.5.2` and `latest`)
 
 ## Table of contents
 
@@ -42,7 +42,7 @@ Frontend never receives admin, SMTP, or OAuth client secrets.
 | | Local development | Production |
 |---|---|---|
 | Compose file | [`docker-compose.yml`](docker-compose.yml) | [`docker-compose.prod.example.yml`](docker-compose.prod.example.yml) |
-| Images | Built locally (`Dockerfile.dev` for frontend) | Docker Hub (`kennyl777/snippy-*`) |
+| Images | Built locally (`Dockerfile.dev` for frontend) | Docker Hub (`slurrps/snippy-frontend`, `slurrps/snippy-pocketbase`) |
 | Frontend | `ng serve` on **4200** | nginx on container **8080** |
 | Env | PocketBase `env_file: .env` | same `.env` / Portainer stack.env |
 | Admin UI | [http://localhost:8090/_/](http://localhost:8090/_/) (localhost only) | `127.0.0.1:8090` only. Production nginx does not proxy `/_/` |
@@ -181,7 +181,7 @@ Migrations and hooks bind-mount from `snippy/pocketbase/pb_migrations` and `pb_h
 
 ## Production deployment
 
-Use [`docker-compose.prod.example.yml`](docker-compose.prod.example.yml). Set `PB_APP_URL` to your HTTPS origin. Put TLS in front (any reverse proxy works). Point the proxy at the frontend container. nginx forwards `/api/` to PocketBase on the compose network. It does not forward the Admin UI. `/_/` serves a static page that closes the OAuth popup (PocketBase redirects the popup there after GitHub login).
+Use [`docker-compose.prod.example.yml`](docker-compose.prod.example.yml). It pulls `slurrps/snippy-frontend:latest` and `slurrps/snippy-pocketbase:latest`. Pin `0.5.2` instead of `latest` when you want this release. Set `PB_APP_URL` to your HTTPS origin. Put TLS in front (any reverse proxy works). Point the proxy at the frontend container. nginx forwards `/api/` to PocketBase on the compose network. It does not forward the Admin UI. `/_/` serves a static page that closes the OAuth popup (PocketBase redirects the popup there after GitHub login). The same close runs in the SPA if that path still loads the app.
 
 The Admin UI stays on the PocketBase port, which the example compose file binds to `127.0.0.1:8090`. Reach it with an SSH tunnel or from the host. Do not publish that port on the public interface.
 

@@ -1,5 +1,5 @@
 # Local development only. Production images are built by GitHub Actions
-# and deployed via Docker Hub (kennyl777/snippy-*).
+# and deployed via Docker Hub (slurrps/snippy-frontend, slurrps/snippy-pocketbase).
 #
 # PocketBase reads repo-root .env. Frontend only gets POCKETBASE_URL so
 # admin / SMTP / OAuth client secrets never reach the SPA container.
