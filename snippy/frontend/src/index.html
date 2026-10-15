@@ -7,6 +7,41 @@
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="snippy.ico" />
+    <style>
+      #oauth-popup-msg {
+        display: none;
+        margin: 2rem;
+        font: 16px/1.4 system-ui, sans-serif;
+      }
+      html[data-oauth-popup] #oauth-popup-msg {
+        display: block;
+      }
+      html[data-oauth-popup] app-root {
+        display: none;
+      }
+    </style>
+    <script>
+      (function () {
+        var path = location.pathname.replace(/\/+$/, '') || '/';
+        var hash = location.hash || '';
+        if (path !== '/_' && hash.indexOf('oauth2-redirect') === -1) return;
+        window.__snippyOauthPopup = true;
+        document.documentElement.setAttribute('data-oauth-popup', '');
+        var failed = hash.indexOf('oauth2-redirect-failure') !== -1;
+        document.title = failed ? 'Sign-in failed' : 'Signed in';
+        document.addEventListener('DOMContentLoaded', function () {
+          var msg = document.getElementById('oauth-popup-msg');
+          if (msg && failed) {
+            msg.textContent = 'Sign-in did not finish. Close this window and try again.';
+          }
+        });
+        window.close();
+        try {
+          window.open('', '_self');
+        } catch (e) {}
+        window.close();
+      })();
+    </script>
     <script>
       (function () {
         try {
@@ -23,6 +58,7 @@
   <body>
     <!-- runtime env injected by container entrypoint -->
     <script src="/env.js"></script>
+    <p id="oauth-popup-msg">Signed in. You can close this window.</p>
     <app-root></app-root>
   </body>
 </html>

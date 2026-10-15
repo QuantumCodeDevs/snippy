@@ -6,4 +6,8 @@
     if (msg) msg.textContent = 'Sign-in did not finish. Close this window and try again.';
   }
   window.close();
+  try {
+    window.open('', '_self');
+  } catch (e) {}
+  window.close();
 })();

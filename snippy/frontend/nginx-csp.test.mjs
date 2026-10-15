@@ -49,10 +49,15 @@ describe('nginx CSP for PocketBase proxy and snippet previews', () => {
   it('closes the OAuth popup from the static /_/ page', () => {
     const html = readFrontend('public/oauth2-popup-close.html');
     const js = readFrontend('public/oauth2-popup-close.js');
+    const index = readFrontend('src/index.html');
     assert.match(html, /src="\/oauth2-popup-close\.js"/);
     assert.doesNotMatch(html, /<script(?![^>]*\ssrc=)/);
+    assert.match(js, /window\.open\('', '_self'\)/);
     assert.match(js, /window\.close\(\)/);
     assert.match(js, /oauth2-redirect-failure/);
+    assert.match(index, /window\.__snippyOauthPopup = true/);
+    assert.match(index, /window\.open\('', '_self'\)/);
+    assert.match(index, /id="oauth-popup-msg"/);
   });
 
   it('keeps clickjacking protection on the app and allows embed framing', () => {
