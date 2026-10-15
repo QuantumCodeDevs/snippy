@@ -41,6 +41,21 @@ describe('nginx CSP for PocketBase proxy and snippet previews', () => {
     assert.doesNotMatch(oauthClose, /proxy_pass/);
     assert.match(oauthClose, /script-src 'self'/);
     assert.match(site, /proxy_pass http:\/\/pocketbase:8090/);
+    assert.match(site, /proxy_redirect default;/);
+    const redirect = site.match(/proxy_redirect '([^']+)'/);
+    assert.ok(redirect);
+    const oauthLocation = new RegExp(redirect[1].replace(/^~\*/, ''));
+    for (const location of [
+      '../_/#/auth/oauth2-redirect-success',
+      '../_/#/auth/oauth2-redirect-failure',
+      '/_/#/auth/oauth2-redirect-success',
+      '/_/#/auth/oauth2-redirect-failure',
+      'https://snippy.example/_/#/auth/oauth2-redirect-success',
+      'http://pocketbase:8090/_/#/auth/oauth2-redirect-failure',
+    ]) {
+      assert.match(location, oauthLocation);
+    }
+    assert.doesNotMatch('https://example.com/api/files/x', oauthLocation);
     const withoutOauthClose = site.replace(oauthClose, '');
     assert.doesNotMatch(withoutOauthClose, /add_header Content-Security-Policy/);
     assert.doesNotMatch(site, /minio/i);
@@ -50,6 +65,7 @@ describe('nginx CSP for PocketBase proxy and snippet previews', () => {
     const html = readFrontend('public/oauth2-popup-close.html');
     const js = readFrontend('public/oauth2-popup-close.js');
     const index = readFrontend('src/index.html');
+    const main = readFrontend('src/main.ts');
     assert.match(html, /src="\/oauth2-popup-close\.js"/);
     assert.doesNotMatch(html, /<script(?![^>]*\ssrc=)/);
     assert.match(js, /window\.open\('', '_self'\)/);
@@ -58,6 +74,9 @@ describe('nginx CSP for PocketBase proxy and snippet previews', () => {
     assert.match(index, /window\.__snippyOauthPopup = true/);
     assert.match(index, /window\.open\('', '_self'\)/);
     assert.match(index, /id="oauth-popup-msg"/);
+    assert.match(main, /function closeOauthPopup/);
+    assert.match(main, /window\.open\('', '_self'\)/);
+    assert.match(main, /isOauthPopup\(\)/);
   });
 
   it('keeps clickjacking protection on the app and allows embed framing', () => {

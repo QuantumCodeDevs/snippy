@@ -6,7 +6,7 @@
         <h1>Write snippets that preview live.</h1>
         <p class="home-lede">
           Write HTML, CSS, and JavaScript in one editor. The preview updates as you type. Publish
-          with a link, or keep the snippet private.
+          with a link, keep the snippet private, or group it with others in a collection.
         </p>
         <div class="home-actions">
           <button mat-raised-button color="primary" (click)="login()">Get started</button>
@@ -19,6 +19,62 @@
         <img src="/images/example-snippet.png" alt="A snippet preview in the Snippy editor" />
         <figcaption>Live preview beside the source.</figcaption>
       </figure>
+    </section>
+
+    <section class="home-manual" aria-labelledby="home-manual-title">
+      <h2 id="home-manual-title">Inside a snippet</h2>
+      <p class="home-manual__lede">
+        The editor, the preview, and the way you share it all live on the same snippet.
+      </p>
+      <ol class="home-specs">
+        <li>
+          <div class="home-spec__title">
+            <p class="mono-label">Preview</p>
+            <h3>It updates as you type</h3>
+          </div>
+          <p>
+            The preview sits with the source and refreshes while you edit. Move it to the left, top,
+            right, or bottom.
+          </p>
+        </li>
+        <li>
+          <div class="home-spec__title">
+            <p class="mono-label">Source</p>
+            <h3>Three languages, one file</h3>
+          </div>
+          <p>
+            HTML, CSS, and JavaScript share the snippet. Add an external CSS or JavaScript library
+            when a snippet needs one.
+          </p>
+        </li>
+        <li>
+          <div class="home-spec__title">
+            <p class="mono-label">Editor</p>
+            <h3>Theme, font, and keymap</h3>
+          </div>
+          <p>
+            Pick a syntax theme and an editor font. Stay on the default keymap, or switch to Vim.
+            Those choices stay with your account.
+          </p>
+        </li>
+        <li>
+          <div class="home-spec__title">
+            <p class="mono-label">Share</p>
+            <h3>Private, public, or embedded</h3>
+          </div>
+          <p>
+            Keep a snippet to yourself, or publish it. Add tags, copy a link, open the full page, or
+            embed the preview.
+          </p>
+        </li>
+        <li>
+          <div class="home-spec__title">
+            <p class="mono-label">Collections</p>
+            <h3>Group the ones that belong together</h3>
+          </div>
+          <p>A collection can stay private, or be open so anyone can view it.</p>
+        </li>
+      </ol>
     </section>
 
     <section class="home-band" aria-label="How a snippet gets published">

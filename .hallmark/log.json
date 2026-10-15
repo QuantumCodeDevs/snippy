@@ -1,5 +1,15 @@
 [
   {
+    "date": "2026-10-15",
+    "macrostructure": "Split Studio",
+    "theme": "custom",
+    "theme_axes": "light / grotesk-sans / warm",
+    "vibe": "warm cream, copper, instrument manual",
+    "enrichment": "none",
+    "brief": "Snippy · retro-modern light and lifted dark",
+    "scope": "app"
+  },
+  {
     "date": "2026-10-13",
     "macrostructure": "Workbench",
     "theme": "Cobalt",

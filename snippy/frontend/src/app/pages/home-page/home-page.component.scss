@@ -1,7 +1,11 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app */
+/* Hallmark · genre: modern-minimal · macrostructure: Split Studio · design-system: design.md · designed-as-app
+ * pre-emit critique: P5 H4 E5 S4 R4 V4
+ */
 
 :host {
   display: block;
+  height: 100%;
+  min-height: 0;
   min-width: 0;
 }
 
@@ -44,7 +48,8 @@
   margin-top: var(--space-md);
 }
 
-.home-actions a {
+.home-actions a,
+.home-actions button {
   white-space: nowrap;
 }
 
@@ -73,14 +78,11 @@
   color: var(--text-muted);
 }
 
-.home-band {
+.home-manual {
   margin-top: var(--space-2xl);
-  padding: var(--space-lg);
-  border-radius: var(--radius-panel);
-  background: var(--band-bg);
-  color: var(--band-ink);
 }
 
+.home-manual h2,
 .home-band h2,
 .home-close h2 {
   font-size: clamp(1.75rem, 2vw + 1rem, 2.5rem);
@@ -89,6 +91,66 @@
   letter-spacing: -0.03em;
   line-height: 1.1;
   overflow-wrap: anywhere;
+}
+
+.home-manual h2 {
+  padding-bottom: var(--space-xs);
+  border-bottom: 2px solid var(--accent);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.home-manual__lede {
+  max-width: 36rem;
+  margin-top: var(--space-sm);
+  color: var(--text-muted);
+}
+
+.home-specs {
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--hairline);
+}
+
+.home-specs li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.35rem;
+  min-width: 0;
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.home-spec__title {
+  min-width: 0;
+}
+
+.home-specs h3 {
+  margin-top: 0.3rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  color: var(--text-bright);
+}
+
+.home-specs li > p {
+  min-width: 0;
+  max-width: 42rem;
+  color: var(--text-muted);
+  font-size: 0.975rem;
+  line-height: 1.55;
+}
+
+.home-band {
+  margin-top: var(--space-2xl);
+  padding: var(--space-lg);
+  border-radius: var(--radius-panel);
+  background: var(--band-bg);
+  color: var(--band-ink);
 }
 
 .home-steps {
@@ -130,6 +192,15 @@
 .home-close .mat-mdc-raised-button,
 .home-close button {
   margin-top: var(--space-md);
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .home-specs li {
+    grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+    column-gap: var(--space-lg);
+    align-items: start;
+  }
 }
 
 @media (max-width: 900px) {

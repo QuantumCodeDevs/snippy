@@ -1,4 +1,4 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app
+/* Hallmark · genre: modern-minimal · macrostructure: Split Studio · design-system: design.md · designed-as-app
  * pre-emit critique: P5 H4 E5 S4 R4 V4
  * -------------------------------------------------------
  * Snippy global styles — entry point
@@ -12,13 +12,13 @@ html {
   @include mat.theme(
     (
       color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$azure-palette,
+        primary: mat.$orange-palette,
+        tertiary: mat.$orange-palette,
         theme-type: color-scheme,
       ),
       typography: (
         plain-family: (
-          'Inter',
+          'IBM Plex Sans',
           sans-serif,
         ),
         brand-family: (
@@ -30,7 +30,7 @@ html {
     )
   );
 
-  /* Cobalt pair. Values follow [data-theme] tokens, not a second palette. */
+  /* Retro-modern pair. Values follow [data-theme] tokens, not a second palette. */
   --mat-sys-background: var(--page-bg);
   --mat-sys-surface: var(--card-bg);
   --mat-sys-surface-container: var(--card-bg);
