@@ -18,31 +18,34 @@ Pages share type, colour, radii, and button voice. They vary only by job.
 
 ## Theme
 
-Retro-modern. Warm cream in light mode, a lifted warm charcoal in dark mode, and one copper accent. Cobalt, clay, and mint are not brand colours. Success and danger stay status colours.
+Orchard. The light palette is the five given swatches. Dark mode keeps the same hues and swaps the paper and the ink. Success and danger stay status colours.
 
 Light (`[data-theme='light']`):
 
-- `--color-paper`   oklch(97% 0.014 88)
-- `--color-paper-2` oklch(94.2% 0.02 82)
-- `--color-ink`     oklch(26% 0.03 55)
-- `--color-ink-2`   oklch(42% 0.03 58)
-- `--color-rule`    oklch(86% 0.02 78)
-- `--color-accent`  oklch(50% 0.13 42)
-- `--color-focus`   oklch(50% 0.13 42)
+- `--color-paper`   oklch(96% 0.050 112) — `#F2F6D0`, the page
+- `--color-paper-2` oklch(89.3% 0.025 153) — `#D0E1D4`, panels and dialogs
+- `--color-sand`    oklch(86.2% 0.038 96) — `#D9D2B6`, hover
+- `--color-ink`     oklch(32% 0.035 307) — deeper step of `#71697A`, so body text clears the sage panels
+- `--color-ink-2`   oklch(45% 0.03 307) — muted text, same mauve
+- `--color-rule`    oklch(60% 0.028 307) — mauve hairline. `#71697A` is the stronger rule and the off-state switch
+- `--color-accent`  oklch(44% 0.085 62) — deeper step of `#E4BE9E`, so a pale-yellow label passes on the button
+- `--color-focus`   oklch(44% 0.085 62)
 
-Dark (`:root`, the default when the OS is not light). Paper is lifted from the previous near-black so the theme stays dark without reading as a void:
+`#E4BE9E` itself is the marketing band. It is too light to carry small text, so the band uses the deep mauve for its type.
 
-- `--color-paper`   oklch(29% 0.022 62)
-- `--color-paper-2` oklch(36% 0.026 66)
-- `--color-ink`     oklch(96% 0.012 85)
-- `--color-ink-2`   oklch(80% 0.018 75)
-- `--color-rule`    oklch(46% 0.028 66)
-- `--color-accent`  oklch(80% 0.12 68)
-- `--color-focus`   oklch(80% 0.12 68)
+Dark (`:root`, the default when the OS is not light):
 
-App token names in `snippy/frontend/src/styles/_tokens.scss` map onto these: `--page-bg` is paper, `--card-bg` / `--surface-hover` are paper-2, `--text-primary` is ink, `--text-muted` is ink-2, `--hairline` is rule, `--accent` is accent, `--focus-ring` is focus.
+- `--color-paper`   oklch(27% 0.025 307) — deep mauve
+- `--color-paper-2` oklch(36% 0.03 150) — a dark sage lift
+- `--color-ink`     oklch(96% 0.050 112) — `#F2F6D0`
+- `--color-ink-2`   oklch(86.2% 0.038 96) — `#D9D2B6`
+- `--color-rule`    oklch(55% 0.028 307)
+- `--color-accent`  oklch(82.7% 0.061 62) — `#E4BE9E`, with mauve label text
+- `--color-focus`   oklch(82.7% 0.061 62)
 
-The warm band (`--band-bg`) is the one dark beat on marketing pages. In dark mode it steps slightly darker than the page so the section still separates.
+App token names in `snippy/frontend/src/styles/_tokens.scss` map onto these: `--page-bg` is paper, `--card-bg` is the sage panel, `--surface-hover` is sand, `--text-primary` is ink, `--text-muted` is ink-2, `--hairline` is rule, `--accent` is accent, `--focus-ring` is focus.
+
+The band (`--band-bg`) is peach in light mode and a deeper mauve than the page in dark mode.
 
 ## Typography
 
@@ -72,7 +75,7 @@ Headings stay roman. Italic is for body emphasis only. Editor font preferences a
 
 ## CTA voice
 
-- Primary CTA: solid copper fill, 6px radius, cream label in light mode and dark ink in dark mode. Copy names the action (Get started, Save).
+- Primary CTA: solid peach fill, 6px radius, pale-yellow label in light mode and mauve ink in dark mode. Copy names the action (Get started, Save).
 - Secondary CTA: hairline border, same radius, ink label. Text links for quieter destinations.
 
 ## Per-page allowances
@@ -84,7 +87,7 @@ Headings stay roman. Italic is for body emphasis only. Editor font preferences a
 ## What pages MUST share
 
 - The wordmark.
-- The copper accent and its placement (primary button, active nav, focus, links).
+- The peach accent and its placement (primary button, active nav, focus, links).
 - The display, body, and mono fonts.
 - The CTA voice (6px controls, 10px panels).
 - A hairline header, not a floating pill.
@@ -100,14 +103,14 @@ Headings stay roman. Italic is for body emphasis only. Editor font preferences a
 
 ```css
 :root {
-  --color-paper:      oklch(29% 0.022 62);
-  --color-paper-2:    oklch(36% 0.026 66);
-  --color-ink:        oklch(96% 0.012 85);
-  --color-ink-2:      oklch(80% 0.018 75);
-  --color-rule:       oklch(46% 0.028 66);
-  --color-accent:     oklch(80% 0.12 68);
-  --color-accent-ink: oklch(24% 0.03 55);
-  --color-focus:      oklch(80% 0.12 68);
+  --color-paper:      oklch(27% 0.025 307);
+  --color-paper-2:    oklch(36% 0.03 150);
+  --color-ink:        oklch(96% 0.050 112);
+  --color-ink-2:      oklch(86.2% 0.038 96);
+  --color-rule:       oklch(55% 0.028 307);
+  --color-accent:     oklch(82.7% 0.061 62);
+  --color-accent-ink: oklch(27% 0.025 307);
+  --color-focus:      oklch(82.7% 0.061 62);
 
   --font-display: "Space Grotesk", sans-serif;
   --font-body:    "IBM Plex Sans", sans-serif;
@@ -126,14 +129,14 @@ Headings stay roman. Italic is for body emphasis only. Editor font preferences a
 }
 
 [data-theme="light"] {
-  --color-paper:      oklch(97% 0.014 88);
-  --color-paper-2:    oklch(94.2% 0.02 82);
-  --color-ink:        oklch(26% 0.03 55);
-  --color-ink-2:      oklch(42% 0.03 58);
-  --color-rule:       oklch(86% 0.02 78);
-  --color-accent:     oklch(50% 0.13 42);
-  --color-accent-ink: oklch(98% 0.01 90);
-  --color-focus:      oklch(50% 0.13 42);
+  --color-paper:      oklch(96% 0.050 112);
+  --color-paper-2:    oklch(89.3% 0.025 153);
+  --color-ink:        oklch(32% 0.035 307);
+  --color-ink-2:      oklch(45% 0.03 307);
+  --color-rule:       oklch(60% 0.028 307);
+  --color-accent:     oklch(44% 0.085 62);
+  --color-accent-ink: oklch(96% 0.050 112);
+  --color-focus:      oklch(44% 0.085 62);
 }
 ```
 
@@ -141,9 +144,9 @@ Headings stay roman. Italic is for body emphasis only. Editor font preferences a
 
 ```css
 @theme {
-  --color-paper:   oklch(97% 0.014 88);
-  --color-ink:     oklch(26% 0.03 55);
-  --color-accent:  oklch(50% 0.13 42);
+  --color-paper:   oklch(96% 0.050 112);
+  --color-ink:     oklch(32% 0.035 307);
+  --color-accent:  oklch(44% 0.085 62);
   --font-display:  "Space Grotesk", sans-serif;
   --font-body:     "IBM Plex Sans", sans-serif;
   --spacing-md:    1.5rem;
@@ -159,9 +162,9 @@ Runtime colours in the app reference the CSS variables above so dark mode stays 
 ```json
 {
   "color": {
-    "paper":  { "$value": "oklch(97% 0.014 88)", "$type": "color" },
-    "ink":    { "$value": "oklch(26% 0.03 55)", "$type": "color" },
-    "accent": { "$value": "oklch(50% 0.13 42)", "$type": "color" }
+    "paper":  { "$value": "oklch(96% 0.050 112)", "$type": "color" },
+    "ink":    { "$value": "oklch(32% 0.035 307)", "$type": "color" },
+    "accent": { "$value": "oklch(44% 0.085 62)", "$type": "color" }
   },
   "font": {
     "display": { "$value": "Space Grotesk", "$type": "fontFamily" },
@@ -177,27 +180,27 @@ Runtime colours in the app reference the CSS variables above so dark mode stays 
 
 ```css
 :root {
-  --background:        29% 0.022 62;
-  --foreground:        96% 0.012 85;
-  --primary:           80% 0.12 68;
-  --primary-foreground: 24% 0.03 55;
-  --muted:             46% 0.028 66;
-  --muted-foreground:  80% 0.018 75;
-  --border:            46% 0.028 66;
-  --input:             46% 0.028 66;
-  --ring:              80% 0.12 68;
+  --background:        27% 0.025 307;
+  --foreground:        96% 0.050 112;
+  --primary:           82.7% 0.061 62;
+  --primary-foreground: 27% 0.025 307;
+  --muted:             55% 0.028 307;
+  --muted-foreground:  86.2% 0.038 96;
+  --border:            55% 0.028 307;
+  --input:             55% 0.028 307;
+  --ring:              82.7% 0.061 62;
   --radius:            6px;
 }
 
 [data-theme="light"] {
-  --background:         97% 0.014 88;
-  --foreground:         26% 0.03 55;
-  --primary:            50% 0.13 42;
-  --primary-foreground: 98% 0.01 90;
-  --muted:              86% 0.02 78;
-  --muted-foreground:   42% 0.03 58;
-  --border:             86% 0.02 78;
-  --input:              86% 0.02 78;
-  --ring:               50% 0.13 42;
+  --background:         96% 0.050 112;
+  --foreground:         32% 0.035 307;
+  --primary:            44% 0.085 62;
+  --primary-foreground: 96% 0.050 112;
+  --muted:              60% 0.028 307;
+  --muted-foreground:   45% 0.03 307;
+  --border:             60% 0.028 307;
+  --input:              60% 0.028 307;
+  --ring:               44% 0.085 62;
 }
 ```

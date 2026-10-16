@@ -1,5 +1,5 @@
 /* Hallmark · genre: modern-minimal · macrostructure: Split Studio · design-system: design.md · designed-as-app
- * pre-emit critique: P5 H4 E5 S4 R4 V4
+ * pre-emit critique: P5 H4 E4 S5 R4 V4
  * -------------------------------------------------------
  * Snippy global styles — entry point
  * Partials live in src/styles/ and are grouped by concern.
@@ -30,7 +30,7 @@ html {
     )
   );
 
-  /* Retro-modern pair. Values follow [data-theme] tokens, not a second palette. */
+  /* Orchard pair. Values follow [data-theme] tokens, not a second palette. */
   --mat-sys-background: var(--page-bg);
   --mat-sys-surface: var(--card-bg);
   --mat-sys-surface-container: var(--card-bg);
