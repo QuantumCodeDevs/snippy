@@ -4,7 +4,7 @@
       <div class="page-container flex items-center justify-between py-3">
         @if (user()) {
           <a routerLink="/home" class="brand-mark">
-            <span class="brand-star" aria-hidden="true">✦</span>
+            <img src="/snippy.svg" alt="" class="brand-mark__icon" width="38" height="24" />
             Snippy
           </a>
           <div class="flex items-center gap-2">
@@ -22,7 +22,7 @@
           </div>
         } @else {
           <a routerLink="/" class="brand-mark">
-            <span class="brand-star" aria-hidden="true">✦</span>
+            <img src="/snippy.svg" alt="" class="brand-mark__icon" width="38" height="24" />
             Snippy
           </a>
           <div class="flex items-center gap-2">
@@ -48,7 +48,7 @@
     <header class="site-header">
       <div class="page-container flex flex-wrap items-center justify-between gap-3 py-3">
         <a [routerLink]="user() ? '/home' : '/'" class="brand-mark">
-          <span class="brand-star" aria-hidden="true">✦</span>
+          <img src="/snippy.svg" alt="" class="brand-mark__icon" width="38" height="24" />
           Snippy
         </a>
 
@@ -106,7 +106,7 @@
       <div class="page-container flex flex-wrap items-center justify-between gap-3 py-2">
         <div class="flex min-w-0 flex-1 items-center gap-3">
           <a [routerLink]="isGuest ? '/' : '/home'" class="brand-mark shrink-0">
-            <span class="brand-star" aria-hidden="true">✦</span>
+            <img src="/snippy.svg" alt="" class="brand-mark__icon" width="38" height="24" />
             Snippy
           </a>
           @if (snippetStore.snippet(); as snippet) {
@@ -266,7 +266,7 @@
     <header class="site-header">
       <div class="page-container flex items-center justify-between py-3">
         <a [routerLink]="user() ? '/home' : '/'" class="brand-mark">
-          <span class="brand-star" aria-hidden="true">✦</span>
+          <img src="/snippy.svg" alt="" class="brand-mark__icon" width="38" height="24" />
           Snippy
         </a>
         @if (user()) {
