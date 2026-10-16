@@ -7,6 +7,8 @@ export class EditorUiService {
   readonly layout = signal<EditorLayout>(this.readStoredLayout());
   /** True on the public /try guest playground (no auth / no save). */
   readonly guestMode = signal(false);
+  /** True while the snippet editor page is mounted (enables editor shortcuts). */
+  readonly editorOpen = signal(false);
 
   //#region Layout
 

@@ -13,6 +13,10 @@ const tighten = fs.readFileSync(
   path.join(root, 'pb_migrations/1740000004_tighten_access.js'),
   'utf8'
 );
+const templates = fs.readFileSync(
+  path.join(root, 'pb_migrations/1740000005_snippet_templates.js'),
+  'utf8'
+);
 const routes = fs.readFileSync(path.join(root, 'pb_hooks/4_routes.pb.js'), 'utf8');
 const settings = fs.readFileSync(path.join(root, 'pb_hooks/0_settings.pb.js'), 'utf8');
 const usersHook = fs.readFileSync(path.join(root, 'pb_hooks/1_users.pb.js'), 'utf8');
@@ -151,5 +155,25 @@ describe('PocketBase API rules', () => {
     assert.match(frontendDoc, /OAUTH_PROVIDERS/);
     assert.match(readme, /reset-user-password/);
     assert.match(envExample, /PB_GOOGLE_CLIENT_ID/);
+  });
+
+  it('adds an owner-only isTemplate flag that forks never copy', () => {
+    assert.match(templates, /new BoolField\(\{ name: 'isTemplate' \}\)/);
+    assert.match(templates, /removeByName\('isTemplate'\)/);
+    // Writes go through the existing snippets updateRule (owner only).
+    assert.match(migration, /updateRule: `user = @request\.auth\.id && \$\{COUNTER_LOCK\}`/);
+    const fork = routes.slice(routes.indexOf("'/api/snippy/snippets/{id}/fork'"));
+    assert.doesNotMatch(fork.slice(0, fork.indexOf('txApp.save(copy)')), /isTemplate/);
+  });
+
+  it('serves a sitemap of public snippets from public profiles only', () => {
+    const sitemap = routes.slice(
+      routes.indexOf("'/api/snippy/sitemap.xml'"),
+      routes.indexOf('// Get a shared snippet by token.')
+    );
+    assert.match(sitemap, /'isPrivate = false && user\.isPrivate = false'/);
+    assert.match(sitemap, /application\/xml/);
+    assert.match(sitemap, /xmlEscape\(base \+ entry\.loc\)/);
+    assert.doesNotMatch(sitemap, /shareToken/);
   });
 });

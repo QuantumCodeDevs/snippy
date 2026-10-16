@@ -118,10 +118,20 @@
                     [ngModel]="snippet.name"
                     (ngModelChange)="onSnippetNameChange($event)"
                     placeholder="Snippet name"
+                    aria-label="Snippet name"
                   />
-                  <mat-icon matSuffix>mode_edit</mat-icon>
+                  <mat-icon matSuffix aria-hidden="true">mode_edit</mat-icon>
                 </mat-form-field>
               </div>
+              @if (snippet.isTemplate) {
+                <span
+                  class="template-chip"
+                  matTooltip="This snippet is one of your templates. Change it in Snippet settings."
+                >
+                  <mat-icon aria-hidden="true">dashboard_customize</mat-icon>
+                  Template
+                </span>
+              }
               @if (snippet.parentShortId) {
                 <p class="truncate text-xs text-muted">
                   <app-fork-attribution
@@ -134,7 +144,7 @@
               }
             } @else {
               <div class="min-w-0 flex-1">
-                <h3 class="truncate text-lg font-semibold text-ink">{{ snippet.name }}</h3>
+                <h1 class="truncate text-lg font-semibold text-ink">{{ snippet.name }}</h1>
                 @if (snippet.parentShortId) {
                   <p class="truncate text-xs text-muted">
                     <app-fork-attribution
@@ -167,18 +177,38 @@
 
         <div class="flex items-center gap-2">
           @if (canEdit && !isGuest) {
+            <app-save-status class="hidden lg:inline-flex"></app-save-status>
             <button
               mat-raised-button
               color="primary"
               (click)="snippetSaveUI.saveSnippetWithUI(snippetStore, user)"
-              [disabled]="!snippetStore.isDirty()"
+              [disabled]="!snippetStore.isDirty() || snippetSaveUI.saving()"
+              [attr.aria-busy]="snippetSaveUI.saving()"
+              matTooltip="Save (Ctrl+S)"
             >
-              <mat-icon>save</mat-icon>
-              {{ snippetStore.isDirty() ? 'Save Changes' : 'Saved' }}
+              @if (snippetSaveUI.saving()) {
+                <mat-spinner diameter="18" class="button-spinner" aria-hidden="true"></mat-spinner>
+              } @else {
+                <mat-icon aria-hidden="true">save</mat-icon>
+              }
+              {{
+                snippetSaveUI.saving()
+                  ? 'Saving…'
+                  : snippetStore.isDirty()
+                    ? 'Save Changes'
+                    : hasSavedSnippet
+                      ? 'Saved'
+                      : 'Save'
+              }}
             </button>
           }
 
-          <button mat-icon-button [matMenuTriggerFor]="layoutMenu">
+          <button
+            mat-icon-button
+            [matMenuTriggerFor]="layoutMenu"
+            aria-label="Editor layout"
+            matTooltip="Editor layout"
+          >
             <mat-icon>dashboard</mat-icon>
           </button>
           <mat-menu #layoutMenu="matMenu" xPosition="before">
@@ -202,7 +232,12 @@
           </mat-menu>
 
           @if (canEdit) {
-            <button mat-icon-button (click)="openSettings()">
+            <button
+              mat-icon-button
+              (click)="openSettings()"
+              aria-label="Snippet settings"
+              matTooltip="Snippet settings (Ctrl+,)"
+            >
               <mat-icon>settings</mat-icon>
             </button>
           }

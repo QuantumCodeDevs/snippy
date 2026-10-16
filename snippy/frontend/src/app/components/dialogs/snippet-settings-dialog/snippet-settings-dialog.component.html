@@ -11,13 +11,36 @@
           </mat-form-field>
 
           <div class="flex items-center justify-between gap-4">
-            <div>
+            <div id="privacy-label">
               <div class="font-semibold text-ink">{{ isPrivate ? 'Private' : 'Public' }}</div>
               <small class="text-faint">
                 {{ isPrivate ? 'Only you can view this snippet' : 'Anyone can view this snippet' }}
               </small>
             </div>
-            <mat-slide-toggle [(ngModel)]="isPrivate"></mat-slide-toggle>
+            <mat-slide-toggle
+              [(ngModel)]="isPrivate"
+              aria-labelledby="privacy-label"
+            ></mat-slide-toggle>
+          </div>
+
+          <div class="flex items-center justify-between gap-4">
+            <div id="template-label">
+              <div class="flex items-center gap-2 font-semibold text-ink">
+                <mat-icon class="text-accent" aria-hidden="true">dashboard_customize</mat-icon>
+                Use as template
+              </div>
+              <small class="text-faint">
+                {{
+                  isTemplate
+                    ? 'Shows under “Your templates” when you start a new snippet'
+                    : 'Reuse this snippet’s HTML, CSS, JS, and libraries as a starting point'
+                }}
+              </small>
+            </div>
+            <mat-slide-toggle
+              [(ngModel)]="isTemplate"
+              aria-labelledby="template-label"
+            ></mat-slide-toggle>
           </div>
 
           <div class="flex flex-col gap-2">
@@ -39,7 +62,7 @@
                 @for (tag of tags; track tag) {
                   <mat-chip (removed)="removeTag(tag)">
                     {{ tag }}
-                    <button matChipRemove>
+                    <button matChipRemove [attr.aria-label]="'Remove tag ' + tag">
                       <mat-icon>cancel</mat-icon>
                     </button>
                   </mat-chip>

@@ -4,16 +4,30 @@ import { unsavedChangesGuard } from '@app/guards/unsaved-changes.guard';
 import { authGuard, guestGuard } from '@app/guards/auth.guard';
 import type { SnippetFeed } from '@app/pages/snippet-feed-page/snippet-feed-page.component';
 import type { HeaderMode } from '@app/models/extra-models/header-mode';
+import { DEFAULT_DESCRIPTION, type SeoData } from '@app/services/ui/seo.service';
 
 export const routes: Routes = [
-  { path: '', component: HomePageComponent, data: { header: 'landing' satisfies HeaderMode } },
+  {
+    path: '',
+    component: HomePageComponent,
+    data: {
+      seo: { description: DEFAULT_DESCRIPTION } satisfies SeoData,
+      header: 'landing' satisfies HeaderMode,
+    },
+  },
 
   {
     path: 'login',
     loadComponent: () =>
       import('./pages/auth/login-page.component').then((m) => m.LoginPageComponent),
     canActivate: [guestGuard],
-    data: { header: 'landing' satisfies HeaderMode },
+    data: {
+      seo: {
+        title: 'Log in',
+        description: 'Log in to Snippy to save, share, and organize your snippets.',
+      } satisfies SeoData,
+      header: 'landing' satisfies HeaderMode,
+    },
   },
   {
     path: 'create-account',
@@ -22,7 +36,14 @@ export const routes: Routes = [
         (m) => m.CreateAccountPageComponent
       ),
     canActivate: [guestGuard],
-    data: { header: 'landing' satisfies HeaderMode },
+    data: {
+      seo: {
+        title: 'Create account',
+        description:
+          'Create a free Snippy account to save and share HTML, CSS, and JavaScript snippets.',
+      } satisfies SeoData,
+      header: 'landing' satisfies HeaderMode,
+    },
   },
   {
     path: 'forgot-password',
@@ -31,7 +52,10 @@ export const routes: Routes = [
         (m) => m.ForgotPasswordPageComponent
       ),
     canActivate: [guestGuard],
-    data: { header: 'landing' satisfies HeaderMode },
+    data: {
+      seo: { title: 'Forgot password', noindex: true } satisfies SeoData,
+      header: 'landing' satisfies HeaderMode,
+    },
   },
   {
     path: 'reset-password',
@@ -40,13 +64,19 @@ export const routes: Routes = [
         (m) => m.ResetPasswordPageComponent
       ),
     canActivate: [guestGuard],
-    data: { header: 'landing' satisfies HeaderMode },
+    data: {
+      seo: { title: 'Reset password', noindex: true } satisfies SeoData,
+      header: 'landing' satisfies HeaderMode,
+    },
   },
   {
     path: 'set-password',
     loadComponent: () =>
       import('./pages/auth/set-password-page.component').then((m) => m.SetPasswordPageComponent),
-    data: { header: 'landing' satisfies HeaderMode },
+    data: {
+      seo: { title: 'Set password', noindex: true } satisfies SeoData,
+      header: 'landing' satisfies HeaderMode,
+    },
   },
   {
     path: 'auth/callback',
@@ -54,7 +84,10 @@ export const routes: Routes = [
       import('./pages/auth/oauth-callback-page.component').then(
         (m) => m.OAuthCallbackPageComponent
       ),
-    data: { header: 'landing' satisfies HeaderMode },
+    data: {
+      seo: { title: 'Signing in', noindex: true } satisfies SeoData,
+      header: 'landing' satisfies HeaderMode,
+    },
   },
 
   {
@@ -63,13 +96,25 @@ export const routes: Routes = [
       import('./pages/privacy-policy-page/privacy-policy-page.component').then(
         (m) => m.PrivacyPolicyPageComponent
       ),
-    data: { header: 'landing' satisfies HeaderMode },
+    data: {
+      seo: {
+        title: 'Privacy policy',
+        description: 'How Snippy collects, uses, and protects your data.',
+      } satisfies SeoData,
+      header: 'landing' satisfies HeaderMode,
+    },
   },
   {
     path: 'terms',
     loadComponent: () =>
       import('./pages/terms-page/terms-page.component').then((m) => m.TermsPageComponent),
-    data: { header: 'landing' satisfies HeaderMode },
+    data: {
+      seo: {
+        title: 'Terms of service',
+        description: 'The terms for using Snippy.',
+      } satisfies SeoData,
+      header: 'landing' satisfies HeaderMode,
+    },
   },
 
   {
@@ -79,7 +124,10 @@ export const routes: Routes = [
         (m) => m.UserHomePageComponent
       ),
     canActivate: [authGuard],
-    data: { header: 'feed' satisfies HeaderMode },
+    data: {
+      seo: { title: 'Your snippets', noindex: true } satisfies SeoData,
+      header: 'feed' satisfies HeaderMode,
+    },
   },
   {
     path: 'following',
@@ -88,7 +136,11 @@ export const routes: Routes = [
         (m) => m.SnippetFeedPageComponent
       ),
     canActivate: [authGuard],
-    data: { header: 'feed' satisfies HeaderMode, feed: 'following' satisfies SnippetFeed },
+    data: {
+      seo: { title: 'Following', noindex: true } satisfies SeoData,
+      header: 'feed' satisfies HeaderMode,
+      feed: 'following' satisfies SnippetFeed,
+    },
   },
   {
     path: 'public',
@@ -96,7 +148,14 @@ export const routes: Routes = [
       import('./pages/snippet-feed-page/snippet-feed-page.component').then(
         (m) => m.SnippetFeedPageComponent
       ),
-    data: { header: 'feed' satisfies HeaderMode, feed: 'public' satisfies SnippetFeed },
+    data: {
+      seo: {
+        title: 'Public snippets',
+        description: 'Browse public HTML, CSS, and JavaScript snippets from the Snippy community.',
+      } satisfies SeoData,
+      header: 'feed' satisfies HeaderMode,
+      feed: 'public' satisfies SnippetFeed,
+    },
   },
   {
     path: 'tags/:tag',
@@ -104,14 +163,21 @@ export const routes: Routes = [
       import('./pages/snippet-feed-page/snippet-feed-page.component').then(
         (m) => m.SnippetFeedPageComponent
       ),
-    data: { header: 'feed' satisfies HeaderMode, feed: 'tag' satisfies SnippetFeed },
+    data: {
+      seo: { title: 'Tagged snippets' } satisfies SeoData,
+      header: 'feed' satisfies HeaderMode,
+      feed: 'tag' satisfies SnippetFeed,
+    },
   },
   {
     path: 'settings',
     loadComponent: () =>
       import('./pages/settings-page/settings-page.component').then((m) => m.SettingsPageComponent),
     canActivate: [authGuard],
-    data: { header: 'feed' satisfies HeaderMode },
+    data: {
+      seo: { title: 'Settings', noindex: true } satisfies SeoData,
+      header: 'feed' satisfies HeaderMode,
+    },
   },
   {
     path: 'collections/:shortId',
@@ -119,7 +185,7 @@ export const routes: Routes = [
       import('./pages/collection-detail-page/collection-detail-page.component').then(
         (m) => m.CollectionDetailPageComponent
       ),
-    data: { header: 'feed' satisfies HeaderMode },
+    data: { seo: { title: 'Collection' } satisfies SeoData, header: 'feed' satisfies HeaderMode },
   },
   {
     path: 'embed/:shortId',
@@ -127,7 +193,10 @@ export const routes: Routes = [
       import('./pages/embed-player-page/embed-player-page.component').then(
         (m) => m.EmbedPlayerPageComponent
       ),
-    data: { header: 'embed' satisfies HeaderMode },
+    data: {
+      seo: { title: 'Embedded snippet', noindex: true } satisfies SeoData,
+      header: 'embed' satisfies HeaderMode,
+    },
   },
   {
     path: 's/:token',
@@ -136,7 +205,11 @@ export const routes: Routes = [
         (m) => m.SnippetWebViewComponent
       ),
     canDeactivate: [unsavedChangesGuard],
-    data: { header: 'editor' satisfies HeaderMode, share: true },
+    data: {
+      seo: { title: 'Shared snippet', noindex: true } satisfies SeoData,
+      header: 'editor' satisfies HeaderMode,
+      share: true,
+    },
   },
   {
     path: 'try',
@@ -145,7 +218,15 @@ export const routes: Routes = [
         (m) => m.SnippetWebViewComponent
       ),
     canDeactivate: [unsavedChangesGuard],
-    data: { header: 'editor' satisfies HeaderMode, guest: true },
+    data: {
+      seo: {
+        title: 'Try Snippy',
+        description:
+          'Try the Snippy playground without an account: edit HTML, CSS, and JavaScript with a live preview.',
+      } satisfies SeoData,
+      header: 'editor' satisfies HeaderMode,
+      guest: true,
+    },
   },
   {
     path: 'snippet',
@@ -155,7 +236,10 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { header: 'editor' satisfies HeaderMode },
+    data: {
+      seo: { title: 'New snippet', noindex: true } satisfies SeoData,
+      header: 'editor' satisfies HeaderMode,
+    },
   },
   {
     path: ':username/snippet/:id',
@@ -164,19 +248,28 @@ export const routes: Routes = [
         (m) => m.SnippetWebViewComponent
       ),
     canDeactivate: [unsavedChangesGuard],
-    data: { header: 'editor' satisfies HeaderMode },
+    data: {
+      seo: { title: 'Snippet', type: 'article' } satisfies SeoData,
+      header: 'editor' satisfies HeaderMode,
+    },
   },
   {
     path: ':username/fullpage/:id',
     loadComponent: () =>
       import('./pages/fullpage-view/fullpage-view.component').then((m) => m.FullpageViewComponent),
-    data: { header: 'minimal' satisfies HeaderMode },
+    data: {
+      seo: { title: 'Full page preview', noindex: true } satisfies SeoData,
+      header: 'minimal' satisfies HeaderMode,
+    },
   },
   {
     path: ':username',
     loadComponent: () =>
       import('./pages/profile-page/profile-page.component').then((m) => m.ProfilePageComponent),
-    data: { header: 'feed' satisfies HeaderMode },
+    data: {
+      seo: { title: 'Profile', type: 'profile' } satisfies SeoData,
+      header: 'feed' satisfies HeaderMode,
+    },
   },
 
   { path: '**', redirectTo: '' },

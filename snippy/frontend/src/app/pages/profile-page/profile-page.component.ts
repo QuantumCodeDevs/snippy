@@ -25,6 +25,7 @@ import { CollectionStoreService } from '@app/services/stores/collection.store.se
 import { SnippetListComponent } from '@app/components/lists/snippet-list/snippet-list.component';
 import { CollectionListComponent } from '@app/components/lists/collection-list/collection-list.component';
 import { UserIdentityHeaderComponent } from '@app/components/modules/user-identity-header/user-identity-header.component';
+import { SeoService } from '@app/services/ui/seo.service';
 import { AsyncStateComponent } from '@app/components/async-state/async-state.component';
 import { ListPageState } from '@app/utils/list-page-state';
 
@@ -47,6 +48,7 @@ export class ProfilePageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
   private api = inject(SnippyApi);
+  private seo = inject(SeoService);
   private followUi = inject(FollowUiService);
   private navigation = inject(NavigationService);
   authStoreService = inject(AuthStoreService);
@@ -112,8 +114,29 @@ export class ProfilePageComponent implements OnInit {
     try {
       const res = await this.api.getUserProfile(username);
       this.profileUser.set(res.user ?? null);
+      if (res.user) {
+        const name = res.user.displayName || res.user.userName;
+        this.seo.update({
+          title: `${name} (@${res.user.userName})`,
+          description: res.user.bio || `HTML, CSS, and JavaScript snippets by ${name} on Snippy.`,
+          image: res.user.pictureUrl,
+          noindex: !!res.user.isPrivate,
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'ProfilePage',
+            mainEntity: {
+              '@type': 'Person',
+              name,
+              alternateName: `@${res.user.userName}`,
+              ...(res.user.bio ? { description: res.user.bio } : {}),
+              ...(res.user.pictureUrl ? { image: res.user.pictureUrl } : {}),
+            },
+          },
+        });
+      }
       await Promise.all([this.loadPens(), this.loadCollections()]);
     } catch (err: any) {
+      this.seo.update({ title: 'Profile unavailable', noindex: true });
       if (err?.status === 403) {
         this.errorMessage.set(err?.error?.message || 'This profile is private.');
       } else if (err?.status === 404) {

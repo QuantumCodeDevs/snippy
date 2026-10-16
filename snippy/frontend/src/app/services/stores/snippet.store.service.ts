@@ -29,6 +29,10 @@ export class SnippetStoreService {
   loading = signal<boolean>(false);
   favoritesLoading = signal<boolean>(false);
   error = signal<string | null>(null);
+  /** When the open snippet was last persisted (load time from the server, or a save). */
+  lastSavedAt = signal<Date | null>(null);
+  /** True when `lastSavedAt` came from an autosave rather than a manual save. */
+  lastSaveWasAuto = signal(false);
 
   private originalSnippet = signal<Snippet | null>(null);
   private listGeneration = 0;
@@ -182,7 +186,7 @@ export class SnippetStoreService {
   //#endregion List loaders
 
   /** Create or update the current snippet from the editor signal. */
-  async saveSnippet() {
+  async saveSnippet(opts: { auto?: boolean } = {}) {
     const s = this.snippet();
     if (!s) throw new Error('No snippet to save');
     this.error.set(null);
@@ -192,6 +196,7 @@ export class SnippetStoreService {
         description: s.description ?? undefined,
         tags: s.tags ?? [],
         isPrivate: s.isPrivate,
+        isTemplate: !!s.isTemplate,
         snippetFiles: s.snippetFiles,
         cdnResources: s.cdnResources ?? [],
       };
@@ -199,12 +204,60 @@ export class SnippetStoreService {
         ? await this.api.updateSnippet(s.snippetId, body)
         : await this.api.createSnippet(body);
       if (!saved) throw new Error('Save returned no snippet');
-      this.snippet.set(saved);
+      this.snippet.set(this.mergeEditsDuringSave(s, saved));
       this.originalSnippet.set(JSON.parse(JSON.stringify(saved)));
+      this.lastSavedAt.set(new Date());
+      this.lastSaveWasAuto.set(!!opts.auto);
       return saved;
     } catch (err) {
       this.error.set('Failed to save snippet');
       throw err;
+    }
+  }
+
+  /**
+   * Keep edits typed while a save was in flight (autosave makes this common).
+   * The server copy supplies ids and timestamps. The editor keeps its newer
+   * content, which stays dirty against the saved original.
+   */
+  private mergeEditsDuringSave(sent: Snippet, saved: Snippet): Snippet {
+    const current = this.snippet();
+    if (!current || current === sent) return saved;
+    const currentFiles = current.snippetFiles ?? [];
+    return {
+      ...saved,
+      name: current.name,
+      description: current.description,
+      tags: current.tags,
+      isPrivate: current.isPrivate,
+      isTemplate: current.isTemplate,
+      cdnResources: current.cdnResources,
+      snippetFiles: (saved.snippetFiles ?? []).map((f) => ({
+        ...f,
+        content: currentFiles.find((c) => c.fileType === f.fileType)?.content ?? f.content,
+      })),
+    };
+  }
+
+  /** Toggle "Use as template" from a list card; patches lists and the open snippet. */
+  async setTemplate(snippetId: string, isTemplate: boolean) {
+    await this.api.setSnippetTemplate(snippetId, isTemplate);
+    const patchList = (list: SnippetListPage | null) => {
+      if (!list) return list;
+      return {
+        ...list,
+        snippets: (list.snippets ?? []).map((item) =>
+          item.snippetId === snippetId ? { ...item, isTemplate } : item
+        ),
+      };
+    };
+    this.snippetList.update(patchList);
+    this.favoritesList.update(patchList);
+    const current = this.snippet();
+    if (current?.snippetId === snippetId) {
+      this.snippet.set({ ...current, isTemplate });
+      const original = this.originalSnippet();
+      if (original) this.originalSnippet.set({ ...original, isTemplate });
     }
   }
 
@@ -423,6 +476,7 @@ export class SnippetStoreService {
     if (s.name !== o.name) return true;
     if (s.description !== o.description) return true;
     if (s.isPrivate !== o.isPrivate) return true;
+    if (!!s.isTemplate !== !!o.isTemplate) return true;
     const sTags = s.tags ?? [];
     const oTags = o.tags ?? [];
     if (sTags.length !== oTags.length) return true;
@@ -454,6 +508,10 @@ export class SnippetStoreService {
     }
     this.snippet.set(snippet);
     this.originalSnippet.set(JSON.parse(JSON.stringify(snippet)));
+    this.lastSavedAt.set(
+      snippet.snippetId && snippet.updatedAt ? new Date(snippet.updatedAt) : null
+    );
+    this.lastSaveWasAuto.set(false);
     if (updatePreview) {
       this.previewUpdateType.set('full');
     }
@@ -495,6 +553,7 @@ export class SnippetStoreService {
   updateSnippetSettings(settings: {
     description: string;
     isPrivate: boolean;
+    isTemplate?: boolean;
     tags: string[];
     cdnResources?: CdnResource[];
   }) {
@@ -505,6 +564,7 @@ export class SnippetStoreService {
         ...s,
         description: settings.description,
         isPrivate: settings.isPrivate,
+        isTemplate: settings.isTemplate ?? s.isTemplate,
         tags: settings.tags,
         cdnResources: settings.cdnResources ?? s.cdnResources,
       };
@@ -592,6 +652,8 @@ export class SnippetStoreService {
     this.snippet.set(null);
     this.originalSnippet.set(null);
     this.previewUpdateType.set(null);
+    this.lastSavedAt.set(null);
+    this.lastSaveWasAuto.set(false);
     this.loading.set(false);
     this.error.set(null);
   }

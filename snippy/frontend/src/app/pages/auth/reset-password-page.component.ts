@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { AuthStoreService } from '@app/services/stores/auth.store.service';
 
@@ -15,6 +16,7 @@ import { AuthStoreService } from '@app/services/stores/auth.store.service';
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
+    MatProgressSpinnerModule,
     AuthLayoutComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,9 +48,18 @@ import { AuthStoreService } from '@app/services/stores/auth.store.service';
           />
         </mat-form-field>
         @if (error()) {
-          <p class="text-sm text-red-400">{{ error() }}</p>
+          <p class="auth-error" role="alert">{{ error() }}</p>
         }
-        <button mat-raised-button color="primary" type="submit" [disabled]="busy() || !token">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="busy() || !token"
+          [attr.aria-busy]="busy()"
+        >
+          @if (busy()) {
+            <mat-spinner diameter="18" class="button-spinner" aria-hidden="true"></mat-spinner>
+          }
           Save password
         </button>
       </form>

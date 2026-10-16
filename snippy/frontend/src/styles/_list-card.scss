@@ -9,6 +9,7 @@
 }
 
 .list-card-thumb {
+  position: relative;
   margin: -1rem -1.25rem 0.75rem;
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -103,4 +104,43 @@
     height: 0.9375rem;
     line-height: 1;
   }
+}
+
+/* Owner-only marker on cards marked "Use as template". */
+.list-card-badge,
+.template-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem 0.125rem 0.375rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+
+  .mat-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    font-size: 0.875rem;
+  }
+}
+
+.list-card-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.template-chip {
+  flex: none;
+  border: 1px solid var(--accent);
+  color: var(--text-accent);
+}
+
+.list-card.mat-mdc-card:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }

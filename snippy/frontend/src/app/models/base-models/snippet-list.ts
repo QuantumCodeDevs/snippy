@@ -8,6 +8,8 @@ export interface SnippetList {
   isFavorited?: boolean;
   isFollowing?: boolean;
   isOwner?: boolean;
+  isPrivate?: boolean;
+  isTemplate?: boolean;
   name?: string;
   parentDeleted?: boolean;
   parentName?: string | null;

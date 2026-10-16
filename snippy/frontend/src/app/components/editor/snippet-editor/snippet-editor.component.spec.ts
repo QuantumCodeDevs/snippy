@@ -20,20 +20,21 @@ describe('SnippetEditorComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('does not flag void or self-closing tags as unclosed', () => {
-    const analyze = (
-      component as unknown as { analyzeHTML: (html: string) => string[] }
-    ).analyzeHTML.bind(component);
-    expect(analyze('<div><img src="a.png"><br><input></div>')).toEqual([]);
-    expect(analyze('<div class="card" />')).toEqual([]);
-    expect(analyze('<!-- <div> --><p>ok</p>')).toEqual([]);
+  it('labels the pane and its CodeMirror content for assistive tech', async () => {
+    await new Promise((r) => setTimeout(r, 0));
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('section')?.getAttribute('aria-label')).toBe('HTML editor');
+    expect(el.querySelector('.cm-content')?.getAttribute('aria-label')).toBe('HTML code editor');
   });
 
-  it('flags a tag that is missing its close', () => {
-    const analyze = (
-      component as unknown as { analyzeHTML: (html: string) => string[] }
-    ).analyzeHTML.bind(component);
-    expect(analyze('<div><span>hi</div>')).toEqual(['Unclosed <span> tag']);
-    expect(analyze('</p>')).toEqual(['Unexpected </p> tag']);
+  it('opens the find/replace panel from the toolbar button', async () => {
+    await new Promise((r) => setTimeout(r, 0));
+    const el: HTMLElement = fixture.nativeElement;
+    const button = el.querySelector<HTMLButtonElement>(
+      'button[aria-label="Find and replace in HTML"]'
+    );
+    button?.click();
+    await vi.waitFor(() => expect(el.querySelector('.cm-search')).toBeTruthy());
+    expect(el.querySelector('.cm-search input[name=replace]')).toBeTruthy();
   });
 });

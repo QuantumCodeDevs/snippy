@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import JSZip from 'jszip';
 import type { CdnResource } from '@app/models/extra-models/cdnLibrary';
 import type { SnippetFile } from '@app/models/base-models/snippet-file';
 
@@ -20,6 +19,8 @@ export class ZipImportService {
 
   /** Unzip a CodePen-style archive into HTML/CSS/JS + CDN links. */
   async importFile(file: File): Promise<ImportedPen> {
+    // Lazy: the footer (initial bundle) injects this service, but imports are rare.
+    const { default: JSZip } = await import('jszip');
     const zip = await JSZip.loadAsync(file);
     const entries = Object.values(zip.files).filter((e) => !e.dir);
     if (entries.length > MAX_FILES) {

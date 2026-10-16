@@ -6,7 +6,10 @@
     </div>
 
     @if (!user()) {
-      <div class="p-8 text-center text-muted">Loading…</div>
+      <div class="flex flex-col items-center gap-3 p-8 text-muted" role="status">
+        <mat-spinner diameter="32" aria-hidden="true"></mat-spinner>
+        <p>Loading settings…</p>
+      </div>
     } @else {
       <mat-tab-group
         mat-stretch-tabs="false"
@@ -262,10 +265,10 @@
             <mat-divider></mat-divider>
             <div>
               <p class="section-label">Keyboard shortcuts</p>
-              <ul class="space-y-1 text-sm text-muted">
-                <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>K</kbd> — Command palette</li>
-                <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>S</kbd> — Save snippet</li>
-              </ul>
+              <p class="mb-3 text-sm text-muted">
+                Press <kbd class="kbd">?</kbd> anywhere outside a text field to open this list.
+              </p>
+              <app-shortcut-list />
             </div>
           </div>
         </mat-tab>

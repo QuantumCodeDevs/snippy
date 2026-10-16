@@ -3,12 +3,27 @@
   [class.embed-shell]="isEmbedShell"
 >
   @if (!isEmbedShell) {
+    <a class="skip-link" href="#main-content" (click)="skipToMain($event)">Skip to content</a>
     <app-page-header class="relative z-20 shrink-0"></app-page-header>
   }
 
-  <main class="relative z-10 min-h-0 flex-1 overflow-hidden" [class.bg-transparent]="isEmbedShell">
+  <main
+    id="main-content"
+    tabindex="-1"
+    class="relative z-10 min-h-0 flex-1 overflow-hidden"
+    [class.bg-transparent]="isEmbedShell"
+  >
+    @if (activity.busy() && !isEmbedShell) {
+      <mat-progress-bar
+        class="route-progress"
+        mode="indeterminate"
+        aria-label="Loading"
+      ></mat-progress-bar>
+    }
     <router-outlet />
   </main>
+
+  <p class="sr-only" aria-live="polite" aria-atomic="true">{{ seo.pageTitle() }}</p>
 
   @if (!isEmbedShell) {
     <app-preview-console-panel class="relative z-20 shrink-0"></app-preview-console-panel>

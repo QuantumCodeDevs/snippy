@@ -3,9 +3,26 @@
   <head>
     <meta charset="utf-8" />
     <meta name="referrer" content="no-referrer" />
-    <title>Snippy</title>
+    <title>Snippy: live HTML, CSS &amp; JavaScript playground</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Write HTML, CSS, and JavaScript with a live preview. Save snippets, start from templates, and share, fork, or embed your work."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="application-name" content="Snippy" />
+    <meta name="theme-color" content="#3a3128" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f8f3e6" media="(prefers-color-scheme: light)" />
+    <meta property="og:site_name" content="Snippy" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Snippy: live HTML, CSS &amp; JavaScript playground" />
+    <meta
+      property="og:description"
+      content="Write HTML, CSS, and JavaScript with a live preview. Save snippets, start from templates, and share, fork, or embed your work."
+    />
+    <meta property="og:image" content="/assets/images/example-snippet.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/x-icon" href="snippy.ico" />
     <style>
       #oauth-popup-msg {
@@ -62,5 +79,17 @@
     <script src="/env.js"></script>
     <p id="oauth-popup-msg">Signed in. You can close this window.</p>
     <app-root></app-root>
+    <noscript>
+      <p
+        style="
+          margin: 2rem;
+          font:
+            16px/1.5 system-ui,
+            sans-serif;
+        "
+      >
+        Snippy is a live HTML, CSS, and JavaScript playground. Turn on JavaScript to use it.
+      </p>
+    </noscript>
   </body>
 </html>

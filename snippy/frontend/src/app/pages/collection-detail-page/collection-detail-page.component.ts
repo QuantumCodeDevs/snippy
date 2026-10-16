@@ -19,6 +19,7 @@ import { CollectionStoreService } from '@app/services/stores/collection.store.se
 import { SnackbarService } from '@app/services/ui/snackbar.service';
 import { SnippetList } from '@app/models/base-models/snippet-list';
 import { SnippetListComponent } from '@app/components/lists/snippet-list/snippet-list.component';
+import { SeoService } from '@app/services/ui/seo.service';
 import { DialogService } from '@app/services/ui/dialog.service';
 import { AsyncStateComponent } from '@app/components/async-state/async-state.component';
 import { ListPageState } from '@app/utils/list-page-state';
@@ -43,6 +44,7 @@ export class CollectionDetailPageComponent implements OnInit {
   private collectionStoreService = inject(CollectionStoreService);
   private snackbarService = inject(SnackbarService);
   private dialogService = inject(DialogService);
+  private seo = inject(SeoService);
 
   loading = signal(true);
   notFound = signal(false);
@@ -86,8 +88,21 @@ export class CollectionDetailPageComponent implements OnInit {
     this.notFound.set(false);
     try {
       await this.collectionStoreService.loadOne(shortId, q);
+      const collection = this.collection;
+      if (collection && !q) {
+        this.seo.update({
+          title: collection.name,
+          description:
+            collection.description ||
+            `A collection of ${this.penCount} snippet${this.penCount === 1 ? '' : 's'}` +
+              (collection.userName ? ` by @${collection.userName}` : '') +
+              ' on Snippy.',
+          noindex: !!collection.isPrivate,
+        });
+      }
     } catch {
       this.notFound.set(true);
+      this.seo.update({ title: 'Collection not found', noindex: true });
       this.snackbarService.error('Failed to load collection');
     } finally {
       this.loading.set(false);

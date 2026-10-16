@@ -219,3 +219,27 @@
     grid-template-rows: 1fr 1fr;
   }
 }
+
+.embed-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -0.15em;
+  animation: embed-spin 0.8s linear infinite;
+}
+
+@keyframes embed-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .embed-spinner {
+    animation-duration: 2.4s;
+  }
+}

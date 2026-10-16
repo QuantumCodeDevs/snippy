@@ -137,6 +137,9 @@ export class EmbedCodePaneComponent implements AfterViewInit, OnChanges, OnDestr
           this.prefsCompartment.of(buildPreferenceExtensions(prefs)),
           this.languageExtension(),
           this.readOnlyCompartment.of(EditorState.readOnly.of(!this.editable)),
+          EditorView.contentAttributes.of({
+            'aria-label': `${this.language === 'js' ? 'JavaScript' : this.language.toUpperCase()} code`,
+          }),
           EditorView.updateListener.of((update) => {
             if (!update.docChanged || this.suppressEmit || !this.editable) return;
             this.contentChange.emit(update.state.doc.toString());

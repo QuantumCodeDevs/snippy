@@ -25,6 +25,8 @@ services:
     container_name: snippy-frontend
     environment:
       POCKETBASE_URL: ${POCKETBASE_URL:-}
+      # Public origin for the robots.txt Sitemap line. Not a secret.
+      SITE_URL: ${PB_APP_URL:-}
     ports:
       - "${FRONTEND_PORT:-4200}:8080"
     depends_on:

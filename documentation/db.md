@@ -13,7 +13,7 @@ Search uses collection `~` filters on name, description, and tags. Counter field
 | Collection | Kind | Purpose |
 |---|---|---|
 | `users` | auth | Email/password + optional OAuth. Extra fields: `username`, `bio`, `isPrivate`, `editorPreferences`. Built-in `name`, `avatar`. `isAdmin` is hidden. |
-| `snippets` | base | Owner relation, `shortId`, privacy, tags/cdn JSON, counters, hidden `shareToken`, parent denorm, `snapshot` file |
+| `snippets` | base | Owner relation, `shortId`, privacy, `isTemplate`, tags/cdn JSON, counters, hidden `shareToken`, parent denorm, `snapshot` file |
 | `snippet_files` | base | `html` / `css` / `js` + text content |
 | `comments` | base | Threaded via `parentComment` |
 | `favorites` | base | Unique `(snippet, user)` |
@@ -72,7 +72,8 @@ Full path (domain type, mapper, JWT vs API rules, no `*Response` envelopes): [fr
 
 - Favorite create/delete → `favoriteCount` (own snippets allowed)
 - Comment create/delete/soft-delete → `commentCount`
-- Fork `POST /api/snippy/snippets/{id}/fork` → copy files, bump source `forkCount`
+- Fork `POST /api/snippy/snippets/{id}/fork` → copy files, bump source `forkCount` (never copies `isTemplate`)
+- `GET /api/snippy/sitemap.xml` → public snippets whose owner profile is public, plus those profiles and static pages. Absolute URLs from `PB_APP_URL`
 - View `POST /api/snippy/snippets/{id}/view` → 24h unique in `snippet_views` (collection locked to hooks), bump `viewCount` inside one transaction
 - Share create/revoke custom routes generate or clear `shareToken`
 - User create (`onRecordCreate`) → unique `username`, default `name`, `isPrivate = false`

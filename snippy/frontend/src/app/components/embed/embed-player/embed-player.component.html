@@ -1,5 +1,8 @@
 @if (loading()) {
-  <div class="embed-player embed-player--status">Loading…</div>
+  <div class="embed-player embed-player--status" role="status" aria-live="polite">
+    <span class="embed-spinner" aria-hidden="true"></span>
+    Loading…
+  </div>
 } @else if (error()) {
   <div class="embed-player embed-player--status">{{ error() }}</div>
 } @else {

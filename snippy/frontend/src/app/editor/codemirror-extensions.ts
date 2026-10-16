@@ -14,7 +14,12 @@ import {
   indentUnit,
   syntaxHighlighting,
 } from '@codemirror/language';
-import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
+import {
+  highlightSelectionMatches,
+  openSearchPanel,
+  search,
+  searchKeymap,
+} from '@codemirror/search';
 import { EditorState, Extension } from '@codemirror/state';
 import {
   EditorView,
@@ -31,6 +36,25 @@ import {
 import { EditorPreferences, FONT_FAMILY_CSS, EditorFontKey } from './editor-preferences';
 import { getThemeExtension } from './themes';
 import { vim } from '@replit/codemirror-vim';
+
+/**
+ * Open CodeMirror's find/replace panel. With `focusReplace`, the caret lands in
+ * the replace field, so Ctrl+H goes straight to replacing.
+ */
+export function openFindReplace(view: EditorView, focusReplace = false): boolean {
+  openSearchPanel(view);
+  if (focusReplace) {
+    const field = view.dom.querySelector<HTMLInputElement>('.cm-search input[name=replace]');
+    field?.focus();
+    field?.select();
+  }
+  return true;
+}
+
+/** Ctrl/Cmd+H opens find/replace with the replace field focused. */
+const findReplaceKeymap = [
+  { key: 'Mod-h', run: (view: EditorView) => openFindReplace(view, true), preventDefault: true },
+];
 
 function resolveFontFamily(fontFamily: string): string {
   return FONT_FAMILY_CSS[fontFamily as EditorFontKey] ?? FONT_FAMILY_CSS.monospace;
@@ -51,7 +75,9 @@ export function baseEditorExtensions(): Extension[] {
     highlightActiveLine(),
     highlightActiveLineGutter(),
     highlightSelectionMatches(),
+    search({ top: true }),
     keymap.of([
+      ...findReplaceKeymap,
       ...closeBracketsKeymap,
       ...defaultKeymap,
       ...searchKeymap,

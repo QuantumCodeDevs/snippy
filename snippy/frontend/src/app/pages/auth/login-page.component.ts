@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { AuthStoreService } from '@app/services/stores/auth.store.service';
+import { authErrorMessage } from './auth-errors';
 
 @Component({
   selector: 'app-login-page',
@@ -15,6 +18,8 @@ import { AuthStoreService } from '@app/services/stores/auth.store.service';
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
+    MatProgressSpinnerModule,
+    MatIconModule,
     AuthLayoutComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,16 +51,46 @@ import { AuthStoreService } from '@app/services/stores/auth.store.service';
           />
         </mat-form-field>
         @if (error()) {
-          <p class="text-sm text-red-400">{{ error() }}</p>
+          <p class="auth-error" role="alert">{{ error() }}</p>
         }
-        <button mat-raised-button color="primary" type="submit" [disabled]="busy()">Log in</button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="busy()"
+          [attr.aria-busy]="pending() === 'password'"
+        >
+          @if (pending() === 'password') {
+            <mat-spinner diameter="18" class="button-spinner" aria-hidden="true"></mat-spinner>
+            Logging in…
+          } @else {
+            Log in
+          }
+        </button>
       </form>
       @if (auth.oauthProviders().length) {
         <div class="mt-4 flex flex-col gap-2">
           @for (p of auth.oauthProviders(); track p.name) {
-            <button mat-stroked-button type="button" [disabled]="busy()" (click)="oauth(p.name)">
-              Continue with {{ p.displayName }}
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="busy()"
+              [attr.aria-busy]="pending() === p.name"
+              (click)="oauth(p.name)"
+            >
+              @if (pending() === p.name) {
+                <mat-spinner diameter="18" class="button-spinner" aria-hidden="true"></mat-spinner>
+                Waiting for {{ p.displayName }}…
+              } @else {
+                Continue with {{ p.displayName }}
+              }
             </button>
+          }
+          @if (pending() && pending() !== 'password') {
+            <p class="auth-pending" role="status">
+              Finish signing in in the popup window.
+              <button type="button" class="auth-cancel" (click)="cancelOauth()">Cancel</button>
+            </p>
           }
         </div>
       }
@@ -78,7 +113,9 @@ export class LoginPageComponent {
 
   email = '';
   password = '';
-  busy = signal(false);
+  /** `'password'`, a provider name, or null. Drives the button spinners. */
+  pending = signal<string | null>(null);
+  busy = computed(() => this.pending() !== null);
   error = signal<string | null>(null);
 
   get redirectParams() {
@@ -91,33 +128,32 @@ export class LoginPageComponent {
   }
 
   async submit() {
-    this.busy.set(true);
+    this.pending.set('password');
     this.error.set(null);
     try {
       await this.auth.login(this.email.trim(), this.password);
       await this.router.navigateByUrl(this.destination());
     } catch (err: unknown) {
-      this.error.set(this.message(err, 'Could not log in'));
+      this.error.set(authErrorMessage(err, 'Could not log in'));
     } finally {
-      this.busy.set(false);
+      this.pending.set(null);
     }
   }
 
   async oauth(provider: string) {
-    this.busy.set(true);
+    this.pending.set(provider);
     this.error.set(null);
     try {
       await this.auth.loginWithProvider(provider);
       await this.router.navigateByUrl(this.destination());
     } catch (err: unknown) {
-      this.error.set(this.message(err, 'Could not sign in with that provider'));
+      this.error.set(authErrorMessage(err, 'Could not sign in with that provider'));
     } finally {
-      this.busy.set(false);
+      this.pending.set(null);
     }
   }
 
-  private message(err: unknown, fallback: string) {
-    const anyErr = err as { message?: string; response?: { message?: string } };
-    return anyErr?.response?.message || anyErr?.message || fallback;
+  cancelOauth() {
+    this.auth.cancelProviderLogin();
   }
 }

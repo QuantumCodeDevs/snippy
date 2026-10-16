@@ -8,18 +8,34 @@
 
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     @for (snippet of snippets; track snippet.shortId) {
-      <mat-card class="list-card h-full cursor-pointer" (click)="openSnippet(snippet)">
+      <mat-card
+        class="list-card h-full cursor-pointer"
+        role="link"
+        tabindex="0"
+        [attr.aria-label]="
+          'Open ' + (snippet.name || 'snippet') + ' by ' + (snippet.userName || 'unknown')
+        "
+        (click)="openSnippet(snippet)"
+        (keydown.enter)="onCardKey(snippet, $event)"
+      >
         <div class="list-card-thumb">
           @if (snippet.snapshotUrl && !snapshotFailed(snippet.shortId)) {
             <img
               [src]="snapshotSrc(snippet)"
-              [alt]="snippet.name"
+              alt=""
+              loading="lazy"
               (error)="onSnapshotError(snippet.shortId)"
             />
           } @else {
-            <div class="list-card-thumb__placeholder">
+            <div class="list-card-thumb__placeholder" aria-hidden="true">
               <mat-icon>code</mat-icon>
             </div>
+          }
+          @if (snippet.isOwner && snippet.isTemplate) {
+            <span class="list-card-badge">
+              <mat-icon aria-hidden="true">dashboard_customize</mat-icon>
+              Template
+            </span>
           }
         </div>
         <mat-card-header>
@@ -27,8 +43,9 @@
           <mat-card-subtitle class="flex flex-col gap-1.5 text-faint">
             <a
               class="text-link no-underline hover:underline"
-              (click)="goToProfile(snippet.userName, $event)"
-              href="javascript:void(0)"
+              [routerLink]="snippet.userName ? ['/', snippet.userName] : null"
+              (click)="$event.stopPropagation()"
+              (keydown.enter)="$event.stopPropagation()"
             >
               {{ snippet.userName || 'unknown' }}
             </a>
@@ -53,7 +70,12 @@
           <div class="list-card-chips">
             <mat-chip-set>
               @for (tag of snippet.tags; track tag) {
-                <a [routerLink]="['/tags', tag]" (click)="$event.stopPropagation()">
+                <a
+                  [routerLink]="['/tags', tag]"
+                  [attr.aria-label]="'Snippets tagged ' + tag"
+                  (click)="$event.stopPropagation()"
+                  (keydown.enter)="$event.stopPropagation()"
+                >
                   <mat-chip>{{ tag }}</mat-chip>
                 </a>
               }
@@ -74,8 +96,10 @@
           <button
             mat-icon-button
             matTooltip="More actions"
+            [attr.aria-label]="'More actions for ' + (snippet.name || 'snippet')"
             [matMenuTriggerFor]="menu"
             (click)="$event.stopPropagation()"
+            (keydown.enter)="$event.stopPropagation()"
           >
             <mat-icon>more_vert</mat-icon>
           </button>
@@ -103,6 +127,12 @@
               </button>
             }
             @if (snippet.isOwner) {
+              <button mat-menu-item (click)="toggleTemplate(snippet)">
+                <mat-icon>{{
+                  snippet.isTemplate ? 'remove_circle_outline' : 'dashboard_customize'
+                }}</mat-icon>
+                <span>{{ snippet.isTemplate ? 'Remove from templates' : 'Use as template' }}</span>
+              </button>
               <mat-divider></mat-divider>
               <button mat-menu-item class="menu-item-danger" (click)="deleteSnippet(snippet)">
                 <mat-icon>delete</mat-icon>

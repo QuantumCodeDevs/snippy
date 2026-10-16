@@ -98,6 +98,7 @@ Hooks register extra JSON under `/api/snippy/`. The SDK calls them with `pb.send
 | `POST` / `DELETE /api/snippy/snippets/{id}/share` | Generate or clear `shareToken` |
 | `POST /api/snippy/snippets/{id}/view` | 24h unique view ledger + `viewCount` |
 | `POST /api/snippy/snippets/{id}/fork` | Copy files, denorm parent, bump `forkCount` |
+| `GET /api/snippy/sitemap.xml` | XML sitemap of public snippets and profiles. nginx serves it at `/sitemap.xml` |
 
 Admin UI is PocketBase on `127.0.0.1:8090/_/`, not the public site. Files are `/api/files/{collectionId}/{recordId}/{filename}` via `pb.files.getURL`. Asset uploads cannot be SVG. `/api/` responses send `X-Content-Type-Options: nosniff`.
 
@@ -203,11 +204,14 @@ Guards do not call `SnippyApi`. They only inspect the SDK session or editor dirt
 
 | File | Role |
 |---|---|
-| [`codemirror-extensions.ts`](../snippy/frontend/src/app/editor/codemirror-extensions.ts) | Builds the extension list (language, keymap, indent, line numbers, wrapping, autocomplete, bracket matching, fold gutter) from effective prefs |
+| [`codemirror-extensions.ts`](../snippy/frontend/src/app/editor/codemirror-extensions.ts) | Builds the extension list (language, keymap, indent, line numbers, wrapping, autocomplete, bracket matching, fold gutter, find/replace panel) from effective prefs. `openFindReplace()` opens the panel, `Mod-h` focuses the replace field |
+| [`code-format.ts`](../snippy/frontend/src/app/editor/code-format.ts) | Pure HTML/CSS/JS formatters and quick analyzers behind Format Code and Analyze Code |
 | [`editor-preferences.ts`](../snippy/frontend/src/app/editor/editor-preferences.ts) | Theme / font / keymap unions, defaults, `mergeEditorPreferences` |
 | [`editor-preferences.service.ts`](../snippy/frontend/src/app/editor/editor-preferences.service.ts) | `preferences` computed signal: local Settings preview override → signed-in user → defaults. `applyLocal` / `clearLocal` for live preview before save |
-| [`snippet-templates.ts`](../snippy/frontend/src/app/editor/snippet-templates.ts) | Starter HTML/CSS/JS pens on `/snippet` |
-| [`themes/index.ts`](../snippy/frontend/src/app/editor/themes/index.ts) + [`themes/highlight.ts`](../snippy/frontend/src/app/editor/themes/highlight.ts) | CodeMirror theme + syntax highlighting |
+| [`snippet-templates.ts`](../snippy/frontend/src/app/editor/snippet-templates.ts) | Starter pens, plus `templateFromSnippet()` for snippets marked `isTemplate`. Both feed the new-snippet picker |
+| [`themes/index.ts`](../snippy/frontend/src/app/editor/themes/index.ts) + [`themes/highlight.ts`](../snippy/frontend/src/app/editor/themes/highlight.ts) | One `editorChromeTheme()` factory per palette (selection, gutters, search panel, tooltips) + syntax highlighting. Selection selectors must match the base theme's specificity (`&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground`) and active-line colors must be translucent, or the selection disappears. `themes.spec.ts` enforces both |
+
+Keyboard shortcuts live in [`shortcuts/keyboard-shortcuts.ts`](../snippy/frontend/src/app/shortcuts/keyboard-shortcuts.ts). That registry drives the global handler (`KeyboardShortcutsService`), the `?` dialog, the Settings list, and command palette hints. Add a binding there and it shows up everywhere.
 
 The editor **component** (`components/editor/`) hosts three `EditorView`s and the iframe preview. This folder is the configuration those views consume.
 
@@ -334,6 +338,28 @@ Identity for `isOwner` / `isFavorited` is `this.pb.authStore.record?.id` (`me`).
 - **What:** Shared card/header/footer actions: fork (then navigate), comments dialog, add-to-collection, optimistic favorite, delete confirm.
 - **Who:** List cards, editor header, footer.
 - **Must not:** Duplicate those flows in each component.
+
+#### [`editor-commands.service.ts`](../snippy/frontend/src/app/services/ui/editor-commands.service.ts)
+
+- **What:** Save, export ZIP, snippet settings, format/find in the focused pane, focus a pane, toggle console, re-run preview.
+- **Who:** Header, footer, command palette, and keyboard shortcuts, so every surface runs the same code.
+
+#### [`snippet-autosave.service.ts`](../snippy/frontend/src/app/services/ui/snippet-autosave.service.ts)
+
+- **What:** Server autosave 5 minutes after the first unsaved change, only once the snippet has an id and the user owns it. Any save resets the countdown. Local drafts (`draft-autosave.service.ts`) still cover new pens.
+- **Who:** `SnippetWebViewComponent` calls `watch()`. `SaveStatusComponent` shows the last saved time.
+
+#### [`activity.service.ts`](../snippy/frontend/src/app/services/ui/activity.service.ts)
+
+- **What:** Counts in-flight PocketBase requests (wrapped in `PocketBaseService`) and lazy route loads. The shell shows a thin progress bar when work runs longer than 150 ms.
+
+#### [`seo.service.ts`](../snippy/frontend/src/app/services/ui/seo.service.ts)
+
+- **What:** Title, description, robots, canonical, Open Graph, Twitter, and JSON-LD. Routes set defaults in `data.seo`. Snippet, profile, collection, and tag pages refine them after loading. Private, share, auth, and settings pages are `noindex`. Crawlers that run JavaScript see per-page tags. Link-preview bots that do not run JavaScript see the static defaults in `index.html`.
+
+#### [`keyboard-shortcuts.service.ts`](../snippy/frontend/src/app/services/ui/keyboard-shortcuts.service.ts)
+
+- **What:** Maps window keydown to actions from the shortcut registry. Editor-only shortcuts need the editor open. `?` is ignored while typing. Nothing but the palette fires while a dialog is open.
 
 #### [`snippet-save-ui.service.ts`](../snippy/frontend/src/app/services/ui/snippet-save-ui.service.ts)
 

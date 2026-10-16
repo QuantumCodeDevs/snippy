@@ -1,3 +1,4 @@
+import { SeoService } from '@app/services/ui/seo.service';
 import { Component, OnInit, inject, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -31,6 +32,7 @@ export class SnippetFeedPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
   private destroyRef = inject(DestroyRef);
+  private seo = inject(SeoService);
 
   feed: SnippetFeed = 'public';
   tag = '';
@@ -62,6 +64,12 @@ export class SnippetFeedPageComponent implements OnInit {
     this.feed = (this.route.snapshot.data['feed'] as SnippetFeed) ?? 'public';
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.tag = params.get('tag') ?? '';
+      if (this.feed === 'tag' && this.tag) {
+        this.seo.update({
+          title: `#${this.tag} snippets`,
+          description: `Public HTML, CSS, and JavaScript snippets tagged #${this.tag} on Snippy.`,
+        });
+      }
       void this.load();
     });
   }

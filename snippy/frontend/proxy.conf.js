@@ -13,5 +13,6 @@ function proxyOptions() {
 
 module.exports = {
   '/api': proxyOptions(),
+  '/sitemap.xml': { ...proxyOptions(), pathRewrite: { '^/sitemap\\.xml$': '/api/snippy/sitemap.xml' } },
   '/_/': proxyOptions(),
 };

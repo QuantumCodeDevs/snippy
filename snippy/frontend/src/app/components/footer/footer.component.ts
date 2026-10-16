@@ -1,6 +1,7 @@
 import {
   Component,
   computed,
+  signal,
   inject,
   ChangeDetectionStrategy,
   ViewChild,
@@ -11,7 +12,7 @@ import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import JSZip from 'jszip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SnippetStoreService } from '@app/services/stores/snippet.store.service';
 import {
   AssetsDialogComponent,
@@ -25,10 +26,11 @@ import { SnippetActionsService } from '@app/services/ui/snippet-actions.service'
 import { EditorUiService } from '@app/services/ui/editor-ui.service';
 import { PreviewConsoleService } from '@app/services/ui/preview-console.service';
 import { ZipImportService } from '@app/services/ui/zip-import.service';
+import { EditorCommandsService } from '@app/services/ui/editor-commands.service';
 
 @Component({
   selector: 'app-footer',
-  imports: [RouterLink, MatButtonModule, MatIconModule, MatTooltipModule],
+  imports: [RouterLink, MatButtonModule, MatIconModule, MatTooltipModule, MatProgressSpinnerModule],
   templateUrl: './footer.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './footer.component.scss',
@@ -37,12 +39,16 @@ export class FooterComponent {
   snippetStoreService = inject(SnippetStoreService);
   editorUi = inject(EditorUiService);
   previewConsole = inject(PreviewConsoleService);
+  editorCommands = inject(EditorCommandsService);
   private dialogService = inject(DialogService);
   private snippetActions = inject(SnippetActionsService);
   private snackbar = inject(SnackbarService);
   private zipImport = inject(ZipImportService);
 
   @ViewChild('zipInput') zipInput?: ElementRef<HTMLInputElement>;
+
+  /** True while an imported ZIP is being unpacked. */
+  readonly importing = signal(false);
 
   readonly githubUrl = 'https://github.com/QuantumCodeDevs/snippy';
   readonly licenseUrl = 'https://github.com/QuantumCodeDevs/snippy/blob/main/LICENSE';
@@ -81,63 +87,6 @@ export class FooterComponent {
     void this.snippetActions.forkAndOpen(snippet.snippetId);
   }
 
-  async exportZip() {
-    const snippet = this.snippetStoreService.snippet();
-    if (!snippet) return;
-
-    const zip = new JSZip();
-    const files = snippet.snippetFiles ?? [];
-    const html = files.find((f) => f.fileType === 'html')?.content ?? '';
-    const css = files.find((f) => f.fileType === 'css')?.content ?? '';
-    const js = files.find((f) => f.fileType === 'js')?.content ?? '';
-    const cdnResources = snippet.cdnResources ?? [];
-
-    const stylesheets = cdnResources
-      .filter((res) => res.resourceType === 'css')
-      .map((res) => `<link rel="stylesheet" href="${res.url}">`)
-      .join('\n  ');
-
-    const scripts = cdnResources
-      .filter((res) => res.resourceType === 'js')
-      .map((res) => `<script src="${res.url}"><\/script>`)
-      .join('\n  ');
-
-    const title = (snippet.name || 'snippet')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    const indexHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  ${stylesheets ? stylesheets + '\n  ' : ''}<link rel="stylesheet" href="style.css">
-</head>
-<body>
-${html}
-  <script src="script.js"><\/script>${scripts ? '\n  ' + scripts : ''}
-</body>
-</html>
-`;
-
-    zip.file('index.html', indexHtml);
-    zip.file('style.css', css);
-    zip.file('script.js', js);
-    zip.file('README.txt', `Snippy export: ${snippet.name}\n${snippet.description || ''}\n`);
-
-    const blob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const safeName = (snippet.name || 'snippet').replace(/[^\w.\-]+/g, '_');
-    a.href = url;
-    a.download = `${safeName}.zip`;
-    a.click();
-    URL.revokeObjectURL(url);
-    this.snackbar.success('Exported ZIP');
-  }
-
   triggerImportZip() {
     this.zipInput?.nativeElement.click();
   }
@@ -147,6 +96,7 @@ ${html}
     const file = input.files?.[0];
     input.value = '';
     if (!file) return;
+    this.importing.set(true);
     try {
       const imported = await this.zipImport.importFile(file);
       const snippet = this.snippetStoreService.snippet();
@@ -160,6 +110,8 @@ ${html}
       this.snackbar.success('Imported ZIP');
     } catch {
       this.snackbar.error('Failed to import ZIP');
+    } finally {
+      this.importing.set(false);
     }
   }
 }

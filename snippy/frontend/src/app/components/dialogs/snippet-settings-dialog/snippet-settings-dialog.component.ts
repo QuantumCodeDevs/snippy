@@ -42,6 +42,7 @@ export class SnippetSettingsDialogComponent {
 
   description: string;
   isPrivate: boolean;
+  isTemplate: boolean;
   tags: string[];
   newTag: string = '';
   cssResources: CdnResource[] = [];
@@ -52,6 +53,7 @@ export class SnippetSettingsDialogComponent {
     this.guestMode = !!this.data.guestMode;
     this.description = this.data.description || '';
     this.isPrivate = !!this.data.isPrivate;
+    this.isTemplate = !!this.data.isTemplate;
     this.tags = [...(this.data.tags || [])];
     const allResources = [...(this.data.cdnResources || [])];
     this.cssResources = allResources.filter((r) => r.resourceType === 'css');
@@ -98,6 +100,7 @@ export class SnippetSettingsDialogComponent {
     this.dialogRef.close({
       description: this.description,
       isPrivate: this.isPrivate,
+      isTemplate: this.isTemplate,
       tags: this.tags,
       cdnResources,
     });

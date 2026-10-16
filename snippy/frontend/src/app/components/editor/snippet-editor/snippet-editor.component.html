@@ -1,18 +1,39 @@
-<div class="editor-shell">
+<section class="editor-shell" [attr.aria-label]="paneLabel + ' editor'">
   <div class="editor-toolbar">
-    <span class="editor-type-label">{{ editorType.toUpperCase() }}</span>
-    <button
-      mat-icon-button
-      [matMenuTriggerFor]="menu"
-      matTooltip="Pane actions"
-      (click)="$event.stopPropagation()"
-    >
-      <mat-icon>more_vert</mat-icon>
-    </button>
+    <span class="editor-type-label" aria-hidden="true">{{ editorType.toUpperCase() }}</span>
+    <div class="editor-toolbar__actions">
+      <button
+        mat-icon-button
+        type="button"
+        class="editor-toolbar__button"
+        (click)="openFindReplace()"
+        [matTooltip]="'Find & replace (Ctrl+F / Ctrl+H)'"
+        [attr.aria-label]="'Find and replace in ' + paneLabel"
+      >
+        <mat-icon>find_replace</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        type="button"
+        class="editor-toolbar__button"
+        [matMenuTriggerFor]="menu"
+        matTooltip="Pane actions"
+        [attr.aria-label]="paneLabel + ' pane actions'"
+        (click)="$event.stopPropagation()"
+      >
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    </div>
     <mat-menu #menu="matMenu" xPosition="before">
+      <button mat-menu-item (click)="openFindReplace()">
+        <mat-icon>find_replace</mat-icon>
+        <span>Find &amp; Replace</span>
+        <span class="menu-shortcut" aria-hidden="true">Ctrl+H</span>
+      </button>
       <button mat-menu-item (click)="formatCode()">
         <mat-icon>code</mat-icon>
         <span>Format Code</span>
+        <span class="menu-shortcut" aria-hidden="true">Shift+Alt+F</span>
       </button>
       <button mat-menu-item (click)="analyzeCode()">
         <mat-icon>analytics</mat-icon>
@@ -21,4 +42,4 @@
     </mat-menu>
   </div>
   <div #editor class="editor-pane"></div>
-</div>
+</section>

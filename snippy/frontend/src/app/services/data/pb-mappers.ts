@@ -87,6 +87,8 @@ export function mapSnippetList(
     forkCount: record['forkCount'] ?? 0,
     embedCount: record['embedCount'] ?? 0,
     isOwner: !!currentUserId && record['user'] === currentUserId,
+    isPrivate: !!record['isPrivate'],
+    isTemplate: !!record['isTemplate'],
     snapshotUrl: fileUrl(pb, record, 'snapshot'),
     updatedAt: record['updated'],
     parentShortId: record['parentShortId'] ?? null,

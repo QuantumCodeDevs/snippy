@@ -24,6 +24,22 @@ export class SnippetActionsService {
   private snackbar = inject(SnackbarService);
   private navigation = inject(NavigationService);
 
+  //#region Templates
+
+  /** Add to or remove from the user's templates (shown in the new-snippet picker). */
+  async toggleTemplate(snippet: Pick<SnippetList, 'snippetId' | 'name' | 'isTemplate'>) {
+    if (!snippet.snippetId) return;
+    const next = !snippet.isTemplate;
+    try {
+      await this.snippetStore.setTemplate(snippet.snippetId, next);
+      this.snackbar.success(next ? 'Added to your templates' : 'Removed from your templates');
+    } catch {
+      this.snackbar.error('Failed to update template');
+    }
+  }
+
+  //#endregion Templates
+
   //#region Forks & comments
 
   /** Fork then navigate to the new pen. */

@@ -9,6 +9,7 @@ export type EditorPane = 'html' | 'css' | 'js';
 @Injectable({ providedIn: 'root' })
 export class EditorInsertService {
   private views = new Map<EditorPane, EditorView>();
+  private lastFocused: EditorPane | null = null;
 
   //#region View registry
 
@@ -21,7 +22,35 @@ export class EditorInsertService {
   unregister(pane: EditorPane, view: EditorView) {
     if (this.views.get(pane) === view) {
       this.views.delete(pane);
+      if (this.lastFocused === pane) this.lastFocused = null;
     }
+  }
+
+  /** The live view for a pane, if mounted. */
+  view(pane: EditorPane): EditorView | undefined {
+    return this.views.get(pane);
+  }
+
+  /** Remember which pane the user last typed in, for pane-scoped shortcuts. */
+  markFocused(pane: EditorPane) {
+    this.lastFocused = pane;
+  }
+
+  /** The focused pane, else the last focused one, else HTML. */
+  activePane(): EditorPane {
+    for (const [pane, view] of this.views) {
+      if (view.hasFocus) return pane;
+    }
+    return this.lastFocused ?? 'html';
+  }
+
+  /** Move keyboard focus into a pane; returns false if that pane is not mounted. */
+  focus(pane: EditorPane): boolean {
+    const view = this.views.get(pane);
+    if (!view) return false;
+    view.focus();
+    this.lastFocused = pane;
+    return true;
   }
 
   //#endregion View registry

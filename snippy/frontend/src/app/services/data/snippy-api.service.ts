@@ -337,6 +337,7 @@ export class SnippyApi {
         name: body.name || 'Untitled',
         description: body.description || '',
         isPrivate: !!body.isPrivate,
+        isTemplate: !!body.isTemplate,
         tags: body.tags ?? [],
         cdnResources: body.cdnResources ?? [],
       },
@@ -354,6 +355,7 @@ export class SnippyApi {
         name: body.name,
         description: body.description ?? '',
         isPrivate: !!body.isPrivate,
+        isTemplate: !!body.isTemplate,
         tags: body.tags ?? [],
         cdnResources: body.cdnResources ?? [],
       },
@@ -361,6 +363,11 @@ export class SnippyApi {
     );
     const fileRecords = await this.syncFiles(snippetId, body.snippetFiles);
     return mapSnippet(this.pb, rec, fileRecords, this.me);
+  }
+
+  /** Mark or unmark one of the signed-in user's snippets as a template. */
+  async setSnippetTemplate(snippetId: string, isTemplate: boolean): Promise<void> {
+    await this.pb.collection('snippets').update(snippetId, { isTemplate });
   }
 
   /** Delete a snippet (API rules require owner). Cascades files via PocketBase. */
@@ -395,6 +402,17 @@ export class SnippyApi {
       expand: 'user',
     });
     return this.withFavoriteFlags(result);
+  }
+
+  /** Signed-in user's snippets marked as templates, newest first. */
+  async getMyTemplates(limit = 60): Promise<SnippetList[]> {
+    if (!this.me) return [];
+    const result = await this.pb.collection('snippets').getList(1, limit, {
+      filter: this.filter('user = {:me} && isTemplate = true', { me: this.me }),
+      sort: '-updated',
+      expand: 'user',
+    });
+    return result.items.map((rec) => mapSnippetList(this.pb, rec, this.me));
   }
 
   /** Explore: public snippets, optional search and tag. */

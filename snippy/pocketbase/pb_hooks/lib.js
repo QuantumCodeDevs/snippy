@@ -190,6 +190,7 @@ function publicSnippet(snippet) {
     name: snippet.getString('name'),
     description: snippet.getString('description'),
     isPrivate: snippet.getBool('isPrivate'),
+    isTemplate: snippet.getBool('isTemplate'),
     tags: snippet.get('tags'),
     cdnResources: snippet.get('cdnResources'),
     viewCount: snippet.getInt('viewCount'),

@@ -1,27 +1,26 @@
 @if (loading) {
   <div
-    class="flex flex-col items-center justify-center gap-2 p-6 text-center text-dim"
-    [class.min-h-32]="spinnerOnly"
+    class="flex min-h-32 flex-col items-center justify-center gap-3 p-6 text-center text-dim"
     [class.flex-1]="spinnerOnly"
+    role="status"
+    aria-live="polite"
   >
-    @if (spinnerOnly) {
-      <mat-spinner [diameter]="diameter"></mat-spinner>
-    } @else {
-      <p class="m-0">{{ loadingText }}</p>
-    }
+    <mat-spinner [diameter]="spinnerOnly ? diameter : 32" aria-hidden="true"></mat-spinner>
+    <p class="m-0" [class.sr-only]="spinnerOnly">{{ loadingText }}</p>
   </div>
 } @else if (error) {
   <div
     class="flex min-h-32 flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-dim"
+    role="alert"
   >
-    <mat-icon>{{ errorIcon }}</mat-icon>
+    <mat-icon aria-hidden="true">{{ errorIcon }}</mat-icon>
     <p class="m-0">{{ error }}</p>
   </div>
 } @else if (empty) {
   <div
     class="flex min-h-32 flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-dim"
   >
-    <mat-icon>{{ emptyIcon }}</mat-icon>
+    <mat-icon aria-hidden="true">{{ emptyIcon }}</mat-icon>
     <p class="m-0">{{ emptyText }}</p>
   </div>
 } @else {

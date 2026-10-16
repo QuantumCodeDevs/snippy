@@ -1,13 +1,14 @@
 <footer class="site-footer" [class.editor-footer]="showEditorActions()">
   <div class="page-container footer-inner">
     @if (showEditorActions()) {
-      <div class="editor-actions">
+      <div class="editor-actions" role="toolbar" aria-label="Snippet actions">
         <button
           mat-button
           type="button"
           (click)="toggleConsole()"
           [class.active-console]="previewConsole.open()"
-          matTooltip="Toggle JavaScript console"
+          [attr.aria-pressed]="previewConsole.open()"
+          matTooltip="Toggle JavaScript console (Ctrl+`)"
         >
           <mat-icon>terminal</mat-icon>
           Console
@@ -23,25 +24,38 @@
         <button
           mat-button
           type="button"
-          (click)="exportZip()"
-          matTooltip="Download HTML/CSS/JS as ZIP"
+          (click)="editorCommands.exportZip()"
+          [disabled]="editorCommands.exporting()"
+          [attr.aria-busy]="editorCommands.exporting()"
+          matTooltip="Download HTML/CSS/JS as ZIP (Ctrl+E)"
         >
-          <mat-icon>download</mat-icon>
+          @if (editorCommands.exporting()) {
+            <mat-spinner diameter="16" class="button-spinner" aria-hidden="true"></mat-spinner>
+          } @else {
+            <mat-icon>download</mat-icon>
+          }
           Export
         </button>
         <button
           mat-button
           type="button"
           (click)="triggerImportZip()"
+          [disabled]="importing()"
+          [attr.aria-busy]="importing()"
           matTooltip="Import ZIP into this pen"
         >
-          <mat-icon>upload</mat-icon>
+          @if (importing()) {
+            <mat-spinner diameter="16" class="button-spinner" aria-hidden="true"></mat-spinner>
+          } @else {
+            <mat-icon>upload</mat-icon>
+          }
           Import
         </button>
         <input
           #zipInput
           type="file"
           hidden
+          aria-label="Import ZIP file"
           accept=".zip,application/zip"
           (change)="onZipSelected($event)"
         />

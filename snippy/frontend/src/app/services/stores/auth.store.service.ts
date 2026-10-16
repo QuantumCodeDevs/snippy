@@ -17,6 +17,23 @@ interface SnippyMeta {
   oauth?: OauthProviderMeta[];
 }
 
+const OAUTH_REQUEST_KEY = 'snippy-oauth2-login';
+const OAUTH_CLOSE_GRACE_MS = 1500;
+
+/** Open a blank centered popup (same size as the PocketBase SDK's), or null if blocked. */
+function openOAuthPopup(): Window | null {
+  if (typeof window === 'undefined' || !window.open) return null;
+  const width = Math.min(1024, window.innerWidth);
+  const height = Math.min(768, window.innerHeight);
+  const left = window.innerWidth / 2 - width / 2;
+  const top = window.innerHeight / 2 - height / 2;
+  return window.open(
+    '',
+    'popup_window',
+    `width=${width},height=${height},top=${top},left=${left},resizable,menubar=no`
+  );
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthStoreService {
   readonly user = signal<User | null>(null);
@@ -132,10 +149,52 @@ export class AuthStoreService {
   //#region OAuth
 
   /** Run the PocketBase OAuth popup for `provider`, then copy display name / username. */
+  /**
+   * OAuth2 popup login. Snippy opens the popup itself (synchronously, so popup
+   * blockers allow it) and watches it: the SDK never notices a popup closed by
+   * the user, which would leave the login button spinning forever.
+   */
   async loginWithProvider(provider: string) {
-    const authData = await this.pb.collection('users').authWithOAuth2({ provider });
-    await this.applyOAuthMeta(authData as { meta?: Record<string, unknown>; record?: RecordModel });
-    this.syncFromStore();
+    const popup = openOAuthPopup();
+    let watch: ReturnType<typeof setInterval> | undefined;
+    let grace: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const auth = this.pb.collection('users').authWithOAuth2({
+        provider,
+        requestKey: OAUTH_REQUEST_KEY,
+        ...(popup
+          ? {
+              urlCallback: (url: string) => {
+                if (popup.closed) throw new Error('The sign-in window was closed.');
+                popup.location.href = url;
+              },
+            }
+          : {}),
+      });
+      if (popup) {
+        watch = setInterval(() => {
+          if (!popup.closed) return;
+          clearInterval(watch);
+          // The realtime auth message can land just after a successful popup
+          // closes itself, so give it a moment before cancelling.
+          grace = setTimeout(() => this.cancelProviderLogin(), OAUTH_CLOSE_GRACE_MS);
+        }, 400);
+      }
+      const authData = await auth;
+      await this.applyOAuthMeta(
+        authData as { meta?: Record<string, unknown>; record?: RecordModel }
+      );
+      this.syncFromStore();
+    } finally {
+      clearInterval(watch);
+      clearTimeout(grace);
+      if (popup && !popup.closed) popup.close();
+    }
+  }
+
+  /** Abort a pending provider login (rejects `loginWithProvider` with `isAbort`). */
+  cancelProviderLogin() {
+    this.pb.cancelRequest(OAUTH_REQUEST_KEY);
   }
 
   /** Fill name/username from OAuth meta when the user still has placeholders. */

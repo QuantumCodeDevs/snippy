@@ -12,6 +12,7 @@ export interface Snippet {
   isFavorited?: boolean;
   isOwner?: boolean;
   isPrivate?: boolean;
+  isTemplate?: boolean;
   name?: string;
   parentDeleted?: boolean;
   parentName?: string | null;

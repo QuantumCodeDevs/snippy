@@ -46,6 +46,7 @@ import {
   mergeEditorPreferences,
 } from '@app/editor/editor-preferences';
 import { EDITOR_THEMES } from '@app/editor/themes';
+import { ShortcutListComponent } from '@app/components/ui/shortcut-list/shortcut-list.component';
 import { baseEditorExtensions, buildPreferenceExtensions } from '@app/editor/codemirror-extensions';
 
 type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'current';
@@ -77,6 +78,7 @@ console.log(greet('Snippy'));`,
 @Component({
   selector: 'app-settings-page',
   imports: [
+    ShortcutListComponent,
     FormsModule,
     MatTabsModule,
     MatFormFieldModule,
@@ -323,6 +325,7 @@ export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
           this.prefsCompartment.of(buildPreferenceExtensions(prefs)),
           this.langCompartment.of(this.languageExtension(this.previewLang)),
           EditorState.readOnly.of(true),
+          EditorView.contentAttributes.of({ 'aria-label': 'Editor theme preview (read-only)' }),
         ],
       }),
       parent: this.previewHost.nativeElement,

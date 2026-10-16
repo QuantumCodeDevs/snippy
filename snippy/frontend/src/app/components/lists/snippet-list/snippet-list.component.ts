@@ -76,6 +76,17 @@ export class SnippetListComponent {
     });
   }
 
+  /** Enter on a focused card opens it (cards are links for keyboard users). */
+  onCardKey(snippet: SnippetList, event: Event) {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    this.openSnippet(snippet);
+  }
+
+  toggleTemplate(snippet: SnippetList) {
+    void this.snippetActions.toggleTemplate(snippet);
+  }
+
   openSnippet(snippet: SnippetList) {
     if (!snippet.shortId) return;
     this.navigation.toSnippet(snippet.shortId, snippet.userName);

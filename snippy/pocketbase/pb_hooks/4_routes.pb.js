@@ -19,6 +19,82 @@ routerAdd('GET', '/api/snippy/meta', (e) => {
   });
 });
 
+// Sitemap of public pages and public snippets for search engines.
+// nginx serves it at /sitemap.xml. Absolute URLs come from PB_APP_URL.
+routerAdd('GET', '/api/snippy/sitemap.xml', (e) => {
+  const MAX_SNIPPETS = 5000;
+  const base = (e.app.settings().meta.appURL || '').replace(/\/$/, '');
+  const xmlEscape = (value) =>
+    String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  const lastmod = (value) => {
+    const iso = String(value || '').replace(' ', 'T');
+    return iso ? iso.slice(0, 10) : '';
+  };
+
+  const entries = [
+    { loc: '/', changefreq: 'weekly', priority: '1.0' },
+    { loc: '/public', changefreq: 'daily', priority: '0.8' },
+    { loc: '/try', changefreq: 'monthly', priority: '0.6' },
+    { loc: '/privacy', changefreq: 'yearly', priority: '0.2' },
+    { loc: '/terms', changefreq: 'yearly', priority: '0.2' },
+  ];
+
+  const snippets = e.app.findRecordsByFilter(
+    'snippets',
+    'isPrivate = false && user.isPrivate = false',
+    '-updated',
+    MAX_SNIPPETS,
+    0
+  );
+  e.app.expandRecords(snippets, ['user'], null);
+  const profiles = {};
+  for (const snippet of snippets) {
+    const user = snippet.expandedOne('user');
+    const username = user ? user.getString('username') : '';
+    if (!username) continue;
+    const updated = lastmod(snippet.get('updated'));
+    entries.push({
+      loc: `/${encodeURIComponent(username)}/snippet/${encodeURIComponent(snippet.getString('shortId'))}`,
+      lastmod: updated,
+      changefreq: 'weekly',
+      priority: '0.7',
+    });
+    if (!profiles[username] || profiles[username] < updated) profiles[username] = updated;
+  }
+  for (const username of Object.keys(profiles)) {
+    entries.push({
+      loc: `/${encodeURIComponent(username)}`,
+      lastmod: profiles[username],
+      changefreq: 'weekly',
+      priority: '0.5',
+    });
+  }
+
+  const body = entries
+    .map((entry) => {
+      const parts = [`<loc>${xmlEscape(base + entry.loc)}</loc>`];
+      if (entry.lastmod) parts.push(`<lastmod>${entry.lastmod}</lastmod>`);
+      parts.push(`<changefreq>${entry.changefreq}</changefreq>`);
+      parts.push(`<priority>${entry.priority}</priority>`);
+      return `  <url>${parts.join('')}</url>`;
+    })
+    .join('\n');
+  const xml =
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    body +
+    '\n</urlset>\n';
+
+  e.response.header().set('Content-Type', 'application/xml; charset=utf-8');
+  e.response.header().set('Cache-Control', 'public, max-age=3600');
+  return e.string(200, xml);
+});
+
 // Get a shared snippet by token.
 routerAdd('GET', '/api/snippy/shared/{token}', (e) => {
   const token = e.request.pathValue('token');

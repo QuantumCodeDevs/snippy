@@ -27,6 +27,14 @@ import { DialogService } from '@app/services/ui/dialog.service';
 import { EditorPreferencesService } from '@app/editor/editor-preferences.service';
 import { EditorInsertService } from '@app/services/ui/editor-insert.service';
 import { baseEditorExtensions, buildPreferenceExtensions } from '@app/editor/codemirror-extensions';
+import { analyzeCode } from '@app/editor/code-format';
+import { EditorCommandsService } from '@app/services/ui/editor-commands.service';
+
+const PANE_LABELS: Record<'html' | 'css' | 'js', string> = {
+  html: 'HTML',
+  css: 'CSS',
+  js: 'JavaScript',
+};
 
 @Component({
   selector: 'app-snippet-editor',
@@ -44,6 +52,11 @@ export class SnippetEditorComponent implements OnInit, AfterViewInit, OnDestroy 
   private dialogService = inject(DialogService);
   private editorPrefs = inject(EditorPreferencesService);
   private editorInsert = inject(EditorInsertService);
+  private editorCommands = inject(EditorCommandsService);
+
+  get paneLabel() {
+    return PANE_LABELS[this.editorType];
+  }
 
   // CodeMirror editor instance
   private editorInstance?: EditorView;
@@ -122,7 +135,11 @@ export class SnippetEditorComponent implements OnInit, AfterViewInit, OnDestroy 
           ...baseEditorExtensions(),
           this.prefsCompartment.of(buildPreferenceExtensions(prefs)),
           this.getLanguageExtension(),
+          EditorView.contentAttributes.of({ 'aria-label': `${this.paneLabel} code editor` }),
           EditorView.updateListener.of((update) => {
+            if (update.focusChanged && update.view.hasFocus) {
+              this.editorInsert.markFocused(this.editorType);
+            }
             if (update.docChanged) {
               const value = update.state.doc.toString();
               this.code.set(value);
@@ -152,215 +169,31 @@ export class SnippetEditorComponent implements OnInit, AfterViewInit, OnDestroy 
 
   //#endregion CodeMirror
 
-  //#region Code Formatting
+  //#region Pane actions
 
-  /** Pretty-print the current pane and write it back into CodeMirror. */
+  /** Pretty-print this pane and write it back into CodeMirror. */
   formatCode() {
-    if (!this.editorInstance) return;
-
-    const formatted = this.basicFormat(this.code(), this.editorType);
-
-    // Update the editor content
-    this.editorInstance.dispatch({
-      changes: { from: 0, to: this.editorInstance.state.doc.length, insert: formatted },
-    });
+    this.editorCommands.formatPane(this.editorType);
   }
 
-  /** Dispatch to HTML / CSS / JS formatters; returns original on error. */
-  private basicFormat(code: string, type: 'html' | 'css' | 'js'): string {
-    if (!code.trim()) return code;
-
-    try {
-      if (type === 'css') {
-        return this.formatCSS(code);
-      } else if (type === 'js') {
-        return this.formatJS(code);
-      } else if (type === 'html') {
-        return this.formatHTML(code);
-      }
-    } catch (e) {
-      console.error('Format error:', e);
-    }
-    return code;
+  /** Open CodeMirror's find/replace panel in this pane. */
+  openFindReplace() {
+    void this.editorCommands.findReplace(this.editorType);
   }
-
-  /** Indent HTML tags with two spaces. */
-  private formatHTML(html: string): string {
-    let formatted = '';
-    let indent = 0;
-    const tab = '  ';
-
-    html.split(/(<[^>]+>)/g).forEach((part) => {
-      if (part.trim() === '') return;
-
-      if (part.startsWith('</')) {
-        indent = Math.max(0, indent - 1);
-        formatted += tab.repeat(indent) + part.trim() + '\n';
-      } else if (part.startsWith('<') && !part.startsWith('<!') && !part.endsWith('/>')) {
-        formatted += tab.repeat(indent) + part.trim() + '\n';
-        if (
-          !part.match(
-            /<(br|hr|img|input|link|meta|area|base|col|command|embed|keygen|param|source|track|wbr)/
-          )
-        ) {
-          indent++;
-        }
-      } else if (part.startsWith('<')) {
-        formatted += tab.repeat(indent) + part.trim() + '\n';
-      } else {
-        formatted += tab.repeat(indent) + part.trim() + '\n';
-      }
-    });
-
-    return formatted.trim();
-  }
-
-  /** Light CSS pretty-print (braces and semicolons). */
-  private formatCSS(css: string): string {
-    return css
-      .replace(/\s*\{\s*/g, ' {\n  ')
-      .replace(/\s*\}\s*/g, '\n}\n')
-      .replace(/;\s*/g, ';\n  ')
-      .replace(/\n\s*\n/g, '\n')
-      .trim();
-  }
-
-  /** Indent JS by brace depth (line-based). */
-  private formatJS(js: string): string {
-    let formatted = '';
-    let indent = 0;
-    const tab = '  ';
-
-    js.split('\n').forEach((line) => {
-      const trimmed = line.trim();
-      if (trimmed.endsWith('{')) {
-        formatted += tab.repeat(indent) + trimmed + '\n';
-        indent++;
-      } else if (trimmed.startsWith('}')) {
-        indent = Math.max(0, indent - 1);
-        formatted += tab.repeat(indent) + trimmed + '\n';
-      } else {
-        formatted += tab.repeat(indent) + trimmed + '\n';
-      }
-    });
-
-    return formatted.trim();
-  }
-
-  //#endregion Code Formatting
-
-  //#region Analyze code (check for issues)
 
   /** Run a cheap static check and show a success/warning dialog. */
   analyzeCode() {
-    let issues: string[] = [];
-
-    switch (this.editorType) {
-      case 'html':
-        issues = this.analyzeHTML(this.code());
-        break;
-      case 'css':
-        issues = this.analyzeCSS(this.code());
-        break;
-      case 'js':
-        issues = this.analyzeJS(this.code());
-        break;
-    }
-
+    const issues = analyzeCode(this.code(), this.editorType);
+    const label = this.editorType.toUpperCase();
     if (issues.length === 0) {
-      this.dialogService.success('Analysis', `No issues found in ${this.editorType.toUpperCase()}`);
+      this.dialogService.success('Analysis', `No issues found in ${label}`);
     } else {
       this.dialogService.warning(
         'Issues Found',
-        `Issues found in ${this.editorType.toUpperCase()}:\n\n${issues.join('\n')}`
+        `Issues found in ${label}:\n\n${issues.join('\n')}`
       );
     }
   }
 
-  /** Flag tags whose open and close counts disagree. Void and self-closing tags are balanced. */
-  private analyzeHTML(html: string): string[] {
-    const voidTags = new Set([
-      'area',
-      'base',
-      'br',
-      'col',
-      'embed',
-      'hr',
-      'img',
-      'input',
-      'link',
-      'meta',
-      'param',
-      'source',
-      'track',
-      'wbr',
-    ]);
-    const stripped = html
-      .replace(/<!--[\s\S]*?-->/g, '')
-      .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
-    const counts = new Map<string, number>();
-    const tagRe = /<\/?([a-zA-Z][\w:-]*)\b[^>]*?\/?>/g;
-    let match: RegExpExecArray | null;
-    while ((match = tagRe.exec(stripped))) {
-      const raw = match[0];
-      const name = match[1].toLowerCase();
-      if (raw.startsWith('</')) {
-        counts.set(name, (counts.get(name) ?? 0) - 1);
-      } else if (raw.endsWith('/>') || voidTags.has(name)) {
-        continue;
-      } else {
-        counts.set(name, (counts.get(name) ?? 0) + 1);
-      }
-    }
-
-    const issues: string[] = [];
-    for (const [name, count] of counts) {
-      if (count > 0) issues.push(`Unclosed <${name}> tag`);
-      if (count < 0) issues.push(`Unexpected </${name}> tag`);
-    }
-    return issues;
-  }
-
-  /** Flag declarations inside `{ }` that have no `:`. */
-  private analyzeCSS(css: string): string[] {
-    const issues: string[] = [];
-
-    // Check for missing semicolons
-    const rules = css.match(/[^{}]+\{[^}]*\}/g) || [];
-    rules.forEach((rule) => {
-      const declarations = rule.match(/\{([^}]*)\}/)?.[1] || '';
-      const lines = declarations.split(';').filter((l) => l.trim());
-      lines.forEach((line) => {
-        if (line.trim() && !line.includes(':')) {
-          issues.push('Invalid CSS declaration: ' + line.trim());
-        }
-      });
-    });
-
-    return issues;
-  }
-
-  /** Flag mismatched `{ }` or `( )`. */
-  private analyzeJS(js: string): string[] {
-    const issues: string[] = [];
-
-    // Basic syntax checks
-    const openBraces = (js.match(/\{/g) || []).length;
-    const closeBraces = (js.match(/\}/g) || []).length;
-
-    if (openBraces !== closeBraces) {
-      issues.push('Mismatched braces detected');
-    }
-
-    const openParens = (js.match(/\(/g) || []).length;
-    const closeParens = (js.match(/\)/g) || []).length;
-
-    if (openParens !== closeParens) {
-      issues.push('Mismatched parentheses detected');
-    }
-
-    return issues;
-  }
-
-  //#endregion Analyze code (check for issues)
+  //#endregion Pane actions
 }

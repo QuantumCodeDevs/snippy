@@ -18,7 +18,6 @@ import { SnippetStoreService } from '@app/services/stores/snippet.store.service'
 import { AuthStoreService } from '@app/services/stores/auth.store.service';
 import { SnippetSaveUIService } from '@app/services/ui/snippet-save-ui.service';
 import { EditorLayout, EditorUiService } from '@app/services/ui/editor-ui.service';
-import { SnippetSettingsDialogComponent } from '@app/components/dialogs/snippet-settings-dialog/snippet-settings-dialog.component';
 import { DialogService } from '@app/services/ui/dialog.service';
 import { NavigationService } from '@app/services/ui/navigation.service';
 import { SnippetActionsService } from '@app/services/ui/snippet-actions.service';
@@ -26,6 +25,9 @@ import { ForkAttributionComponent } from '@app/components/ui/fork-attribution/fo
 import { SnippetStatBarComponent } from '@app/components/ui/snippet-stat-bar/snippet-stat-bar.component';
 import { CommandPaletteComponent } from '@app/components/dialogs/command-palette/command-palette.component';
 import { DraftAutosaveService } from '@app/services/ui/draft-autosave.service';
+import { EditorCommandsService } from '@app/services/ui/editor-commands.service';
+import { SaveStatusComponent } from '@app/components/ui/save-status/save-status.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-page-header',
@@ -43,6 +45,8 @@ import { DraftAutosaveService } from '@app/services/ui/draft-autosave.service';
     ThemeToggleComponent,
     ForkAttributionComponent,
     SnippetStatBarComponent,
+    SaveStatusComponent,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './page-header.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -56,6 +60,7 @@ export class PageHeaderComponent implements OnInit {
   private navigation = inject(NavigationService);
   private snippetActions = inject(SnippetActionsService);
   private drafts = inject(DraftAutosaveService);
+  private editorCommands = inject(EditorCommandsService);
 
   snippetStore = inject(SnippetStoreService);
   snippetSaveUI = inject(SnippetSaveUIService);
@@ -137,26 +142,7 @@ export class PageHeaderComponent implements OnInit {
   }
 
   openSettings() {
-    const snippet = this.snippetStore.snippet();
-    if (!snippet || !this.canEdit) return;
-
-    const guest = this.isGuest;
-    const dialogRef = this.dialogService.open(SnippetSettingsDialogComponent, 'xl', {
-      data: { ...snippet, guestMode: guest },
-      minHeight: '50vh',
-      panelClass: 'snippy-dialog-tall',
-    });
-
-    dialogRef
-      .afterClosed()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((result) => {
-        if (!result) return;
-        this.snippetStore.updateSnippetSettings(result);
-        if (!guest) {
-          this.snippetSaveUI.saveSnippetWithUI(this.snippetStore, this.user);
-        }
-      });
+    this.editorCommands.openSettings();
   }
 
   viewFullPage() {

@@ -1,0 +1,150 @@
+<h2 mat-dialog-title>Start a new snippet</h2>
+
+<mat-dialog-content class="picker">
+  <p class="picker__intro">Pick a starting point. Everything stays editable.</p>
+
+  @if (showSearch()) {
+    <label class="picker__search">
+      <mat-icon aria-hidden="true">search</mat-icon>
+      <span class="sr-only">Filter templates</span>
+      <input
+        type="search"
+        placeholder="Filter templates…"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+      />
+    </label>
+  }
+
+  @if (openError()) {
+    <p class="picker__error" role="alert">{{ openError() }}</p>
+  }
+
+  <section class="picker__section" aria-labelledby="picker-yours">
+    <header class="picker__section-head">
+      <h3 id="picker-yours">Your templates</h3>
+      @if (!loadingUser() && userTemplates().length) {
+        <span class="picker__count">{{ userTemplates().length }}</span>
+      }
+    </header>
+
+    @if (loadingUser()) {
+      <div class="picker__state" role="status">
+        <mat-spinner diameter="22" aria-hidden="true"></mat-spinner>
+        <span>Loading your templates…</span>
+      </div>
+    } @else if (userError()) {
+      <div class="picker__state" role="alert">
+        <mat-icon aria-hidden="true">error_outline</mat-icon>
+        <span>{{ userError() }}</span>
+        <button mat-button type="button" (click)="loadUserTemplates()">Retry</button>
+      </div>
+    } @else if (!userTemplates().length) {
+      <div class="picker__empty">
+        <mat-icon aria-hidden="true">dashboard_customize</mat-icon>
+        <div>
+          <p class="picker__empty-title">No templates yet</p>
+          <p class="picker__empty-copy">
+            Open any snippet, then turn on <strong>Use as template</strong> in Snippet settings. It
+            shows up here next time.
+          </p>
+        </div>
+      </div>
+    } @else if (!visibleUser().length) {
+      <p class="picker__none">No templates match “{{ query() }}”.</p>
+    } @else {
+      <ul class="picker__grid" role="list">
+        @for (item of visibleUser(); track item.shortId) {
+          <li>
+            <button
+              type="button"
+              class="tpl-card"
+              [class.tpl-card--busy]="opening() === item.shortId"
+              [disabled]="!!opening()"
+              [attr.aria-busy]="opening() === item.shortId"
+              (click)="pickUser(item)"
+            >
+              <span class="tpl-card__thumb" aria-hidden="true">
+                @if (item.snapshotUrl) {
+                  <img [src]="item.snapshotUrl" alt="" loading="lazy" />
+                } @else {
+                  <mat-icon>dashboard_customize</mat-icon>
+                }
+                @if (opening() === item.shortId) {
+                  <span class="tpl-card__overlay">
+                    <mat-spinner diameter="24"></mat-spinner>
+                  </span>
+                }
+              </span>
+              <span class="tpl-card__body">
+                <span class="tpl-card__name">{{ item.name }}</span>
+                @if (item.description) {
+                  <span class="tpl-card__desc">{{ item.description }}</span>
+                }
+                <span class="tpl-card__meta">
+                  @if (item.isPrivate) {
+                    <span class="tpl-chip">Private</span>
+                  }
+                  @for (tag of (item.tags ?? []).slice(0, 2); track tag) {
+                    <span class="tpl-chip">#{{ tag }}</span>
+                  }
+                  <span class="tpl-card__updated">{{ updatedLabel(item) }}</span>
+                </span>
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section class="picker__section" aria-labelledby="picker-starters">
+    <header class="picker__section-head">
+      <h3 id="picker-starters">Starters</h3>
+    </header>
+    @if (!visibleStarters().length) {
+      <p class="picker__none">No starters match “{{ query() }}”.</p>
+    } @else {
+      <ul class="picker__grid" role="list">
+        @for (tpl of visibleStarters(); track tpl.id) {
+          <li>
+            <button
+              type="button"
+              class="tpl-card"
+              [disabled]="!!opening()"
+              (click)="pickStarter(tpl)"
+            >
+              <span class="tpl-card__thumb tpl-card__thumb--starter" aria-hidden="true">
+                <mat-icon>{{ tpl.icon || 'code' }}</mat-icon>
+              </span>
+              <span class="tpl-card__body">
+                <span class="tpl-card__name">{{ tpl.name }}</span>
+                <span class="tpl-card__desc">{{ tpl.description }}</span>
+                <span class="tpl-card__meta">
+                  @for (lang of languages(tpl); track lang) {
+                    <span class="tpl-chip tpl-chip--lang">{{ lang }}</span>
+                  } @empty {
+                    <span class="tpl-chip">Empty</span>
+                  }
+                </span>
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</mat-dialog-content>
+
+<mat-dialog-actions class="dialog-actions-split">
+  <button mat-button type="button" (click)="dialogRef.close(null)">Skip</button>
+  <button
+    mat-raised-button
+    color="primary"
+    type="button"
+    [disabled]="!!opening()"
+    (click)="startBlank()"
+  >
+    Start blank
+  </button>
+</mat-dialog-actions>

@@ -55,3 +55,17 @@
 :host ::ng-deep .cm-scroller {
   overflow: auto;
 }
+
+.editor-toolbar__actions {
+  display: flex;
+  align-items: center;
+}
+
+.editor-toolbar__button {
+  color: var(--text-muted);
+}
+
+.editor-toolbar__button:hover,
+.editor-toolbar__button:focus-visible {
+  color: var(--text-primary);
+}
