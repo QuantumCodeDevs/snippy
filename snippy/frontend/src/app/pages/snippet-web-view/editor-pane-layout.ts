@@ -59,10 +59,7 @@ export function collapseEditorPanes(
   const next = numeric.map((size) => (size < threshold ? 0 : size));
   if (next.some((size) => size > 0)) return normalizeOpenPanes(next);
 
-  const keep = numeric.reduce(
-    (best, value, index) => (value >= numeric[best] ? index : best),
-    0
-  );
+  const keep = numeric.reduce((best, value, index) => (value >= numeric[best] ? index : best), 0);
   return normalizeOpenPanes(
     next.map((size, index) => (index === keep ? Math.max(numeric[keep], threshold) : size))
   );
@@ -92,9 +89,7 @@ export function editorGridTemplate(
   if (!collapsed.some(Boolean)) return null;
   const stacked = direction === 'vertical';
   const [first, second] = editorGutterTracks(collapsed, stacked);
-  const columns = [fr(sizes[0]), `${first}px`, fr(sizes[1]), `${second}px`, fr(sizes[2])].join(
-    ' '
-  );
+  const columns = [fr(sizes[0]), `${first}px`, fr(sizes[1]), `${second}px`, fr(sizes[2])].join(' ');
   return direction === 'horizontal' ? `1fr / ${columns}` : `${columns} / 1fr`;
 }
 
