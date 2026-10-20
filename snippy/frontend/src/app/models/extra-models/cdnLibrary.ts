@@ -7,15 +7,20 @@ export interface CdnLibraryHit {
   name: string;
   description: string;
   version: string;
-  /** CDN URL for the default file of the requested type, when already known from search. */
+  /** CDN URL for the file that matches the tab being searched. */
   url: string | null;
+  /** Set when the library ships a CSS file. */
+  cssUrl?: string | null;
+  /** Set when the library ships a JS file. */
+  jsUrl?: string | null;
 }
 
 export interface CdnjsLibraryResult {
   name: string;
   description?: string;
   version?: string;
-  filename?: string;
+  /** Default file, or a list when the library publishes more than one. */
+  filename?: string | string[];
   latest?: string;
   fileType?: string;
 }
@@ -28,7 +33,7 @@ export interface CdnjsSearchResponse {
 
 export interface CdnjsLibraryDetail {
   version?: string;
-  filename?: string;
+  filename?: string | string[];
   latest?: string;
   assets?: Array<{ version: string; files: string[] }>;
 }

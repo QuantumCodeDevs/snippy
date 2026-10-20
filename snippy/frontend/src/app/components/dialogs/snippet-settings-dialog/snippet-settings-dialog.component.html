@@ -77,13 +77,21 @@
     }
     <mat-tab label="CSS">
       <div class="pt-4">
-        <app-external-resources-list [(resources)]="cssResources" [resourceType]="'css'">
+        <app-external-resources-list
+          [(resources)]="cssResources"
+          [resourceType]="'css'"
+          (libraryFiles)="addLibraryFiles($event)"
+        >
         </app-external-resources-list>
       </div>
     </mat-tab>
     <mat-tab label="JS">
       <div class="pt-4">
-        <app-external-resources-list [(resources)]="jsResources" [resourceType]="'js'">
+        <app-external-resources-list
+          [(resources)]="jsResources"
+          [resourceType]="'js'"
+          (libraryFiles)="addLibraryFiles($event)"
+        >
         </app-external-resources-list>
       </div>
     </mat-tab>

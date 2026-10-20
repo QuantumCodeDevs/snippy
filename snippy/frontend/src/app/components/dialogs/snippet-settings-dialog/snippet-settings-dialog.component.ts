@@ -60,6 +60,19 @@ export class SnippetSettingsDialogComponent {
     this.jsResources = allResources.filter((r) => r.resourceType === 'js');
   }
 
+  /** Drop a companion CSS or JS file into the other tab's list. */
+  addLibraryFiles(files: CdnResource[]) {
+    for (const file of files) {
+      if (!file.url) continue;
+      const list = file.resourceType === 'js' ? this.jsResources : this.cssResources;
+      if (list.some((resource) => resource.url?.trim() === file.url)) continue;
+      const empty = list.findIndex((resource) => !resource.url?.trim());
+      const next = { resourceType: file.resourceType, url: file.url };
+      if (empty >= 0) list[empty] = next;
+      else list.push(next);
+    }
+  }
+
   addTag() {
     const tag = this.newTag.trim();
     if (tag && !this.tags.includes(tag)) {

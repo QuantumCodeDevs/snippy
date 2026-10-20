@@ -51,6 +51,8 @@ export class ExternalResourcesListComponent implements OnInit {
   @Input() resources: CdnResource[] = [];
   @Input() resourceType: 'css' | 'js' = 'css';
   @Output() resourcesChange = new EventEmitter<CdnResource[]>();
+  /** Files of the other type, when the chosen library ships both CSS and JS. */
+  @Output() libraryFiles = new EventEmitter<CdnResource[]>();
 
   private cdnApi = inject(CdnApiService);
   private snackbar = inject(SnackbarService);
@@ -114,18 +116,20 @@ export class ExternalResourcesListComponent implements OnInit {
     if (!hit?.name || this.resolving) return;
 
     this.resolving = true;
-    this.cdnApi.resolveLibraryUrl(hit, this.resourceType).subscribe({
-      next: (url) => {
+    this.cdnApi.resolveLibraryFiles(hit).subscribe({
+      next: (files) => {
         this.resolving = false;
         this.searchControl.setValue('', { emitEvent: false });
         this.searchResults = [];
 
-        if (!url) {
+        const own = files.find((file) => file.resourceType === this.resourceType && file.url);
+        const others = files.filter((file) => file.resourceType !== this.resourceType && file.url);
+        if (!own && others.length === 0) {
           this.snackbar.warning(`No ${this.resourceType.toUpperCase()} file found for ${hit.name}`);
           return;
         }
-
-        this.applyUrl(url);
+        if (own?.url) this.applyUrl(own.url);
+        if (others.length) this.libraryFiles.emit(others);
       },
       error: () => {
         this.resolving = false;
