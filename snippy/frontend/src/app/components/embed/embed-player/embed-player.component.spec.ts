@@ -1,31 +1,30 @@
 import { ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
-import { EmbedPlayerComponent } from './embed-player.component';
+import { EMBED_RECHECK_MS, EmbedPlayerComponent } from './embed-player.component';
 import { SnippyApi } from '@app/services/data/snippy-api.service';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
   let component: EmbedPlayerComponent;
   let fixture: ComponentFixture<EmbedPlayerComponent>;
-  let mockApi: { getSnippetByShortId: ReturnType<typeof vi.fn> };
+  let mockApi: { getPublicEmbed: ReturnType<typeof vi.fn> };
   let mockActivatedRoute: any;
 
   beforeEach(async () => {
     // Create mock API
     mockApi = {
-      getSnippetByShortId: vi.fn().mockName('SnippyApi.getSnippetByShortId'),
+      getPublicEmbed: vi.fn().mockName('SnippyApi.getPublicEmbed'),
     };
-    mockApi.getSnippetByShortId.mockResolvedValue({
-      snippet: {
-        shortId: 'test123',
-        snippetFiles: [
-          { fileType: 'html', content: '<div>Test</div>' },
-          { fileType: 'css', content: 'body { color: red; }' },
-          { fileType: 'js', content: 'console.log("test");' },
-        ],
-        cdnResources: [],
-      },
+    mockApi.getPublicEmbed.mockResolvedValue({
+      shortId: 'test123',
+      isPrivate: false,
+      snippetFiles: [
+        { fileType: 'html', content: '<div>Test</div>' },
+        { fileType: 'css', content: 'body { color: red; }' },
+        { fileType: 'js', content: 'console.log("test");' },
+      ],
+      cdnResources: [{ url: 'https://cdn.example/lib.js', resourceType: 'js' }],
     });
 
     // Create mock ActivatedRoute with paramMap and queryParamMap
@@ -56,12 +55,33 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
     expect(component).toBeTruthy();
   });
 
+  it('keeps the default embed side by side', () => {
+    expect(component.layout()).toBe('horizontal');
+  });
+
+  it('stacks code above the result when layout is vertical', async () => {
+    mockActivatedRoute.queryParamMap = of(
+      convertToParamMap({ 'default-tab': 'html,result', layout: 'vertical' })
+    );
+    fixture.destroy();
+    fixture = TestBed.createComponent(EmbedPlayerComponent);
+    component = fixture.componentInstance;
+
+    expect(component.layout()).toBe('vertical');
+    await component['load']('test123');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.embed-player--vertical')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.embed-player--code-only')).toBeFalsy();
+  });
+
   describe('Security: Timer loop prevention with html-only configuration', () => {
     it('should not start refreshPreview when showResult is false (html-only tab)', fakeAsync(() => {
       // Simulate html-only configuration (the exploit scenario)
       mockActivatedRoute.queryParamMap = of(convertToParamMap({ 'default-tab': 'html' }));
 
       // Recreate component with html-only configuration
+      fixture.destroy();
       fixture = TestBed.createComponent(EmbedPlayerComponent);
       component = fixture.componentInstance;
 
@@ -82,6 +102,7 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       expect(component['refreshTimeoutHandle']).toBeNull();
 
       tick(1000); // Advance time to ensure no timers are pending
+      component.ngOnDestroy();
       flush();
     }));
 
@@ -229,6 +250,7 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
     it('should correctly parse html-only tab configuration', fakeAsync(() => {
       mockActivatedRoute.queryParamMap = of(convertToParamMap({ 'default-tab': 'html' }));
 
+      fixture.destroy();
       fixture = TestBed.createComponent(EmbedPlayerComponent);
       component = fixture.componentInstance;
       fixture.detectChanges();
@@ -237,12 +259,14 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       expect(component.showResult()).toBe(false);
 
       tick();
+      component.ngOnDestroy();
       flush();
     }));
 
     it('should correctly parse css-only tab configuration', fakeAsync(() => {
       mockActivatedRoute.queryParamMap = of(convertToParamMap({ 'default-tab': 'css' }));
 
+      fixture.destroy();
       fixture = TestBed.createComponent(EmbedPlayerComponent);
       component = fixture.componentInstance;
       fixture.detectChanges();
@@ -251,12 +275,14 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       expect(component.showResult()).toBe(false);
 
       tick();
+      component.ngOnDestroy();
       flush();
     }));
 
     it('should correctly parse js-only tab configuration', fakeAsync(() => {
       mockActivatedRoute.queryParamMap = of(convertToParamMap({ 'default-tab': 'js' }));
 
+      fixture.destroy();
       fixture = TestBed.createComponent(EmbedPlayerComponent);
       component = fixture.componentInstance;
       fixture.detectChanges();
@@ -265,12 +291,14 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       expect(component.showResult()).toBe(false);
 
       tick();
+      component.ngOnDestroy();
       flush();
     }));
 
     it('should correctly parse multiple tabs without result', fakeAsync(() => {
       mockActivatedRoute.queryParamMap = of(convertToParamMap({ 'default-tab': 'html,css,js' }));
 
+      fixture.destroy();
       fixture = TestBed.createComponent(EmbedPlayerComponent);
       component = fixture.componentInstance;
       fixture.detectChanges();
@@ -279,12 +307,14 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       expect(component.showResult()).toBe(false);
 
       tick();
+      component.ngOnDestroy();
       flush();
     }));
 
     it('should include result pane when result tab is specified', fakeAsync(() => {
       mockActivatedRoute.queryParamMap = of(convertToParamMap({ 'default-tab': 'html,result' }));
 
+      fixture.destroy();
       fixture = TestBed.createComponent(EmbedPlayerComponent);
       component = fixture.componentInstance;
       fixture.detectChanges();
@@ -410,5 +440,78 @@ describe('EmbedPlayerComponent - Timer Loop Security Tests', () => {
       tick();
       flush();
     }));
+  });
+
+  describe('Privacy: public embeds only', () => {
+    const privateMessage = 'Snippet not found or is private.';
+
+    it('shows the private message and keeps no source when the embed is refused', async () => {
+      mockApi.getPublicEmbed.mockRejectedValue(new Error('not found'));
+
+      await component['load']('test123');
+
+      expect(component.error()).toBe(privateMessage);
+      expect(component.snippet()).toBeNull();
+      expect(component.html()).toBe('');
+      expect(component.css()).toBe('');
+      expect(component.js()).toBe('');
+      expect(component.resources()).toEqual([]);
+    });
+
+    it('refuses a payload that is marked private', async () => {
+      mockApi.getPublicEmbed.mockResolvedValue({
+        shortId: 'test123',
+        isPrivate: true,
+        snippetFiles: [{ fileType: 'html', content: '<div>Secret</div>' }],
+        cdnResources: [],
+      });
+
+      await component['load']('test123');
+
+      expect(component.error()).toBe(privateMessage);
+      expect(component.html()).toBe('');
+    });
+
+    it('clears a playing embed when a later check finds it private', async () => {
+      await component['load']('test123');
+      expect(component.html()).toBe('<div>Test</div>');
+      expect(component.resources().length).toBe(1);
+
+      mockApi.getPublicEmbed.mockRejectedValue(new Error('not found'));
+      await component['recheck']();
+
+      expect(component.error()).toBe(privateMessage);
+      expect(component.snippet()).toBeNull();
+      expect(component.html()).toBe('');
+      expect(component.css()).toBe('');
+      expect(component.js()).toBe('');
+      expect(component.resources()).toEqual([]);
+      expect(component['recheckTimer']).toBeNull();
+    });
+
+    it('rechecks when the document becomes visible', async () => {
+      await component['load']('test123');
+      mockApi.getPublicEmbed.mockClear();
+      mockApi.getPublicEmbed.mockRejectedValue(new Error('not found'));
+
+      const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+      document.dispatchEvent(new Event('visibilitychange'));
+      await Promise.resolve();
+      await Promise.resolve();
+      visibility.mockRestore();
+
+      expect(mockApi.getPublicEmbed).toHaveBeenCalledWith('test123');
+      expect(component.error()).toBe(privateMessage);
+      expect(component.html()).toBe('');
+    });
+
+    it('schedules the public recheck on an interval', async () => {
+      const spy = vi.spyOn(window, 'setInterval');
+
+      await component['load']('test123');
+
+      expect(spy).toHaveBeenCalledWith(expect.any(Function), EMBED_RECHECK_MS);
+      spy.mockRestore();
+    });
   });
 });

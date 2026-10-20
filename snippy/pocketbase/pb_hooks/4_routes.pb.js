@@ -95,6 +95,34 @@ routerAdd('GET', '/api/snippy/sitemap.xml', (e) => {
   return e.string(200, xml);
 });
 
+// Public embed payload. Private and missing snippets are both 404.
+// A signed-in owner cannot load a private snippet through this route.
+routerAdd('GET', '/api/snippy/embed/{shortId}', (e) => {
+  const shortId = e.request.pathValue('shortId');
+  if (!shortId) throw new NotFoundError();
+  const lib = require(`${__hooks}/lib.js`);
+  let snippet;
+  try {
+    snippet = e.app.findFirstRecordByFilter('snippets', 'shortId = {:shortId}', { shortId });
+  } catch (err) {
+    throw new NotFoundError();
+  }
+  if (!snippet || snippet.get('isPrivate') !== false) {
+    throw new NotFoundError();
+  }
+  const files = e.app.findRecordsByFilter(
+    'snippet_files',
+    'snippet = {:id}',
+    'fileType',
+    10,
+    0,
+    { id: snippet.id }
+  );
+  e.app.expandRecord(snippet, ['user'], null);
+  e.response.header().set('Cache-Control', 'no-store');
+  return e.json(200, { snippet: lib.publicSnippet(snippet), files: lib.publicFiles(files) });
+});
+
 // Get a shared snippet by token.
 routerAdd('GET', '/api/snippy/shared/{token}', (e) => {
   const token = e.request.pathValue('token');

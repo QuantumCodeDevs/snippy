@@ -18,6 +18,7 @@ import { EDITOR_THEMES } from '@app/editor/themes';
 import { DEFAULT_EDITOR_PREFERENCES, EditorThemeKey } from '@app/editor/editor-preferences';
 
 export type EmbedTabOption = 'html' | 'css' | 'js' | 'result';
+export type EmbedLayout = 'horizontal' | 'vertical';
 
 @Component({
   selector: 'app-embed-dialog',
@@ -47,6 +48,7 @@ export class EmbedDialogComponent {
 
   height = signal(300);
   editable = signal(false);
+  layout = signal<EmbedLayout>('horizontal');
   defaultTabs = signal<EmbedTabOption[]>(['html', 'result']);
   theme = signal<EditorThemeKey>(
     (this.authStore.user()?.editorPreferences?.theme as EditorThemeKey | undefined) ??
@@ -83,6 +85,7 @@ export class EmbedDialogComponent {
       'default-tab': tabs,
       editable: String(this.editable()),
       theme: this.theme(),
+      layout: this.layout(),
     });
     return `${origin}/embed/${s.shortId}?${params.toString()}`;
   });
@@ -117,6 +120,10 @@ export class EmbedDialogComponent {
 
   onEditableChange(value: boolean) {
     this.editable.set(value);
+  }
+
+  setLayout(layout: EmbedLayout) {
+    this.layout.set(layout);
   }
 
   onThemeChange(value: EditorThemeKey) {

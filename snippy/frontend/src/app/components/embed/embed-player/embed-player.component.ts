@@ -22,7 +22,11 @@ import { EmbedCodePaneComponent } from '@app/components/embed/embed-code-pane/em
 import { EDITOR_THEME_KEYS, EditorThemeKey } from '@app/editor/editor-preferences';
 
 export type EmbedTab = 'html' | 'css' | 'js' | 'result';
+export type EmbedLayout = 'horizontal' | 'vertical';
 export type EmbedZoom = 1 | 0.5 | 0.25;
+
+/** How often an open embed confirms the snippet is still public. */
+export const EMBED_RECHECK_MS = 30_000;
 
 @Component({
   selector: 'app-embed-player',
@@ -55,6 +59,7 @@ export class EmbedPlayerComponent implements AfterViewInit, OnDestroy {
   resources = signal<CdnResource[]>([]);
 
   editable = signal(false);
+  layout = signal<EmbedLayout>('horizontal');
   theme = signal<EditorThemeKey | null>(null);
   enabledTabs = signal<EmbedTab[]>(['html', 'result']);
   activeCodeTab = signal<'html' | 'css' | 'js'>('html');
@@ -80,6 +85,15 @@ export class EmbedPlayerComponent implements AfterViewInit, OnDestroy {
   });
 
   private refreshTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
+  private recheckTimer: ReturnType<typeof setInterval> | null = null;
+  private watchingVisibility = false;
+  private loadGeneration = 0;
+  private loadedShortId: string | null = null;
+  private destroyed = false;
+
+  private onVisibility = () => {
+    if (document.visibilityState === 'visible') void this.recheck();
+  };
 
   constructor() {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
@@ -89,6 +103,7 @@ export class EmbedPlayerComponent implements AfterViewInit, OnDestroy {
 
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((q) => {
       this.editable.set(q.get('editable') === 'true');
+      this.layout.set(q.get('layout') === 'vertical' ? 'vertical' : 'horizontal');
       const themeRaw = (q.get('theme') || '').toLowerCase();
       this.theme.set(
         (EDITOR_THEME_KEYS as readonly string[]).includes(themeRaw)
@@ -116,11 +131,10 @@ export class EmbedPlayerComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Cancel any pending refresh timeout to prevent memory leaks
-    if (this.refreshTimeoutHandle !== null) {
-      clearTimeout(this.refreshTimeoutHandle);
-      this.refreshTimeoutHandle = null;
-    }
+    this.destroyed = true;
+    this.loadGeneration += 1;
+    this.stopRecheck();
+    this.clearRefreshTimeout();
   }
 
   selectCodeTab(tab: 'html' | 'css' | 'js') {
@@ -150,30 +164,91 @@ export class EmbedPlayerComponent implements AfterViewInit, OnDestroy {
   }
 
   private async load(shortId: string) {
+    const generation = ++this.loadGeneration;
+    this.stopRecheck();
+    this.loadedShortId = null;
     this.loading.set(true);
     this.error.set(null);
     try {
-      const snip = await this.api.getSnippetByShortId(shortId);
-      if (!snip) throw new Error('not found');
+      const snip = await this.api.getPublicEmbed(shortId);
+      if (this.destroyed || generation !== this.loadGeneration) return;
+      if (!snip || snip.isPrivate) throw new Error('not found');
       this.snippet.set(snip);
       this.html.set(snip.snippetFiles?.find((f) => f.fileType === 'html')?.content ?? '');
       this.css.set(snip.snippetFiles?.find((f) => f.fileType === 'css')?.content ?? '');
       this.js.set(snip.snippetFiles?.find((f) => f.fileType === 'js')?.content ?? '');
       this.resources.set(snip.cdnResources ?? []);
       this.loading.set(false);
-      queueMicrotask(() => this.refreshPreview());
+      this.loadedShortId = shortId;
+      this.startRecheck();
+      queueMicrotask(() => {
+        if (generation === this.loadGeneration && !this.error()) this.refreshPreview();
+      });
     } catch {
-      this.error.set('Snippet not found or is private.');
-      this.loading.set(false);
+      if (this.destroyed || generation !== this.loadGeneration) return;
+      this.failClosed();
     }
   }
 
-  private refreshPreview(type: 'full' | 'partial' = 'full') {
-    // Clear any existing timeout
+  /** Drop a playing embed once the snippet is missing or no longer public. */
+  private failClosed() {
+    this.stopRecheck();
+    this.loadedShortId = null;
+    this.snippet.set(null);
+    this.html.set('');
+    this.css.set('');
+    this.js.set('');
+    this.resources.set([]);
+    this.clearRefreshTimeout();
+    this.error.set('Snippet not found or is private.');
+    this.loading.set(false);
+  }
+
+  private startRecheck() {
+    this.stopRecheck();
+    this.recheckTimer = setInterval(() => void this.recheck(), EMBED_RECHECK_MS);
+    document.addEventListener('visibilitychange', this.onVisibility);
+    this.watchingVisibility = true;
+  }
+
+  private stopRecheck() {
+    if (this.recheckTimer !== null) {
+      clearInterval(this.recheckTimer);
+      this.recheckTimer = null;
+    }
+    if (this.watchingVisibility) {
+      document.removeEventListener('visibilitychange', this.onVisibility);
+      this.watchingVisibility = false;
+    }
+  }
+
+  private async recheck() {
+    const shortId = this.loadedShortId;
+    const generation = this.loadGeneration;
+    if (!shortId || this.error()) return;
+    try {
+      const snip = await this.api.getPublicEmbed(shortId);
+      if (this.destroyed || generation !== this.loadGeneration || this.loadedShortId !== shortId) {
+        return;
+      }
+      if (!snip || snip.isPrivate) throw new Error('not found');
+    } catch {
+      if (this.destroyed || generation !== this.loadGeneration || this.loadedShortId !== shortId) {
+        return;
+      }
+      this.failClosed();
+    }
+  }
+
+  private clearRefreshTimeout() {
     if (this.refreshTimeoutHandle !== null) {
       clearTimeout(this.refreshTimeoutHandle);
       this.refreshTimeoutHandle = null;
     }
+  }
+
+  private refreshPreview(type: 'full' | 'partial' = 'full') {
+    this.clearRefreshTimeout();
 
     // Guard: do not schedule refresh if result pane is not shown
     if (!this.showResult()) {

@@ -78,11 +78,13 @@
   color: var(--text-muted);
 }
 
-.home-manual {
+.home-manual,
+.home-fork {
   margin-top: var(--space-2xl);
 }
 
 .home-manual h2,
+.home-fork h2,
 .home-band h2,
 .home-close h2 {
   font-size: clamp(1.75rem, 2vw + 1rem, 2.5rem);
@@ -93,14 +95,16 @@
   overflow-wrap: anywhere;
 }
 
-.home-manual h2 {
+.home-manual h2,
+.home-fork h2 {
   padding-bottom: var(--space-xs);
   border-bottom: 2px solid var(--accent);
   width: fit-content;
   max-width: 100%;
 }
 
-.home-manual__lede {
+.home-manual__lede,
+.home-fork__lede {
   max-width: 36rem;
   margin-top: var(--space-sm);
   color: var(--text-muted);

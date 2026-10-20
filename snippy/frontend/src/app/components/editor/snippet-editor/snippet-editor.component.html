@@ -1,6 +1,8 @@
 <section class="editor-shell" [attr.aria-label]="paneLabel + ' editor'">
   <div class="editor-toolbar">
-    <span class="editor-type-label" aria-hidden="true">{{ editorType.toUpperCase() }}</span>
+    @if (showLabel) {
+      <app-pane-lang-label [type]="editorType" />
+    }
     <div class="editor-toolbar__actions">
       <button
         mat-icon-button
@@ -25,6 +27,14 @@
       </button>
     </div>
     <mat-menu #menu="matMenu" xPosition="before">
+      <button mat-menu-item (click)="minimizePane()" [disabled]="!canMinimize">
+        <mat-icon>close_fullscreen</mat-icon>
+        <span>Minimize</span>
+      </button>
+      <button mat-menu-item (click)="maximizePane()" [disabled]="!canMaximize">
+        <mat-icon>open_in_full</mat-icon>
+        <span>Maximize</span>
+      </button>
       <button mat-menu-item (click)="openFindReplace()">
         <mat-icon>find_replace</mat-icon>
         <span>Find &amp; Replace</span>
@@ -34,6 +44,14 @@
         <mat-icon>code</mat-icon>
         <span>Format Code</span>
         <span class="menu-shortcut" aria-hidden="true">Shift+Alt+F</span>
+      </button>
+      <button mat-menu-item (click)="foldAllCode()">
+        <mat-icon>unfold_less</mat-icon>
+        <span>Fold All</span>
+      </button>
+      <button mat-menu-item (click)="unfoldAllCode()">
+        <mat-icon>unfold_more</mat-icon>
+        <span>Unfold All</span>
       </button>
       <button mat-menu-item (click)="analyzeCode()">
         <mat-icon>analytics</mat-icon>

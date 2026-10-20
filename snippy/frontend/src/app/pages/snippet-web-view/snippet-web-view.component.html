@@ -15,7 +15,32 @@
     </div>
   } @else if (snippetStoreService.snippet()) {
     <div class="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-      @if (selectedLayout === 'top') {
+      @if (editorUi.isCompact()) {
+        <app-snippet-mobile-view>
+          <app-snippet-editor
+            data-pane="html"
+            editorType="html"
+            [showLabel]="false"
+            [canMinimize]="false"
+            [canMaximize]="false"
+          ></app-snippet-editor>
+          <app-snippet-editor
+            data-pane="css"
+            editorType="css"
+            [showLabel]="false"
+            [canMinimize]="false"
+            [canMaximize]="false"
+          ></app-snippet-editor>
+          <app-snippet-editor
+            data-pane="js"
+            editorType="js"
+            [showLabel]="false"
+            [canMinimize]="false"
+            [canMaximize]="false"
+          ></app-snippet-editor>
+          <app-snippet-preview data-pane="result"></app-snippet-preview>
+        </app-snippet-mobile-view>
+      } @else if (selectedLayout === 'top') {
         <as-split direction="vertical" unit="percent" [gutterSize]="14" class="h-full">
           <as-split-area size="50" [minSize]="0">
             <ng-container *ngTemplateOutlet="editorsSplit" />
@@ -62,15 +87,78 @@
 </div>
 
 <ng-template #editorsSplit>
-  <as-split class="h-full" [direction]="editorsDirection" unit="percent" [gutterSize]="14">
-    <as-split-area size="33" [minSize]="0">
-      <app-snippet-editor editorType="html"></app-snippet-editor>
+  <as-split
+    #editorSplit
+    class="h-full editors-split"
+    [direction]="editorsDirection"
+    unit="percent"
+    [gutterSize]="editorGutterSize()"
+    (dragEnd)="onEditorDragEnd($event)"
+    (gutterDblClick)="onEditorGutterDblClick($event)"
+  >
+    <as-split-area
+      [size]="editorPaneSizes()[0]"
+      [minSize]="0"
+      [class.editor-pane-collapsed]="editorCollapsed()[0]"
+    >
+      <app-snippet-editor
+        editorType="html"
+        [canMinimize]="canResizePane(0)"
+        [canMaximize]="canResizePane(0)"
+        (minimize)="minimizeEditorPane('html')"
+        (maximize)="maximizeEditorPane('html')"
+      ></app-snippet-editor>
     </as-split-area>
-    <as-split-area size="33" [minSize]="0">
-      <app-snippet-editor editorType="css"></app-snippet-editor>
+    <as-split-area
+      [size]="editorPaneSizes()[1]"
+      [minSize]="0"
+      [class.editor-pane-collapsed]="editorCollapsed()[1]"
+    >
+      <app-snippet-editor
+        editorType="css"
+        [canMinimize]="canResizePane(1)"
+        [canMaximize]="canResizePane(1)"
+        (minimize)="minimizeEditorPane('css')"
+        (maximize)="maximizeEditorPane('css')"
+      ></app-snippet-editor>
     </as-split-area>
-    <as-split-area size="34" [minSize]="0">
-      <app-snippet-editor editorType="js"></app-snippet-editor>
+    <as-split-area
+      [size]="editorPaneSizes()[2]"
+      [minSize]="0"
+      [class.editor-pane-collapsed]="editorCollapsed()[2]"
+    >
+      <app-snippet-editor
+        editorType="js"
+        [canMinimize]="canResizePane(2)"
+        [canMaximize]="canResizePane(2)"
+        (minimize)="minimizeEditorPane('js')"
+        (maximize)="maximizeEditorPane('js')"
+      ></app-snippet-editor>
     </as-split-area>
+    <ng-template asSplitGutter let-gutterNum="gutterNum">
+      @if (gutterPanes(gutterNum); as panes) {
+        @if (panes.length) {
+          <div class="pane-gutter-tabs">
+            @for (pane of panes; track pane) {
+              <div
+                class="pane-gutter-tab"
+                role="button"
+                tabindex="-1"
+                matTooltip="Double-click to expand."
+                [matTooltipPosition]="editorsDirection === 'horizontal' ? 'right' : 'above'"
+                [attr.aria-label]="expandLabel(pane)"
+                (dblclick)="expandEditorPane(pane, $event)"
+              >
+                <app-pane-lang-label
+                  [type]="pane"
+                  [gutter]="true"
+                  [vertical]="editorsDirection === 'horizontal'"
+                />
+              </div>
+            }
+          </div>
+        }
+      }
+    </ng-template>
   </as-split>
 </ng-template>

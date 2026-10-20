@@ -37,6 +37,28 @@
       </div>
     </div>
 
+    <div class="mb-4">
+      <div class="mb-2 text-sm font-medium text-ink">Layout</div>
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          mat-stroked-button
+          [class.tab-active]="layout() === 'horizontal'"
+          (click)="setLayout('horizontal')"
+        >
+          Horizontal
+        </button>
+        <button
+          type="button"
+          mat-stroked-button
+          [class.tab-active]="layout() === 'vertical'"
+          (click)="setLayout('vertical')"
+        >
+          Vertical
+        </button>
+      </div>
+    </div>
+
     <div class="mb-4 flex items-center justify-between gap-4">
       <div>
         <div class="text-sm font-medium text-ink">Make code editable</div>

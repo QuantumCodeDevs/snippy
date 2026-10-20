@@ -18,6 +18,7 @@ const templates = fs.readFileSync(
   'utf8'
 );
 const routes = fs.readFileSync(path.join(root, 'pb_hooks/4_routes.pb.js'), 'utf8');
+const snippetsHook = fs.readFileSync(path.join(root, 'pb_hooks/2_snippets.pb.js'), 'utf8');
 const settings = fs.readFileSync(path.join(root, 'pb_hooks/0_settings.pb.js'), 'utf8');
 const usersHook = fs.readFileSync(path.join(root, 'pb_hooks/1_users.pb.js'), 'utf8');
 const util = fs.readFileSync(path.join(root, 'pb_hooks/lib.js'), 'utf8');
@@ -164,6 +165,31 @@ describe('PocketBase API rules', () => {
     assert.match(migration, /updateRule: `user = @request\.auth\.id && \$\{COUNTER_LOCK\}`/);
     const fork = routes.slice(routes.indexOf("'/api/snippy/snippets/{id}/fork'"));
     assert.doesNotMatch(fork.slice(0, fork.indexOf('txApp.save(copy)')), /isTemplate/);
+  });
+
+  it('marks forks parentDeleted before the parent relation is cleared', () => {
+    assert.match(snippetsHook, /onRecordDelete\(\(e\) =>/);
+    assert.doesNotMatch(snippetsHook, /onRecordAfterDeleteSuccess/);
+    const hook = snippetsHook.slice(snippetsHook.indexOf('onRecordDelete'));
+    const nextAt = hook.indexOf('e.next()');
+    const filterAt = hook.indexOf('parentSnippet = {:id}');
+    assert.ok(filterAt !== -1 && filterAt < nextAt);
+    assert.match(hook.slice(nextAt), /parentDeleted/);
+  });
+
+  it('serves embeds only for public snippets', () => {
+    const embed = routes.slice(
+      routes.indexOf("'/api/snippy/embed/{shortId}'"),
+      routes.indexOf('// Get a shared snippet by token.')
+    );
+    assert.match(embed, /get\('isPrivate'\) !== false/);
+    assert.match(embed, /NotFoundError/);
+    assert.match(embed, /no-store/);
+    assert.match(embed, /publicSnippet/);
+    assert.match(embed, /publicFiles/);
+    assert.doesNotMatch(embed, /requireAuth/);
+    assert.doesNotMatch(embed, /@request\.auth/);
+    assert.doesNotMatch(embed, /get\('user'\)/);
   });
 
   it('serves a sitemap of public snippets from public profiles only', () => {

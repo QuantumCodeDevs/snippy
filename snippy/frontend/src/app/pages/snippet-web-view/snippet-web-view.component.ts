@@ -1,8 +1,9 @@
 import {
   Component,
   ViewChild,
+  viewChild,
+  ElementRef,
   effect,
-  AfterViewInit,
   OnInit,
   OnDestroy,
   inject,
@@ -11,15 +12,23 @@ import {
   ChangeDetectionStrategy,
   computed,
   untracked,
+  afterRenderEffect,
+  signal,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { AngularSplitModule } from 'angular-split';
+import { AngularSplitModule, SplitGutterInteractionEvent } from 'angular-split';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { combineLatest } from 'rxjs';
 
 import { SnippetEditorComponent } from '@app/components/editor/snippet-editor/snippet-editor.component';
+import {
+  PaneLang,
+  PaneLangLabelComponent,
+} from '@app/components/editor/pane-lang-label/pane-lang-label.component';
 import { SnippetPreviewComponent } from '@app/components/editor/snippet-preview/snippet-preview.component';
+import { SnippetMobileViewComponent } from '@app/pages/snippet-mobile-view/snippet-mobile-view.component';
 import { SnippetStoreService } from '@app/services/stores/snippet.store.service';
 import { CdnResource } from '@app/models/extra-models/cdnLibrary';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -33,10 +42,20 @@ import { DialogService } from '@app/services/ui/dialog.service';
 import { TemplatePickerDialogComponent } from '@app/components/dialogs/template-picker-dialog/template-picker-dialog.component';
 import { templateById, templateLanguages, SnippetTemplate } from '@app/editor/snippet-templates';
 import type { Snippet } from '@app/models/base-models/snippet';
-import { EditorPreferencesService } from '@app/editor/editor-preferences.service';
-import { getSplitGutterColors } from '@app/editor/themes';
 import { SnippetAutosaveService } from '@app/services/ui/snippet-autosave.service';
 import { SeoService } from '@app/services/ui/seo.service';
+import {
+  EDITOR_GUTTER_EMPTY,
+  EDITOR_PANES,
+  EditorPaneId,
+  collapseEditorPanes,
+  editorGridTemplate,
+  editorGutterTracks,
+  expandEditorPanes,
+  gutterPaneIds,
+  maximizeEditorPane as expandOneEditorPane,
+  minimizeEditorPane as collapseOneEditorPane,
+} from './editor-pane-layout';
 
 @Component({
   selector: 'app-snippet-web-view',
@@ -45,27 +64,23 @@ import { SeoService } from '@app/services/ui/seo.service';
     AngularSplitModule,
     MatProgressSpinnerModule,
     MatIconModule,
+    MatTooltipModule,
     SnippetEditorComponent,
     SnippetPreviewComponent,
+    SnippetMobileViewComponent,
+    PaneLangLabelComponent,
   ],
   templateUrl: './snippet-web-view.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './snippet-web-view.component.scss',
-  host: {
-    '[style.--as-gutter-background-color]': 'gutterColors().gutter',
-    '[style.--snippy-gutter-hover]': 'gutterColors().gutterHover',
-  },
 })
-export class SnippetWebViewComponent implements OnInit, AfterViewInit, OnDestroy {
+export class SnippetWebViewComponent implements OnInit, OnDestroy {
   @ViewChild(SnippetPreviewComponent) previewComponent?: SnippetPreviewComponent;
+  private editorSplitEl = viewChild('editorSplit', { read: ElementRef });
 
   snippetStoreService = inject(SnippetStoreService);
   snippetSaveUIService = inject(SnippetSaveUIService);
   editorUi = inject(EditorUiService);
-  private editorPrefs = inject(EditorPreferencesService);
-  readonly gutterColors = computed(() =>
-    getSplitGutterColors(this.editorPrefs.preferences().theme)
-  );
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -92,6 +107,21 @@ export class SnippetWebViewComponent implements OnInit, AfterViewInit, OnDestroy
       : 'horizontal';
   }
 
+  /** Percent sizes for HTML, CSS, and JS. 0 means the pane is collapsed into the gutter. */
+  readonly editorPaneSizes = signal<number[]>([33, 33, 34]);
+  readonly editorCollapsed = computed(() => this.editorPaneSizes().map((size) => size <= 0));
+  readonly editorGutterSize = computed(() => {
+    const stacked = this.editorUi.layout() === 'left' || this.editorUi.layout() === 'right';
+    const tracks = editorGutterTracks(this.editorCollapsed(), stacked);
+    return Math.max(EDITOR_GUTTER_EMPTY, tracks[0], tracks[1]);
+  });
+  readonly collapsedGridTemplate = computed(() => {
+    const layout = this.editorUi.layout();
+    const direction = layout === 'left' || layout === 'right' ? 'vertical' : 'horizontal';
+    return editorGridTemplate(direction, this.editorPaneSizes(), this.editorCollapsed());
+  });
+  private editorGridFrame = 0;
+
   snippetId: string | null = null;
   error: string | null = null;
   private viewRecorded = false;
@@ -100,11 +130,27 @@ export class SnippetWebViewComponent implements OnInit, AfterViewInit, OnDestroy
 
   constructor() {
     this.autosave.watch();
+    // The microtask runs after angular-split writes its own grid tracks, so a
+    // gutter that holds a collapsed name can be wider than an empty gutter.
+    afterRenderEffect({
+      write: () => {
+        const template = this.collapsedGridTemplate();
+        const el = this.editorSplitEl()?.nativeElement as HTMLElement | undefined;
+        if (!el) return;
+        const frame = ++this.editorGridFrame;
+        if (!template) return;
+        queueMicrotask(() => {
+          if (frame !== this.editorGridFrame) return;
+          el.style.gridTemplate = template;
+        });
+      },
+    });
 
     effect(() => {
       const snippet = this.snippetStoreService.snippet();
       const previewUpdateType = this.snippetStoreService.previewUpdateType();
       this.editorUi.layout();
+      this.editorUi.isCompact();
 
       if (!previewUpdateType || !snippet?.snippetFiles) return;
 
@@ -162,7 +208,52 @@ export class SnippetWebViewComponent implements OnInit, AfterViewInit, OnDestroy
     event.returnValue = '';
   }
 
-  ngAfterViewInit() {}
+  gutterPanes(gutterNum: number): EditorPaneId[] {
+    return gutterPaneIds(this.editorCollapsed(), gutterNum);
+  }
+
+  expandLabel(pane: PaneLang): string {
+    const name = pane === 'js' ? 'JavaScript' : pane.toUpperCase();
+    return `${name}. Double-click to expand.`;
+  }
+
+  onEditorDragEnd(event: SplitGutterInteractionEvent) {
+    const sizes = event.sizes.map((size) => (typeof size === 'number' ? size : 0));
+    this.editorPaneSizes.set(collapseEditorPanes(sizes));
+  }
+
+  onEditorGutterDblClick(event: SplitGutterInteractionEvent) {
+    const indexes = gutterPaneIds(this.editorCollapsed(), event.gutterNum).map((pane) =>
+      EDITOR_PANES.indexOf(pane)
+    );
+    if (!indexes.length) return;
+    this.editorPaneSizes.set(expandEditorPanes(this.editorPaneSizes(), indexes));
+  }
+
+  canResizePane(index: number): boolean {
+    const sizes = this.editorPaneSizes();
+    return sizes.filter((size) => size > 0).length > 1 && sizes[index] > 0;
+  }
+
+  minimizeEditorPane(pane: EditorPaneId) {
+    this.editorPaneSizes.set(
+      collapseOneEditorPane(this.editorPaneSizes(), EDITOR_PANES.indexOf(pane))
+    );
+  }
+
+  maximizeEditorPane(pane: EditorPaneId) {
+    this.editorPaneSizes.set(
+      expandOneEditorPane(this.editorPaneSizes(), EDITOR_PANES.indexOf(pane))
+    );
+  }
+
+  expandEditorPane(pane: EditorPaneId, event: Event) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.editorPaneSizes.set(
+      expandEditorPanes(this.editorPaneSizes(), [EDITOR_PANES.indexOf(pane)])
+    );
+  }
 
   ngOnInit(): void {
     const guest = !!this.route.snapshot.data['guest'];

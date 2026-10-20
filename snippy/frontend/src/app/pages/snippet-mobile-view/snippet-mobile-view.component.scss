@@ -1,0 +1,97 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.mobile-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.mobile-editors {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.mobile-result {
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  border-top: 1px solid var(--hairline);
+}
+
+.mobile-result[hidden] {
+  display: none !important;
+}
+
+.mobile-tabs {
+  display: flex;
+  flex: none;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--page-bg);
+}
+
+.mobile-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0.7rem 0.25rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mobile-tab[aria-selected='true'] {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+
+.mobile-tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.mobile-tabs__toggle {
+  flex: none;
+  align-self: center;
+  color: var(--text-muted);
+}
+
+.mobile-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.mobile-pane {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mobile-pane[hidden] {
+  display: none !important;
+}

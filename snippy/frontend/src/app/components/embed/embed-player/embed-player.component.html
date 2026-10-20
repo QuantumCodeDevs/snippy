@@ -8,6 +8,7 @@
 } @else {
   <div
     class="embed-player"
+    [class.embed-player--vertical]="layout() === 'vertical'"
     [class.embed-player--code-only]="showCodePane() && !showResult()"
     [class.embed-player--result-only]="!showCodePane() && showResult()"
   >

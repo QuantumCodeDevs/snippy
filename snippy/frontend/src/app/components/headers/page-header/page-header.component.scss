@@ -1,0 +1,59 @@
+.editor-header-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  min-width: 0;
+  padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+}
+
+.editor-title,
+.editor-title-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.editor-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-title-input {
+  width: 100%;
+  border: 0;
+  border-radius: var(--btn-radius);
+  background: transparent;
+  padding: 0.35rem 0.4rem;
+}
+
+.editor-title-input:focus {
+  background: var(--surface-hover);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+}
+
+.editor-title-input::placeholder {
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.editor-login {
+  flex: none;
+  min-width: 0;
+  padding: 0 0.6rem;
+  white-space: nowrap;
+}
+
+.editor-menu-note {
+  padding: 0.5rem 1rem 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.3;
+}

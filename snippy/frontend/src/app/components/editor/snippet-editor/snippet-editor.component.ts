@@ -5,6 +5,8 @@ import {
   AfterViewInit,
   OnDestroy,
   Input,
+  Output,
+  EventEmitter,
   OnInit,
   signal,
   effect,
@@ -22,6 +24,7 @@ import { Compartment, EditorState } from '@codemirror/state';
 import { html } from '@codemirror/lang-html';
 import { css } from '@codemirror/lang-css';
 import { javascript } from '@codemirror/lang-javascript';
+import { foldAll, unfoldAll } from '@codemirror/language';
 import { SnippetStoreService } from '@app/services/stores/snippet.store.service';
 import { DialogService } from '@app/services/ui/dialog.service';
 import { EditorPreferencesService } from '@app/editor/editor-preferences.service';
@@ -29,6 +32,7 @@ import { EditorInsertService } from '@app/services/ui/editor-insert.service';
 import { baseEditorExtensions, buildPreferenceExtensions } from '@app/editor/codemirror-extensions';
 import { analyzeCode } from '@app/editor/code-format';
 import { EditorCommandsService } from '@app/services/ui/editor-commands.service';
+import { PaneLangLabelComponent } from '@app/components/editor/pane-lang-label/pane-lang-label.component';
 
 const PANE_LABELS: Record<'html' | 'css' | 'js', string> = {
   html: 'HTML',
@@ -38,7 +42,13 @@ const PANE_LABELS: Record<'html' | 'css' | 'js', string> = {
 
 @Component({
   selector: 'app-snippet-editor',
-  imports: [MatMenuModule, MatIconModule, MatButtonModule, MatTooltipModule],
+  imports: [
+    MatMenuModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    PaneLangLabelComponent,
+  ],
   templateUrl: './snippet-editor.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './snippet-editor.component.scss',
@@ -46,6 +56,13 @@ const PANE_LABELS: Record<'html' | 'css' | 'js', string> = {
 export class SnippetEditorComponent implements OnInit, AfterViewInit, OnDestroy {
   // Input for editor type only
   @Input() editorType: 'html' | 'css' | 'js' = 'html';
+  /** Compact tabs already name the pane, so the toolbar label is redundant. */
+  @Input() showLabel = true;
+  /** False when this is the only pane still open. */
+  @Input() canMinimize = true;
+  @Input() canMaximize = true;
+  @Output() minimize = new EventEmitter<void>();
+  @Output() maximize = new EventEmitter<void>();
   @ViewChild('editor', { static: false }) editorRef?: ElementRef<HTMLDivElement>;
 
   private snippetStoreService = inject(SnippetStoreService);
@@ -179,6 +196,30 @@ export class SnippetEditorComponent implements OnInit, AfterViewInit, OnDestroy 
   /** Open CodeMirror's find/replace panel in this pane. */
   openFindReplace() {
     void this.editorCommands.findReplace(this.editorType);
+  }
+
+  /** Collapse this pane into the split gutter. */
+  minimizePane() {
+    if (!this.canMinimize) return;
+    this.minimize.emit();
+  }
+
+  /** Give this pane the whole editor split. */
+  maximizePane() {
+    if (!this.canMaximize) return;
+    this.maximize.emit();
+  }
+
+  /** Fold every foldable range in this pane. */
+  foldAllCode() {
+    if (!this.editorInstance) return;
+    foldAll(this.editorInstance);
+  }
+
+  /** Open every folded range in this pane. */
+  unfoldAllCode() {
+    if (!this.editorInstance) return;
+    unfoldAll(this.editorInstance);
   }
 
   /** Run a cheap static check and show a success/warning dialog. */

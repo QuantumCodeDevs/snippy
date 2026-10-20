@@ -27,6 +27,7 @@ import { CommandPaletteComponent } from '@app/components/dialogs/command-palette
 import { DraftAutosaveService } from '@app/services/ui/draft-autosave.service';
 import { EditorCommandsService } from '@app/services/ui/editor-commands.service';
 import { SaveStatusComponent } from '@app/components/ui/save-status/save-status.component';
+import { ThemeService } from '@app/services/ui/theme.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
@@ -49,6 +50,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatProgressSpinnerModule,
   ],
   templateUrl: './page-header.component.html',
+  styleUrl: './page-header.component.scss',
   changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class PageHeaderComponent implements OnInit {
@@ -61,6 +63,7 @@ export class PageHeaderComponent implements OnInit {
   private snippetActions = inject(SnippetActionsService);
   private drafts = inject(DraftAutosaveService);
   private editorCommands = inject(EditorCommandsService);
+  readonly themes = inject(ThemeService);
 
   snippetStore = inject(SnippetStoreService);
   snippetSaveUI = inject(SnippetSaveUIService);
@@ -83,6 +86,18 @@ export class PageHeaderComponent implements OnInit {
 
   get isGuest(): boolean {
     return this.editorUi.guestMode();
+  }
+
+  get saveLabel(): string {
+    if (this.snippetSaveUI.saving()) return 'Saving…';
+    if (this.snippetStore.isDirty()) return 'Save Changes';
+    if (this.hasSavedSnippet) return 'Saved';
+    return 'Save';
+  }
+
+  get showMenuNote(): boolean {
+    const snippet = this.snippetStore.snippet();
+    return !!snippet && (!!snippet.isTemplate || !!snippet.parentShortId);
   }
 
   ngOnInit() {

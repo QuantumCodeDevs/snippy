@@ -1,15 +1,15 @@
 $transparent-gutter-icon: url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
 
 :host {
-  --as-gutter-background-color: var(--hairline);
-  --snippy-gutter-hover: var(--hairline-strong);
+  --as-gutter-background-color: var(--split-gutter);
+  --snippy-gutter-hover: var(--split-gutter-hover);
   --as-gutter-icon-horizontal: #{$transparent-gutter-icon};
   --as-gutter-icon-vertical: #{$transparent-gutter-icon};
   --as-gutter-icon-disabled: #{$transparent-gutter-icon};
 }
 
 :host ::ng-deep .as-split-gutter {
-  background-color: var(--as-gutter-background-color) !important;
+  background-color: var(--split-gutter) !important;
   background-image: none !important;
   border: 0 !important;
 }
@@ -21,6 +21,41 @@ $transparent-gutter-icon: url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH
 :host ::ng-deep .as-split-gutter-icon {
   display: none !important;
   background-image: none !important;
+}
+
+app-snippet-editor[data-pane],
+app-snippet-preview[data-pane] {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+as-split-area.editor-pane-collapsed {
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.pane-gutter-tabs {
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pane-gutter-tab {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  color: var(--text-primary);
+  cursor: inherit;
+  user-select: none;
 }
 
 header a {

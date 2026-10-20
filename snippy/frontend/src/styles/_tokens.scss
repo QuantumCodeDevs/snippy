@@ -90,6 +90,8 @@
   --surface-hover: oklch(36% 0.03 150);
   --hairline: oklch(55% 0.028 307);
   --hairline-strong: oklch(64% 0.028 307);
+  --split-gutter: var(--hairline);
+  --split-gutter-hover: var(--hairline-strong);
   --fallback-solid: oklch(32% 0.028 310);
   --fallback-solid-strong: oklch(32% 0.028 310);
   --thumb-bg: oklch(22% 0.02 307);
@@ -216,6 +218,8 @@
   --surface-hover: oklch(86.2% 0.038 96);
   --hairline: oklch(60% 0.028 307);
   --hairline-strong: oklch(53.4% 0.028 307);
+  --split-gutter: var(--card-bg);
+  --split-gutter-hover: var(--page-bg);
   --fallback-solid: oklch(89.3% 0.025 153);
   --fallback-solid-strong: oklch(89.3% 0.025 153);
   --thumb-bg: oklch(86.2% 0.038 96);

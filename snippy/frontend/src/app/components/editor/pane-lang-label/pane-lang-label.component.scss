@@ -1,0 +1,40 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.pane-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.pane-lang--gutter {
+  padding: 0 0.35rem;
+  gap: 0.3rem;
+  color: inherit;
+}
+
+.pane-lang--vertical {
+  flex-direction: column;
+  padding: 0.45rem 0;
+}
+
+.pane-lang--vertical .pane-lang__name {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.pane-lang__mark {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex: none;
+}

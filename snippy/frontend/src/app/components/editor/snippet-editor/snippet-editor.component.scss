@@ -5,13 +5,6 @@
   overflow: hidden;
   min-width: 0;
   min-height: 0;
-  padding: 0.5rem;
-}
-
-@media (min-width: 768px) {
-  :host {
-    padding: 1rem;
-  }
 }
 
 .editor-shell {
@@ -20,7 +13,6 @@
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--hairline);
-  border-radius: var(--radius-panel);
   background: var(--card-bg);
 }
 
@@ -30,16 +22,6 @@
   justify-content: space-between;
   border-bottom: 1px solid var(--hairline);
   background: var(--page-bg);
-}
-
-.editor-type-label {
-  padding: 0.5rem 0.75rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-accent-bright);
 }
 
 .editor-pane {
@@ -59,6 +41,7 @@
 .editor-toolbar__actions {
   display: flex;
   align-items: center;
+  margin-left: auto;
 }
 
 .editor-toolbar__button {

@@ -1,0 +1,88 @@
+<div class="mobile-editor">
+  <section class="mobile-editors" aria-label="Code">
+    <div class="mobile-tabs" role="tablist" aria-label="Editor panes">
+      @for (pane of editorUi.visiblePanes(); track pane) {
+        <button
+          type="button"
+          class="mobile-tab"
+          role="tab"
+          [id]="'mobile-tab-' + pane"
+          [attr.aria-selected]="editorUi.activePane() === pane"
+          [attr.aria-controls]="'mobile-pane-' + pane"
+          [tabindex]="editorUi.activePane() === pane ? 0 : -1"
+          (click)="select(pane)"
+          (keydown)="onTabKeydown($event, pane)"
+        >
+          {{ labels[pane] }}
+        </button>
+      }
+      <button
+        mat-icon-button
+        type="button"
+        class="mobile-tabs__toggle"
+        [matMenuTriggerFor]="paneMenu"
+        aria-label="Show or hide editors"
+      >
+        <mat-icon>tune</mat-icon>
+      </button>
+      <mat-menu #paneMenu="matMenu" xPosition="before">
+        @for (pane of panes; track pane) {
+          <button
+            mat-menu-item
+            type="button"
+            [disabled]="onlyEnabled(pane)"
+            [attr.aria-pressed]="editorUi.panes()[pane]"
+            (click)="toggle(pane, $event)"
+          >
+            <mat-icon>{{
+              editorUi.panes()[pane] ? 'check_box' : 'check_box_outline_blank'
+            }}</mat-icon>
+            <span>{{ labels[pane] }}</span>
+          </button>
+        }
+      </mat-menu>
+    </div>
+
+    <div class="mobile-stage">
+      <div
+        class="mobile-pane"
+        id="mobile-pane-html"
+        role="tabpanel"
+        aria-labelledby="mobile-tab-html"
+        [hidden]="editorUi.activePane() !== 'html'"
+        [attr.inert]="editorUi.activePane() !== 'html' ? '' : null"
+      >
+        <ng-content select="[data-pane=html]" />
+      </div>
+      <div
+        class="mobile-pane"
+        id="mobile-pane-css"
+        role="tabpanel"
+        aria-labelledby="mobile-tab-css"
+        [hidden]="editorUi.activePane() !== 'css'"
+        [attr.inert]="editorUi.activePane() !== 'css' ? '' : null"
+      >
+        <ng-content select="[data-pane=css]" />
+      </div>
+      <div
+        class="mobile-pane"
+        id="mobile-pane-js"
+        role="tabpanel"
+        aria-labelledby="mobile-tab-js"
+        [hidden]="editorUi.activePane() !== 'js'"
+        [attr.inert]="editorUi.activePane() !== 'js' ? '' : null"
+      >
+        <ng-content select="[data-pane=js]" />
+      </div>
+    </div>
+  </section>
+
+  <section
+    class="mobile-result"
+    aria-label="Preview"
+    [hidden]="!editorUi.panes().result"
+    [attr.inert]="editorUi.panes().result ? null : ''"
+  >
+    <ng-content select="[data-pane=result]" />
+  </section>
+</div>

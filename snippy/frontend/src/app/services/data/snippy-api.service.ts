@@ -319,6 +319,18 @@ export class SnippyApi {
     return mapSnippet(this.pb, rec, files, this.me, { isFavorited });
   }
 
+  /**
+   * Load a snippet for the embed player (`GET /api/snippy/embed/{shortId}`).
+   * The route returns 404 unless the snippet is public, including for the owner.
+   */
+  async getPublicEmbed(shortId: string): Promise<Snippet> {
+    const data = await this.pb.send<{ snippet: RecordModel; files: RecordModel[] }>(
+      `/api/snippy/embed/${encodeURIComponent(shortId)}`,
+      { method: 'GET' }
+    );
+    return mapSnippet(this.pb, data.snippet, data.files ?? [], this.me);
+  }
+
   /** Load a snippet via hidden share token (`GET /api/snippy/shared/{token}`). */
   async getSharedSnippet(token: string): Promise<Snippet> {
     const data = await this.pb.send<{ snippet: RecordModel; files: RecordModel[] }>(

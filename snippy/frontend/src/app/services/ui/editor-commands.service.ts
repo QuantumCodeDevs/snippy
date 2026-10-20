@@ -131,8 +131,12 @@ export class EditorCommandsService {
     openFindReplace(view, focusReplace);
   }
 
-  /** Move keyboard focus into a pane. */
+  /** Move keyboard focus into a pane. On a phone, also select that tab. */
   focusPane(pane: EditorPane) {
+    if (this.editorUi.isCompact()) {
+      this.editorUi.requestFocus(pane);
+      return;
+    }
     this.editors.focus(pane);
   }
 

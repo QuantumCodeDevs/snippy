@@ -90,9 +90,25 @@
   min-height: 0;
 }
 
+.embed-player--vertical .embed-player__body {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.embed-player--vertical .embed-player__code {
+  border-right: 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
 .embed-player--code-only .embed-player__body,
 .embed-player--result-only .embed-player__body {
   grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.embed-player--code-only .embed-player__code,
+.embed-player--vertical.embed-player--code-only .embed-player__code {
+  border-bottom: 0;
 }
 
 .embed-player__code,
@@ -217,6 +233,11 @@
   .embed-player__body {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr;
+  }
+
+  .embed-player--code-only .embed-player__body,
+  .embed-player--result-only .embed-player__body {
+    grid-template-rows: 1fr;
   }
 }
 

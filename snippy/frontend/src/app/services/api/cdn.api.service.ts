@@ -13,6 +13,8 @@ import {
 
 const CDNJS_API = 'https://api.cdnjs.com/libraries';
 const CDNJS_BASE = 'https://cdnjs.cloudflare.com/ajax/libs';
+const CDNJS_SEARCH_LIMIT = '50';
+const CDNJS_RESULT_LIMIT = 12;
 
 // CDNJS API service for searching and resolving library URLs.
 @Injectable({ providedIn: 'root' })
@@ -21,7 +23,10 @@ export class CdnApiService {
 
   //#region Search
 
-  /** Search cdnjs and map hits whose `latest` URL matches `resourceType`. */
+  /**
+   * Search cdnjs and keep hits whose `latest` or `filename` matches `resourceType`.
+   * The API has no file-type filter, so ask for extra rows and return the first 12 matches.
+   */
   searchLibraries(query: string, resourceType: 'css' | 'js'): Observable<CdnLibraryHit[]> {
     const q = query.trim();
     if (!q) return of([]);
@@ -29,10 +34,18 @@ export class CdnApiService {
     const params = new HttpParams()
       .set('search', q)
       .set('fields', 'description,version,filename,latest,fileType')
-      .set('limit', '12');
+      .set('limit', CDNJS_SEARCH_LIMIT);
 
     return this.http.get<CdnjsSearchResponse>(CDNJS_API, { params }).pipe(
-      map((res) => (res.results ?? []).map((lib) => this.toHit(lib, resourceType))),
+      map((res) => {
+        const hits: CdnLibraryHit[] = [];
+        for (const lib of res.results ?? []) {
+          if (!this.libraryMatchesType(lib, resourceType)) continue;
+          hits.push(this.toHit(lib, resourceType));
+          if (hits.length === CDNJS_RESULT_LIMIT) break;
+        }
+        return hits;
+      }),
       catchError(() => of([]))
     );
   }
@@ -128,6 +141,16 @@ export class CdnApiService {
 
     scored.sort((a, b) => b.score - a.score);
     return scored[0]?.f ?? null;
+  }
+
+  /** True when the default file (`latest` or `filename`) is the tab's extension. */
+  private libraryMatchesType(lib: CdnjsLibraryResult, resourceType: 'css' | 'js'): boolean {
+    const latest = lib.latest?.split('?')[0] ?? '';
+    const filename = lib.filename ?? '';
+    return (
+      this.filenameMatchesType(latest, resourceType) ||
+      this.filenameMatchesType(filename, resourceType)
+    );
   }
 
   /** True when the URL path ends with `.css` or `.js`. */

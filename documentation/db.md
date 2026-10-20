@@ -73,6 +73,8 @@ Full path (domain type, mapper, JWT vs API rules, no `*Response` envelopes): [fr
 - Favorite create/delete → `favoriteCount` (own snippets allowed)
 - Comment create/delete/soft-delete → `commentCount`
 - Fork `POST /api/snippy/snippets/{id}/fork` → copy files, bump source `forkCount` (never copies `isTemplate`)
+- Snippet delete (`onRecordDelete`) → collect fork ids where `parentSnippet` matches **before** `e.next()`. PocketBase clears that relation inside the delete transaction, so an after-delete query would miss them. After the delete succeeds, set `parentDeleted` on those forks. Fork files are not removed.
+- `GET /api/snippy/embed/{shortId}` → snippet and files only when `isPrivate` is false. Missing and private are both 404, including for the owner. `Cache-Control: no-store`
 - `GET /api/snippy/sitemap.xml` → public snippets whose owner profile is public, plus those profiles and static pages. Absolute URLs from `PB_APP_URL`
 - View `POST /api/snippy/snippets/{id}/view` → 24h unique in `snippet_views` (collection locked to hooks), bump `viewCount` inside one transaction
 - Share create/revoke custom routes generate or clear `shareToken`
@@ -88,4 +90,4 @@ Avatars (`users.avatar`), snippet snapshots (`snippets.snapshot`), and the asset
 
 ## Tests
 
-`snippy/pocketbase/tests/rules.test.mjs` asserts private-list rules, counter locks, hidden share tokens, owner-scoped favorites, autodate/`shortId` autogenerate, meta route, and OAuth env keys.
+`snippy/pocketbase/tests/rules.test.mjs` asserts private-list rules, counter locks, hidden share tokens, owner-scoped favorites, autodate/`shortId` autogenerate, meta route, the public-only embed route, the fork `parentDeleted` hook, and OAuth env keys.

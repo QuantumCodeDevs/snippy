@@ -98,6 +98,7 @@ Hooks register extra JSON under `/api/snippy/`. The SDK calls them with `pb.send
 | `POST` / `DELETE /api/snippy/snippets/{id}/share` | Generate or clear `shareToken` |
 | `POST /api/snippy/snippets/{id}/view` | 24h unique view ledger + `viewCount` |
 | `POST /api/snippy/snippets/{id}/fork` | Copy files, denorm parent, bump `forkCount` |
+| `GET /api/snippy/embed/{shortId}` | Public embed payload. 404 when missing or private, including for the owner. `Cache-Control: no-store` |
 | `GET /api/snippy/sitemap.xml` | XML sitemap of public snippets and profiles. nginx serves it at `/sitemap.xml` |
 
 Admin UI is PocketBase on `127.0.0.1:8090/_/`, not the public site. Files are `/api/files/{collectionId}/{recordId}/{filename}` via `pb.files.getURL`. Asset uploads cannot be SVG. `/api/` responses send `X-Content-Type-Options: nosniff`.

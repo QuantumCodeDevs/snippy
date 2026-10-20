@@ -102,49 +102,152 @@
   }
 
   @case ('editor') {
-    <header class="site-header">
-      <div class="page-container flex flex-wrap items-center justify-between gap-3 py-2">
-        <div class="flex min-w-0 flex-1 items-center gap-3">
-          <a [routerLink]="isGuest ? '/' : '/home'" class="brand-mark shrink-0">
+    @if (editorUi.isCompact()) {
+      <header class="site-header">
+        <div class="editor-header-compact">
+          <a [routerLink]="isGuest ? '/' : '/home'" class="brand-mark shrink-0" aria-label="Snippy">
             <img src="/snippy.svg" alt="" class="brand-mark__icon" width="38" height="24" />
-            Snippy
           </a>
           @if (snippetStore.snippet(); as snippet) {
             @if (canEdit) {
-              <div class="min-w-0 flex-1">
-                <mat-form-field appearance="outline" class="min-w-[12rem] max-w-md w-full">
-                  <input
-                    matInput
-                    [ngModel]="snippet.name"
-                    (ngModelChange)="onSnippetNameChange($event)"
-                    placeholder="Snippet name"
-                    aria-label="Snippet name"
-                  />
-                  <mat-icon matSuffix aria-hidden="true">mode_edit</mat-icon>
-                </mat-form-field>
-              </div>
-              @if (snippet.isTemplate) {
-                <span
-                  class="template-chip"
-                  matTooltip="This snippet is one of your templates. Change it in Snippet settings."
-                >
-                  <mat-icon aria-hidden="true">dashboard_customize</mat-icon>
-                  Template
-                </span>
-              }
-              @if (snippet.parentShortId) {
-                <p class="truncate text-xs text-muted">
-                  <app-fork-attribution
-                    [parentShortId]="snippet.parentShortId"
-                    [parentName]="snippet.parentName"
-                    [parentUserName]="snippet.parentUserName"
-                    [parentDeleted]="!!snippet.parentDeleted"
-                  />
-                </p>
-              }
+              <input
+                class="editor-title-input"
+                [ngModel]="snippet.name"
+                (ngModelChange)="onSnippetNameChange($event)"
+                placeholder="Snippet name"
+                aria-label="Snippet name"
+              />
             } @else {
-              <div class="min-w-0 flex-1">
-                <h1 class="truncate text-lg font-semibold text-ink">{{ snippet.name }}</h1>
+              <h1 class="editor-title">{{ snippet.name }}</h1>
+            }
+            @if (!isGuest && hasSavedSnippet) {
+              <button
+                mat-icon-button
+                type="button"
+                class="shrink-0"
+                [attr.aria-label]="snippet.isFavorited ? 'Unfavorite' : 'Favorite'"
+                (click)="toggleFavorite()"
+              >
+                <mat-icon>{{ snippet.isFavorited ? 'favorite' : 'favorite_border' }}</mat-icon>
+              </button>
+            }
+          } @else {
+            <span class="editor-title"></span>
+          }
+
+          <button
+            mat-icon-button
+            type="button"
+            class="shrink-0"
+            [matMenuTriggerFor]="editorMenu"
+            aria-label="Snippet actions"
+          >
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #editorMenu="matMenu" xPosition="before">
+            @if (snippetStore.snippet(); as snippet) {
+              @if (showMenuNote) {
+                <div class="editor-menu-note">
+                  @if (snippet.isTemplate) {
+                    <p>Template</p>
+                  }
+                  @if (snippet.parentShortId) {
+                    <app-fork-attribution
+                      [parentShortId]="snippet.parentShortId"
+                      [parentName]="snippet.parentName"
+                      [parentUserName]="snippet.parentUserName"
+                      [parentDeleted]="!!snippet.parentDeleted"
+                    />
+                  }
+                </div>
+              }
+            }
+            @if (canEdit && !isGuest) {
+              <button
+                mat-menu-item
+                type="button"
+                (click)="snippetSaveUI.saveSnippetWithUI(snippetStore, user)"
+                [disabled]="!snippetStore.isDirty() || snippetSaveUI.saving()"
+                [attr.aria-busy]="snippetSaveUI.saving()"
+              >
+                <mat-icon>save</mat-icon>
+                <span>{{ saveLabel }}</span>
+              </button>
+            }
+            @if (!isGuest && hasSavedSnippet) {
+              <button mat-menu-item type="button" (click)="openComments()">
+                <mat-icon>comment</mat-icon>
+                <span>Comments</span>
+              </button>
+              <button mat-menu-item type="button" (click)="forkSnippet()">
+                <mat-icon>fork_right</mat-icon>
+                <span>Fork</span>
+              </button>
+              <button mat-menu-item type="button" (click)="openForks()">
+                <mat-icon>account_tree</mat-icon>
+                <span>View forks</span>
+              </button>
+            }
+            @if (canEdit) {
+              <button mat-menu-item type="button" (click)="openSettings()">
+                <mat-icon>settings</mat-icon>
+                <span>Snippet settings</span>
+              </button>
+            }
+            @if (!isGuest && snippetStore.snippet()?.shortId) {
+              <button mat-menu-item type="button" (click)="viewFullPage()">
+                <mat-icon>open_in_new</mat-icon>
+                <span>Full page view</span>
+              </button>
+            }
+            <button mat-menu-item type="button" (click)="openCommandPalette()">
+              <mat-icon>search</mat-icon>
+              <span>Search commands</span>
+            </button>
+            <button mat-menu-item type="button" (click)="themes.toggle()">
+              <mat-icon>{{ themes.theme() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+              <span>{{ themes.theme() === 'dark' ? 'Light mode' : 'Dark mode' }}</span>
+            </button>
+          </mat-menu>
+
+          @if (isGuest || !user()) {
+            <button mat-button type="button" class="editor-login" (click)="login()">Log in</button>
+          } @else {
+            <app-user-menu class="shrink-0"></app-user-menu>
+          }
+        </div>
+      </header>
+    } @else {
+      <header class="site-header">
+        <div class="page-container flex flex-wrap items-center justify-between gap-3 py-2">
+          <div class="flex min-w-0 flex-1 items-center gap-3">
+            <a [routerLink]="isGuest ? '/' : '/home'" class="brand-mark shrink-0">
+              <img src="/snippy.svg" alt="" class="brand-mark__icon" width="38" height="24" />
+              Snippy
+            </a>
+            @if (snippetStore.snippet(); as snippet) {
+              @if (canEdit) {
+                <div class="min-w-0 flex-1">
+                  <mat-form-field appearance="outline" class="min-w-[12rem] max-w-md w-full">
+                    <input
+                      matInput
+                      [ngModel]="snippet.name"
+                      (ngModelChange)="onSnippetNameChange($event)"
+                      placeholder="Snippet name"
+                      aria-label="Snippet name"
+                    />
+                    <mat-icon matSuffix aria-hidden="true">mode_edit</mat-icon>
+                  </mat-form-field>
+                </div>
+                @if (snippet.isTemplate) {
+                  <span
+                    class="template-chip"
+                    matTooltip="This snippet is one of your templates. Change it in Snippet settings."
+                  >
+                    <mat-icon aria-hidden="true">dashboard_customize</mat-icon>
+                    Template
+                  </span>
+                }
                 @if (snippet.parentShortId) {
                   <p class="truncate text-xs text-muted">
                     <app-fork-attribution
@@ -155,111 +258,121 @@
                     />
                   </p>
                 }
-              </div>
-            }
-          }
-        </div>
-
-        @if (!isGuest && snippetStore.snippet(); as snippet) {
-          @if (hasSavedSnippet) {
-            <app-snippet-stat-bar
-              variant="toolbar"
-              [stats]="snippet"
-              [showFork]="true"
-              [showForksList]="true"
-              (favorite)="toggleFavorite()"
-              (comment)="openComments()"
-              (fork)="forkSnippet()"
-              (forks)="openForks()"
-            />
-          }
-        }
-
-        <div class="flex items-center gap-2">
-          @if (canEdit && !isGuest) {
-            <app-save-status class="hidden lg:inline-flex"></app-save-status>
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="snippetSaveUI.saveSnippetWithUI(snippetStore, user)"
-              [disabled]="!snippetStore.isDirty() || snippetSaveUI.saving()"
-              [attr.aria-busy]="snippetSaveUI.saving()"
-              matTooltip="Save (Ctrl+S)"
-            >
-              @if (snippetSaveUI.saving()) {
-                <mat-spinner diameter="18" class="button-spinner" aria-hidden="true"></mat-spinner>
               } @else {
-                <mat-icon aria-hidden="true">save</mat-icon>
+                <div class="min-w-0 flex-1">
+                  <h1 class="truncate text-lg font-semibold text-ink">{{ snippet.name }}</h1>
+                  @if (snippet.parentShortId) {
+                    <p class="truncate text-xs text-muted">
+                      <app-fork-attribution
+                        [parentShortId]="snippet.parentShortId"
+                        [parentName]="snippet.parentName"
+                        [parentUserName]="snippet.parentUserName"
+                        [parentDeleted]="!!snippet.parentDeleted"
+                      />
+                    </p>
+                  }
+                </div>
               }
-              {{
-                snippetSaveUI.saving()
-                  ? 'Saving…'
-                  : snippetStore.isDirty()
-                    ? 'Save Changes'
-                    : hasSavedSnippet
-                      ? 'Saved'
-                      : 'Save'
-              }}
-            </button>
+            }
+          </div>
+
+          @if (!isGuest && snippetStore.snippet(); as snippet) {
+            @if (hasSavedSnippet) {
+              <app-snippet-stat-bar
+                variant="toolbar"
+                [stats]="snippet"
+                [showFork]="true"
+                [showForksList]="true"
+                (favorite)="toggleFavorite()"
+                (comment)="openComments()"
+                (fork)="forkSnippet()"
+                (forks)="openForks()"
+              />
+            }
           }
 
-          <button
-            mat-icon-button
-            [matMenuTriggerFor]="layoutMenu"
-            aria-label="Editor layout"
-            matTooltip="Editor layout"
-          >
-            <mat-icon>dashboard</mat-icon>
-          </button>
-          <mat-menu #layoutMenu="matMenu" xPosition="before">
-            <div mat-menu-item (click)="$event.stopPropagation()">
-              <mat-button-toggle-group
-                name="editorLayout"
-                aria-label="Editor Layout"
-                hideSingleSelectionIndicator="true"
-                [value]="editorUi.layout()"
-                (change)="onLayoutChange($event.value)"
+          <div class="flex items-center gap-2">
+            @if (canEdit && !isGuest) {
+              <app-save-status class="hidden lg:inline-flex"></app-save-status>
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="snippetSaveUI.saveSnippetWithUI(snippetStore, user)"
+                [disabled]="!snippetStore.isDirty() || snippetSaveUI.saving()"
+                [attr.aria-busy]="snippetSaveUI.saving()"
+                matTooltip="Save (Ctrl+S)"
               >
-                <mat-button-toggle value="left">Left</mat-button-toggle>
-                <mat-button-toggle value="top">Top</mat-button-toggle>
-                <mat-button-toggle value="right">Right</mat-button-toggle>
-                <mat-button-toggle value="bottom">Bottom</mat-button-toggle>
-              </mat-button-toggle-group>
-            </div>
-            @if (!isGuest) {
-              <button mat-menu-item (click)="viewFullPage()">Full Page View</button>
+                @if (snippetSaveUI.saving()) {
+                  <mat-spinner
+                    diameter="18"
+                    class="button-spinner"
+                    aria-hidden="true"
+                  ></mat-spinner>
+                } @else {
+                  <mat-icon aria-hidden="true">save</mat-icon>
+                }
+                {{ saveLabel }}
+              </button>
             }
-          </mat-menu>
 
-          @if (canEdit) {
             <button
               mat-icon-button
-              (click)="openSettings()"
-              aria-label="Snippet settings"
-              matTooltip="Snippet settings (Ctrl+,)"
+              [matMenuTriggerFor]="layoutMenu"
+              aria-label="Editor layout"
+              matTooltip="Editor layout"
             >
-              <mat-icon>settings</mat-icon>
+              <mat-icon>dashboard</mat-icon>
             </button>
-          }
+            <mat-menu #layoutMenu="matMenu" xPosition="before">
+              <div mat-menu-item (click)="$event.stopPropagation()">
+                <mat-button-toggle-group
+                  name="editorLayout"
+                  aria-label="Editor Layout"
+                  hideSingleSelectionIndicator="true"
+                  [value]="editorUi.layout()"
+                  (change)="onLayoutChange($event.value)"
+                >
+                  <mat-button-toggle value="left">Left</mat-button-toggle>
+                  <mat-button-toggle value="top">Top</mat-button-toggle>
+                  <mat-button-toggle value="right">Right</mat-button-toggle>
+                  <mat-button-toggle value="bottom">Bottom</mat-button-toggle>
+                </mat-button-toggle-group>
+              </div>
+              @if (!isGuest) {
+                <button mat-menu-item (click)="viewFullPage()">Full Page View</button>
+              }
+            </mat-menu>
 
-          <button
-            type="button"
-            class="cmdk-button"
-            (click)="openCommandPalette()"
-            aria-label="Search commands"
-          >
-            <mat-icon class="cmdk-button__icon">search</mat-icon>
-            <span class="cmdk-button__keys">Ctrl K</span>
-          </button>
-          <app-theme-toggle></app-theme-toggle>
-          @if (isGuest || !user()) {
-            <button mat-raised-button color="primary" (click)="login()">Log in</button>
-          } @else {
-            <app-user-menu></app-user-menu>
-          }
+            @if (canEdit) {
+              <button
+                mat-icon-button
+                (click)="openSettings()"
+                aria-label="Snippet settings"
+                matTooltip="Snippet settings (Ctrl+,)"
+              >
+                <mat-icon>settings</mat-icon>
+              </button>
+            }
+
+            <button
+              type="button"
+              class="cmdk-button"
+              (click)="openCommandPalette()"
+              aria-label="Search commands"
+            >
+              <mat-icon class="cmdk-button__icon">search</mat-icon>
+              <span class="cmdk-button__keys">Ctrl K</span>
+            </button>
+            <app-theme-toggle></app-theme-toggle>
+            @if (isGuest || !user()) {
+              <button mat-raised-button color="primary" (click)="login()">Log in</button>
+            } @else {
+              <app-user-menu></app-user-menu>
+            }
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    }
   }
 
   @case ('minimal') {
