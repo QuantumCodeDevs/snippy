@@ -3,6 +3,8 @@ import {
   Input,
   Output,
   EventEmitter,
+  OnChanges,
+  SimpleChanges,
   inject,
   signal,
   ChangeDetectionStrategy,
@@ -18,6 +20,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { RouterModule } from '@angular/router';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NavigationService } from '@app/services/ui/navigation.service';
+import { FileTokenService } from '@app/services/data/file-token.service';
 import { SnippetActionsService } from '@app/services/ui/snippet-actions.service';
 import { FollowUiService } from '@app/services/ui/follow-ui.service';
 import { ListToolbarComponent } from '@app/components/ui/list-toolbar/list-toolbar.component';
@@ -47,7 +50,7 @@ import { SnippetStatBarComponent } from '@app/components/ui/snippet-stat-bar/sni
   changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: 'block' },
 })
-export class SnippetListComponent {
+export class SnippetListComponent implements OnChanges {
   @Input() snippets: SnippetList[] = [];
   @Input() total: number = 0;
   @Input() pageSize: number = 6;
@@ -61,14 +64,30 @@ export class SnippetListComponent {
   private navigation = inject(NavigationService);
   private snippetActions = inject(SnippetActionsService);
   private followUi = inject(FollowUiService);
+  private fileTokens = inject(FileTokenService);
   private readonly brokenSnapshots = signal(new Set<string>());
+  /** Private snapshots already retried with a fresh file token. */
+  private readonly retriedSnapshots = new Set<string>();
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['snippets'] && this.snippets.some((s) => s.isPrivate && s.snapshotUrl)) {
+      void this.fileTokens.ensure();
+    }
+  }
 
   snapshotFailed(shortId: string | undefined): boolean {
     return !!shortId && this.brokenSnapshots().has(shortId);
   }
 
-  onSnapshotError(shortId: string | undefined): void {
+  onSnapshotError(snippet: SnippetList): void {
+    const shortId = snippet.shortId;
     if (!shortId) return;
+    // An expired file token breaks private snapshots; retry once with a fresh one.
+    if (snippet.isPrivate && !this.retriedSnapshots.has(shortId)) {
+      this.retriedSnapshots.add(shortId);
+      void this.fileTokens.ensure(true);
+      return;
+    }
     this.brokenSnapshots.update((prev) => {
       const next = new Set(prev);
       next.add(shortId);
@@ -93,7 +112,7 @@ export class SnippetListComponent {
   }
 
   snapshotSrc(snippet: SnippetList): string {
-    const url = snippet.snapshotUrl ?? '';
+    const url = this.fileTokens.snapshotSrc(snippet.snapshotUrl, snippet.isPrivate);
     if (!url) return url;
     const version = snippet.updatedAt ? encodeURIComponent(snippet.updatedAt) : '';
     return version ? `${url}${url.includes('?') ? '&' : '?'}v=${version}` : url;

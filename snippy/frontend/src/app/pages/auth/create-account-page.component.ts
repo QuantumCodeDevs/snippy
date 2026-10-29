@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { AuthStoreService } from '@app/services/stores/auth.store.service';
 import { authErrorMessage } from './auth-errors';
@@ -20,6 +21,7 @@ import { authErrorMessage } from './auth-errors';
     MatInputModule,
     MatProgressSpinnerModule,
     MatIconModule,
+    MatCheckboxModule,
     AuthLayoutComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -62,6 +64,13 @@ import { authErrorMessage } from './auth-errors';
             autocomplete="new-password"
           />
         </mat-form-field>
+        <mat-checkbox name="agreed" [(ngModel)]="agreed" required class="text-sm">
+          I am at least 18, or I am 13 to 17 and have my parent or guardian’s permission, and I
+          agree to the
+          <a routerLink="/terms" target="_blank" class="text-sky">Terms</a>
+          and
+          <a routerLink="/privacy" target="_blank" class="text-sky">Privacy Policy</a>.
+        </mat-checkbox>
         @if (error()) {
           <p class="auth-error" role="alert">{{ error() }}</p>
         }
@@ -69,7 +78,7 @@ import { authErrorMessage } from './auth-errors';
           mat-raised-button
           color="primary"
           type="submit"
-          [disabled]="busy()"
+          [disabled]="busy() || !agreed"
           [attr.aria-busy]="pending() === 'password'"
         >
           @if (pending() === 'password') {
@@ -86,7 +95,7 @@ import { authErrorMessage } from './auth-errors';
             <button
               mat-stroked-button
               type="button"
-              [disabled]="busy()"
+              [disabled]="busy() || !agreed"
               [attr.aria-busy]="pending() === p.name"
               (click)="oauth(p.name)"
             >
@@ -121,6 +130,8 @@ export class CreateAccountPageComponent {
   email = '';
   password = '';
   passwordConfirm = '';
+  /** Age and Terms confirmation; required before any sign-up path. */
+  agreed = false;
   /** `'password'`, a provider name, or null. Drives the button spinners. */
   pending = signal<string | null>(null);
   busy = computed(() => this.pending() !== null);
@@ -136,6 +147,10 @@ export class CreateAccountPageComponent {
   }
 
   async submit() {
+    if (!this.agreed) {
+      this.error.set('Please confirm your age and agree to the Terms to continue');
+      return;
+    }
     if (this.password !== this.passwordConfirm) {
       this.error.set('Passwords do not match');
       return;
@@ -153,6 +168,10 @@ export class CreateAccountPageComponent {
   }
 
   async oauth(provider: string) {
+    if (!this.agreed) {
+      this.error.set('Please confirm your age and agree to the Terms to continue');
+      return;
+    }
     this.pending.set(provider);
     this.error.set(null);
     try {

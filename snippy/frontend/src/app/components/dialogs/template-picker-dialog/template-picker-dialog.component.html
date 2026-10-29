@@ -65,8 +65,8 @@
               (click)="pickUser(item)"
             >
               <span class="tpl-card__thumb" aria-hidden="true">
-                @if (item.snapshotUrl) {
-                  <img [src]="item.snapshotUrl" alt="" loading="lazy" />
+                @if (snapshotSrc(item); as src) {
+                  <img [src]="src" alt="" loading="lazy" />
                 } @else {
                   <mat-icon>dashboard_customize</mat-icon>
                 }

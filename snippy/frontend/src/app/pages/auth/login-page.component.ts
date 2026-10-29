@@ -92,6 +92,12 @@ import { authErrorMessage } from './auth-errors';
               <button type="button" class="auth-cancel" (click)="cancelOauth()">Cancel</button>
             </p>
           }
+          <p class="text-xs text-faint">
+            New to Snippy? By continuing, you confirm you are at least 18, or 13 to 17 with your
+            parent or guardian’s permission, and you agree to the
+            <a routerLink="/terms" class="text-sky">Terms</a> and
+            <a routerLink="/privacy" class="text-sky">Privacy Policy</a>.
+          </p>
         </div>
       }
       <p class="mt-6 text-sm text-faint">
