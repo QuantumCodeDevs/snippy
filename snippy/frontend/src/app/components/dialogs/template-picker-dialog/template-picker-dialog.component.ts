@@ -13,6 +13,7 @@ import {
 } from '@app/editor/snippet-templates';
 import type { SnippetList } from '@app/models/base-models/snippet-list';
 import { SnippyApi } from '@app/services/data/snippy-api.service';
+import { FileTokenService } from '@app/services/data/file-token.service';
 import { formatSavedAgo } from '@app/components/ui/save-status/save-status.component';
 
 const SEARCH_THRESHOLD = 6;
@@ -31,6 +32,7 @@ const SEARCH_THRESHOLD = 6;
 export class TemplatePickerDialogComponent {
   dialogRef = inject(MatDialogRef<TemplatePickerDialogComponent, SnippetTemplate | null>);
   private api = inject(SnippyApi);
+  private fileTokens = inject(FileTokenService);
 
   readonly starters = SNIPPET_TEMPLATES;
   readonly query = signal('');
@@ -65,12 +67,19 @@ export class TemplatePickerDialogComponent {
     this.loadingUser.set(true);
     this.userError.set(null);
     try {
-      this.userTemplates.set(await this.api.getMyTemplates());
+      const templates = await this.api.getMyTemplates();
+      if (templates.some((t) => t.isPrivate && t.snapshotUrl)) await this.fileTokens.ensure();
+      this.userTemplates.set(templates);
     } catch {
       this.userError.set('Could not load your templates.');
     } finally {
       this.loadingUser.set(false);
     }
+  }
+
+  /** Thumbnail URL; private templates need the owner's file token. */
+  snapshotSrc(item: SnippetList): string {
+    return this.fileTokens.snapshotSrc(item.snapshotUrl, item.isPrivate);
   }
 
   languages(tpl: SnippetTemplate): string[] {

@@ -86,7 +86,7 @@ Full path (domain type, mapper, JWT vs API rules, no `*Response` envelopes): [fr
 
 ## Files
 
-Avatars (`users.avatar`), snippet snapshots (`snippets.snapshot`), and the asset library (`assets.file`) are PocketBase file fields. nginx proxies `/api/files/` as part of `/api/` and sets `X-Content-Type-Options: nosniff`. Avatars are jpeg, png, gif, or webp. The asset library adds fonts, text, CSS, JavaScript, audio, and mp4. SVG is rejected so a file opened on the site origin cannot run script.
+Avatars (`users.avatar`), snippet snapshots (`snippets.snapshot`), and the asset library (`assets.file`) are PocketBase file fields. Avatars and assets are public by URL. `snippets.snapshot` is protected, so PocketBase checks the snippets view rule on each download: public snapshots stay open to everyone, and private ones need the owner's file token (`?token=`, valid for an hour). The frontend adds it through `FileTokenService`. nginx proxies `/api/files/` as part of `/api/` and sets `X-Content-Type-Options: nosniff`. Avatars are jpeg, png, gif, or webp. The asset library adds fonts, text, CSS, JavaScript, audio, and mp4. SVG is rejected so a file opened on the site origin cannot run script.
 
 ## Tests
 

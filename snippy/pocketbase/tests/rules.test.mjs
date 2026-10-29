@@ -63,6 +63,15 @@ describe('PocketBase API rules', () => {
     assert.match(migration, /name: 'snippet_views'[\s\S]*listRule: 'user = @request\.auth\.id'/);
   });
 
+  it('protects snippet snapshots so private ones follow the snippet view rule', () => {
+    const protect = fs.readFileSync(
+      path.join(root, 'pb_migrations/1740000006_protect_snapshots.js'),
+      'utf8'
+    );
+    assert.match(protect, /getByName\('snapshot'\)[\s\S]*snapshot\.protected = true/);
+    assert.match(protect, /fileToken\.duration = 3600/);
+  });
+
   it('hides isAdmin from clients', () => {
     assert.match(migration, /name: 'isAdmin'[\s\S]*hidden: true/);
     assert.match(migration, /@request\.body\.isAdmin:isset = false/);
@@ -116,7 +125,10 @@ describe('PocketBase API rules', () => {
   });
 
   it('allows favoriting own snippets and bumps favoriteCount via relation id', () => {
-    assert.match(migration, /name: 'favorites'[\s\S]*createRule: '@request\.auth\.id != "" && user = @request\.auth\.id'/);
+    assert.match(
+      migration,
+      /name: 'favorites'[\s\S]*createRule: '@request\.auth\.id != "" && user = @request\.auth\.id'/
+    );
     assert.doesNotMatch(migration, /snippet\.user != @request\.auth\.id/);
     assert.match(counters, /favoriteCount/);
     assert.match(util, /function relationId/);

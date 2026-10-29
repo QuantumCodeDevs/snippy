@@ -19,12 +19,12 @@
         (keydown.enter)="onCardKey(snippet, $event)"
       >
         <div class="list-card-thumb">
-          @if (snippet.snapshotUrl && !snapshotFailed(snippet.shortId)) {
+          @if (snapshotSrc(snippet) && !snapshotFailed(snippet.shortId)) {
             <img
               [src]="snapshotSrc(snippet)"
               alt=""
               loading="lazy"
-              (error)="onSnapshotError(snippet.shortId)"
+              (error)="onSnapshotError(snippet)"
             />
           } @else {
             <div class="list-card-thumb__placeholder" aria-hidden="true">
