@@ -19,6 +19,8 @@ interface SnippyMeta {
 
 const OAUTH_REQUEST_KEY = 'snippy-oauth2-login';
 const OAUTH_CLOSE_GRACE_MS = 1500;
+/** Auth tokens last 2 days; renewing at most hourly keeps active sessions alive. */
+const SESSION_REFRESH_MS = 60 * 60 * 1000;
 
 /** Open a blank centered popup (same size as the PocketBase SDK's), or null if blocked. */
 function openOAuthPopup(): Window | null {
@@ -44,12 +46,19 @@ export class AuthStoreService {
 
   private pb = inject(PocketBaseService).pb;
   private router = inject(Router);
+  private lastRefresh = 0;
 
   constructor() {
     this.pb.authStore.onChange(() => {
       this.syncFromStore();
     }, true);
     void this.loadMeta();
+    void this.refreshSession();
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') void this.refreshSession();
+      });
+    }
   }
 
   //#region Meta
@@ -100,15 +109,31 @@ export class AuthStoreService {
     void this.router.navigateByUrl('/');
   }
 
+  /** Renew the JWT on startup and when the tab regains focus, at most once an hour. */
+  async refreshSession() {
+    if (Date.now() - this.lastRefresh < SESSION_REFRESH_MS) return;
+    if (!this.pb.authStore.isValid) {
+      // An expired token never fires onChange, so drop the stale user here.
+      this.syncFromStore();
+      return;
+    }
+    this.lastRefresh = Date.now();
+    await this.refreshUserFromBackend();
+  }
+
   /** Refresh the JWT and replace `user` from the latest record. */
   async refreshUserFromBackend() {
     try {
       if (!this.pb.authStore.isValid) return;
       const rec = await this.pb.collection('users').authRefresh();
       this.user.set(mapUser(this.pb, rec.record));
-    } catch {
-      this.pb.authStore.clear();
-      this.user.set(null);
+    } catch (err) {
+      // Only a rejected token ends the session; network errors keep it.
+      const status = (err as { status?: number } | null)?.status;
+      if (status === 401 || status === 403) {
+        this.pb.authStore.clear();
+        this.user.set(null);
+      }
     }
   }
 

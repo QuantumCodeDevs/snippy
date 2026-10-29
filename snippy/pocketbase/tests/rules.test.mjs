@@ -72,6 +72,44 @@ describe('PocketBase API rules', () => {
     assert.match(protect, /fileToken\.duration = 3600/);
   });
 
+  it('stops owners from reassigning records to other users', () => {
+    const lock = fs.readFileSync(
+      path.join(root, 'pb_migrations/1740000007_lock_owner_fields.js'),
+      'utf8'
+    );
+    const up = lock.slice(lock.indexOf('migrate('), lock.indexOf('(app) => {', lock.indexOf('migrate(') + 20));
+    assert.match(
+      up,
+      /snippets\.updateRule = `user = @request\.auth\.id && @request\.body\.user:isset = false && \$\{COUNTER_LOCK\}`/
+    );
+    assert.match(
+      up,
+      /collections\.updateRule =\s*'user = @request\.auth\.id && @request\.body\.user:isset = false && @request\.body\.shortId:isset = false'/
+    );
+    assert.match(
+      up,
+      /snippetFiles\.updateRule =\s*'snippet\.user = @request\.auth\.id && @request\.body\.snippet:isset = false && @request\.body\.fileType:isset = false'/
+    );
+    assert.match(up, /comments\.updateRule = COMMENT_UPDATE/);
+    const commentRule = lock.slice(
+      lock.indexOf('const COMMENT_UPDATE'),
+      lock.indexOf('const PREVIOUS_COMMENT_UPDATE')
+    );
+    assert.match(
+      commentRule,
+      /@request\.body\.isDeleted:isset = false \|\| @request\.body\.isDeleted = true/
+    );
+  });
+
+  it('limits auth tokens to 2 days', () => {
+    const tokens = fs.readFileSync(
+      path.join(root, 'pb_migrations/1740000008_auth_token_duration.js'),
+      'utf8'
+    );
+    assert.match(tokens, /authToken\.duration = 172800/);
+    assert.match(authStore, /refreshSession/);
+  });
+
   it('hides isAdmin from clients', () => {
     assert.match(migration, /name: 'isAdmin'[\s\S]*hidden: true/);
     assert.match(migration, /@request\.body\.isAdmin:isset = false/);
