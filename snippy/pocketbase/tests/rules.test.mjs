@@ -101,6 +101,15 @@ describe('PocketBase API rules', () => {
     );
   });
 
+  it('limits auth tokens to 2 days', () => {
+    const tokens = fs.readFileSync(
+      path.join(root, 'pb_migrations/1740000008_auth_token_duration.js'),
+      'utf8'
+    );
+    assert.match(tokens, /authToken\.duration = 172800/);
+    assert.match(authStore, /refreshSession/);
+  });
+
   it('hides isAdmin from clients', () => {
     assert.match(migration, /name: 'isAdmin'[\s\S]*hidden: true/);
     assert.match(migration, /@request\.body\.isAdmin:isset = false/);
