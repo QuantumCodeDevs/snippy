@@ -30,12 +30,12 @@ Custom collections include autodate `created` / `updated`. PocketBase 0.23+ only
 Pattern:
 
 - **List/view snippets:** `isPrivate = false || user = @request.auth.id`
-- **Create/update/delete:** authenticated owner (`user = @request.auth.id`)
-- Nested `snippet_files` follow parent visibility (`snippet.isPrivate = false || snippet.user = @request.auth.id`)
-- **Comments, favorites, collection membership:** create only when the snippet is public or owned by the caller. A comment author can edit their own text. They cannot change `user`, `snippet`, or `parentComment`. The snippet owner can soft-delete a comment and cannot rewrite it or reassign it. A reply's parent must be a comment on the same snippet (hook).
+- **Create/update/delete:** authenticated owner (`user = @request.auth.id`). Update rules check the stored record, so owners also need `@request.body.user:isset = false` to stop them handing a snippet or collection to another user.
+- Nested `snippet_files` follow parent visibility (`snippet.isPrivate = false || snippet.user = @request.auth.id`). An update cannot change `snippet` or `fileType`, so a row cannot be moved onto another user's snippet.
+- **Comments, favorites, collection membership:** create only when the snippet is public or owned by the caller. A comment author can edit their own text and soft-delete it, but cannot undo a soft-delete. They cannot change `user`, `snippet`, or `parentComment`. The snippet owner can soft-delete a comment and cannot rewrite it or reassign it. A reply's parent must be a comment on the same snippet (hook).
 - **Follows:** `follower = @request.auth.id` and `follower != following`
 - **`snippet_views`:** API rules are null (superuser / hooks only). The view route writes the 24h ledger. Clients cannot delete a row to count again.
-- Counter, `shortId`, `shareToken`, and parent fields: `@request.body.<field>:isset = false`
+- Counter, `shortId`, `shareToken`, and parent fields, plus owner relations (`user` on snippets and collections, `snippet`/`fileType` on snippet_files): `@request.body.<field>:isset = false`
 - `isAdmin` cannot be set on create or update. `editorPreferences` is stripped from other users' API responses.
 - Share tokens are **hidden**. List rules never use `shareToken != ""`. Fetch is `GET /api/snippy/shared/{token}` only. That route returns a field list (no email, no `shareToken`). Fork does the same.
 - Asset MIME types do not include SVG or `application/octet-stream`.
@@ -90,4 +90,4 @@ Avatars (`users.avatar`), snippet snapshots (`snippets.snapshot`), and the asset
 
 ## Tests
 
-`snippy/pocketbase/tests/rules.test.mjs` asserts private-list rules, counter locks, hidden share tokens, owner-scoped favorites, autodate/`shortId` autogenerate, meta route, the public-only embed route, the fork `parentDeleted` hook, and OAuth env keys.
+`snippy/pocketbase/tests/rules.test.mjs` asserts private-list rules, counter locks, owner-field locks, hidden share tokens, owner-scoped favorites, autodate/`shortId` autogenerate, meta route, the public-only embed route, the fork `parentDeleted` hook, and OAuth env keys.
