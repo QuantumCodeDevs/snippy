@@ -2,8 +2,9 @@
 # Built and published by GitHub Actions (.github/workflows/docker-image.yml).
 # Use with Portainer or: docker compose -f docker-compose.prod.example.yml up -d
 #
-# PocketBase reads .env (or Portainer stack.env copied as .env).
-# Frontend only gets SITE_URL — never admin / SMTP / OAuth secrets.
+# PocketBase reads stack.env (Portainer). The frontend only gets SITE_URL,
+# never admin / SMTP / OAuth secrets. It reaches PocketBase through its own
+# nginx /api/ proxy, so it needs no PocketBase URL.
 
 services:
   pocketbase:
@@ -11,7 +12,7 @@ services:
     image: slurrps/snippy-pocketbase:latest
     container_name: snippy-pocketbase
     env_file:
-      - .env
+      - stack.env
     volumes:
       - pb_data:/pb_data
     ports:
@@ -27,6 +28,8 @@ services:
       # Public origin for the robots.txt Sitemap line. Not a secret.
       SITE_URL: ${PB_APP_URL:-}
     ports:
+      # Published on all interfaces so a reverse proxy or tunnel (NPM, Cloudflare
+      # Tunnel) can reach it. Firewall this port so plain HTTP is not public.
       - "${FRONTEND_PORT:-4200}:8080"
     depends_on:
       - pocketbase
