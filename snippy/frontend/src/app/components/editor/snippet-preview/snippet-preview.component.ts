@@ -25,6 +25,14 @@ import { toJpeg } from 'html-to-image';
 export const PREVIEW_IFRAME_SANDBOX =
   'allow-scripts allow-forms allow-modals allow-popups allow-downloads';
 
+/**
+ * The live preview loads this page instead of a srcdoc. A srcdoc would inherit the
+ * app CSP; this page has its own (loose script-src plus a CSP `sandbox`), so the app
+ * can keep `script-src 'self'`. The page posts `ready`, then renders the document we
+ * send back.
+ */
+export const PREVIEW_PAGE_URL = '/preview.html';
+
 /** Same-origin so html-to-image can read the DOM; no scripts so user HTML cannot XSS. */
 export const CAPTURE_IFRAME_SANDBOX = 'allow-same-origin';
 
@@ -154,11 +162,13 @@ export class SnippetPreviewComponent implements AfterViewInit, OnDestroy {
   private lastHtml = '';
   private lastCss = '';
   private lastCdnResources: CdnResource[] = [];
+  private pendingDoc = '';
+  private reloadSeq = 0;
 
   constructor() {
     fromEvent<MessageEvent>(window, 'message')
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((event) => this.onConsoleMessage(event));
+      .subscribe((event) => this.onPreviewMessage(event));
     this.messageListenerAttached = true;
   }
 
@@ -177,57 +187,42 @@ export class SnippetPreviewComponent implements AfterViewInit, OnDestroy {
     this.lastCss = css;
     this.lastCdnResources = cdnResources;
 
-    if (!this.previewIframe) return;
-
-    if (previewUpdateType?.toLocaleLowerCase() === 'partial') {
-      // Attempt CSS-only update; if it fails (e.g., due to sandbox), fall back to full reload
-      const updated = this.updateCssOnly(css);
-      if (!updated) {
-        this.fullReload(html, css, js, cdnResources);
-      }
-    } else {
-      this.fullReload(html, css, js, cdnResources);
-    }
+    // The sandboxed frame is cross-origin, so CSS-only ('partial') edits reload too.
+    void previewUpdateType;
+    this.fullReload(html, css, js, cdnResources);
   }
 
   private fullReload(html: string, css: string, js: string, cdnResources: CdnResource[] = []) {
     if (!this.previewIframe) return;
 
     this.previewConsole.clear();
-    this.previewIframe.nativeElement.srcdoc = buildPreviewSrcdoc({
+    this.pendingDoc = buildPreviewSrcdoc({
       html,
       css,
       js,
       cdnResources,
       includeRuntime: true,
     });
+    // A new query string forces a fresh document; the page then asks for pendingDoc.
+    this.reloadSeq++;
+    this.previewIframe.nativeElement.src = `${PREVIEW_PAGE_URL}?v=${this.reloadSeq}`;
   }
 
-  private updateCssOnly(css: string): boolean {
-    if (!this.previewIframe) return false;
-
-    const iframe = this.previewIframe.nativeElement;
-    const doc = iframe.contentDocument;
-
-    if (!doc) return false;
-
-    let styleEl = doc.getElementById('snippet-style') as HTMLStyleElement | null;
-
-    if (!styleEl) {
-      styleEl = doc.createElement('style');
-      styleEl.id = 'snippet-style';
-      doc.head.appendChild(styleEl);
-    }
-
-    styleEl.textContent = css;
-    return true;
-  }
-
-  private onConsoleMessage(event: MessageEvent) {
+  private onPreviewMessage(event: MessageEvent) {
     // Validate that the message comes from our preview iframe
-    if (event.source !== this.previewIframe?.nativeElement?.contentWindow) return;
+    const frame = this.previewIframe?.nativeElement?.contentWindow;
+    if (!frame || event.source !== frame) return;
 
     const data = event.data;
+    if (data?.source === 'snippy-preview' && data.type === 'ready') {
+      // The sandboxed frame has an opaque origin, so '*' is the only usable target.
+      // The message goes to our own iframe's window and holds only the snippet itself.
+      frame.postMessage(
+        { source: 'snippy-preview-host', type: 'render', html: this.pendingDoc },
+        '*'
+      );
+      return;
+    }
     if (!data || data.source !== 'snippy-console') return;
     const level = (data.level as ConsoleLevel) || 'log';
     const args = Array.isArray(data.args) ? data.args : [String(data.args ?? '')];

@@ -90,4 +90,4 @@ Avatars (`users.avatar`), snippet snapshots (`snippets.snapshot`), and the asset
 
 ## Tests
 
-`snippy/pocketbase/tests/rules.test.mjs` asserts private-list rules, counter locks, owner-field locks, hidden share tokens, owner-scoped favorites, autodate/`shortId` autogenerate, meta route, the public-only embed route, the fork `parentDeleted` hook, and OAuth env keys.
+`snippy/pocketbase/tests/rules.test.mjs` asserts private-list rules, counter locks, owner-field locks, the 2-day auth token, hidden share tokens, owner-scoped favorites, autodate/`shortId` autogenerate, meta route, the public-only embed route, the fork `parentDeleted` hook, and OAuth env keys.

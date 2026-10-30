@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Snippy preview</title>
+  </head>
+  <body>
+    <!--
+      Live preview shell. nginx serves this page with its own CSP (nginx-preview-headers.inc):
+      a loose script-src for snippet code plus a CSP `sandbox`, so the page always has an
+      opaque origin and cannot read Snippy's storage, even when framed without a sandbox
+      attribute or opened directly. It renders only what its parent window sends.
+    -->
+    <script>
+      (function () {
+        if (window.parent === window) return;
+        window.addEventListener('message', function onRender(event) {
+          var data = event.data;
+          if (event.source !== window.parent || !data) return;
+          if (data.source !== 'snippy-preview-host' || data.type !== 'render') return;
+          if (typeof data.html !== 'string') return;
+          window.removeEventListener('message', onRender);
+          document.open();
+          document.write(data.html);
+          document.close();
+        });
+        window.parent.postMessage({ source: 'snippy-preview', type: 'ready' }, '*');
+      })();
+    </script>
+  </body>
+</html>

@@ -19,7 +19,10 @@ describe('nginx CSP for PocketBase proxy and snippet previews', () => {
     assert.match(csp, /connect-src[^"]*https:\/\/api\.cdnjs\.com/);
     assert.match(csp, /connect-src[^"]*https:\/\/cdnjs\.cloudflare\.com/);
     assert.doesNotMatch(csp, /connect-src[^"]*https:(?!\/\/)/);
-    assert.match(csp, /script-src[^"]*https:/);
+    assert.match(csp, /script-src 'self';/);
+    const header = csp.match(/add_header Content-Security-Policy "([^"]+)"/)[1];
+    assert.doesNotMatch(header, /'unsafe-eval'/);
+    assert.doesNotMatch(header, /script-src[^;]*'unsafe-inline'/);
     assert.match(csp, /style-src[^"]*https:/);
     assert.match(csp, /img-src[^"]*'self' data: blob: https:/);
     assert.match(csp, /default-src 'self'/);
@@ -73,8 +76,11 @@ describe('nginx CSP for PocketBase proxy and snippet previews', () => {
     assert.match(js, /window\.open\('', '_self'\)/);
     assert.match(js, /window\.close\(\)/);
     assert.match(js, /oauth2-redirect-failure/);
-    assert.match(index, /window\.__snippyOauthPopup = true/);
-    assert.match(index, /window\.open\('', '_self'\)/);
+    const boot = readFrontend('public/boot.js');
+    assert.match(index, /<script src="\/boot\.js"><\/script>/);
+    assert.match(boot, /window\.__snippyOauthPopup = true/);
+    assert.match(boot, /window\.open\('', '_self'\)/);
+    assert.match(boot, /snippy-theme/);
     assert.match(index, /id="oauth-popup-msg"/);
     assert.match(main, /function closeOauthPopup/);
     assert.match(main, /window\.open\('', '_self'\)/);
@@ -88,5 +94,40 @@ describe('nginx CSP for PocketBase proxy and snippet previews', () => {
     assert.match(appHeaders, /X-Frame-Options "SAMEORIGIN"/);
     assert.match(embedHeaders, /set \$csp_frame_ancestors "\*"/);
     assert.doesNotMatch(embedHeaders, /X-Frame-Options/);
+  });
+
+  it('keeps index.html free of inline scripts and critical-CSS inlining', () => {
+    const index = readFrontend('src/index.html');
+    assert.doesNotMatch(index, /<script(?![^>]*\ssrc=)/);
+    const angular = JSON.parse(readFrontend('angular.json'));
+    const prod = angular.projects.frontend.architect.build.configurations.production;
+    assert.equal(prod.optimization.styles.inlineCritical, false);
+  });
+
+  it('serves the live preview page with its own sandboxed CSP', () => {
+    const site = readFrontend('nginx.site.conf');
+    const preview = readFrontend('nginx-preview-headers.inc');
+    const page = readFrontend('public/preview.html');
+    const component = readFrontend(
+      'src/app/components/editor/snippet-preview/snippet-preview.component.ts'
+    );
+    const dockerfile = readFrontend('Dockerfile');
+    assert.match(
+      site,
+      /location = \/preview\.html \{\s*include \/etc\/nginx\/nginx-preview-headers\.inc;\s*\}/
+    );
+    assert.match(dockerfile, /COPY \.\/nginx-preview-headers\.inc/);
+    assert.match(
+      preview,
+      /Content-Security-Policy "sandbox allow-scripts allow-forms allow-modals allow-popups allow-downloads;/
+    );
+    const sandbox = preview.match(/Content-Security-Policy "(sandbox[^;]*);/)[1];
+    assert.doesNotMatch(sandbox, /allow-same-origin/);
+    assert.doesNotMatch(sandbox, /allow-top-navigation/);
+    assert.doesNotMatch(sandbox, /allow-popups-to-escape-sandbox/);
+    assert.match(page, /event\.source !== window\.parent/);
+    assert.match(page, /window\.parent === window\) return/);
+    assert.match(component, /PREVIEW_PAGE_URL = '\/preview\.html'/);
+    assert.doesNotMatch(component, /previewIframe\.nativeElement\.srcdoc/);
   });
 });
