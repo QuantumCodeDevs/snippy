@@ -1,6 +1,5 @@
 # Keep build context lean for both Dockerfile and Dockerfile.dev.
-# Do not ignore entrypoint.dev.sh / proxy.conf.json — required by Dockerfile.dev.
-public/env.js
+# Do not ignore proxy.conf.js — required by Dockerfile.dev.
 node_modules
 dist
 .angular

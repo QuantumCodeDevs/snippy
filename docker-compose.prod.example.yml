@@ -3,7 +3,7 @@
 # Use with Portainer or: docker compose -f docker-compose.prod.example.yml up -d
 #
 # PocketBase reads .env (or Portainer stack.env copied as .env).
-# Frontend only gets POCKETBASE_URL — never admin / SMTP / OAuth secrets.
+# Frontend only gets SITE_URL — never admin / SMTP / OAuth secrets.
 
 services:
   pocketbase:
@@ -24,7 +24,6 @@ services:
     image: slurrps/snippy-frontend:latest
     container_name: snippy-frontend
     environment:
-      POCKETBASE_URL: ${POCKETBASE_URL:-}
       # Public origin for the robots.txt Sitemap line. Not a secret.
       SITE_URL: ${PB_APP_URL:-}
     ports:

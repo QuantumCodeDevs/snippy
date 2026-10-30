@@ -101,7 +101,7 @@ Admin UI: [http://localhost:8090/_/](http://localhost:8090/_/) with the env supe
 
 ## Environment variables
 
-Copy [`.env.example`](.env.example) to `.env` at the repo root. Compose gives PocketBase the whole file (`env_file: .env`). The frontend service only receives `POCKETBASE_URL` (leave empty for the same-origin proxy) and `SITE_URL`.
+Copy [`.env.example`](.env.example) to `.env` at the repo root. Compose gives PocketBase the whole file (`env_file: .env`). The frontend needs no PocketBase settings: it always calls PocketBase on its own origin, which nginx (prod) or `ng serve` (dev) proxies. In production it only receives `SITE_URL`.
 
 | Variable | Service | Notes |
 |---|---|---|
@@ -112,7 +112,6 @@ Copy [`.env.example`](.env.example) to `.env` at the repo root. Compose gives Po
 | `PB_SMTP_*` | pocketbase | Optional. Needed only for password-reset mail |
 | `PB_GITHUB_CLIENT_ID` / `SECRET` | pocketbase | Optional GitHub OAuth |
 | `PB_GOOGLE_CLIENT_ID` / `SECRET` | pocketbase | Optional Google OAuth |
-| `POCKETBASE_URL` | frontend | Leave empty for same-origin proxy |
 | `SITE_URL` | frontend | Optional public origin. Adds `Sitemap: {SITE_URL}/sitemap.xml` to `robots.txt`. The prod example passes `PB_APP_URL` |
 
 **Never** put `PB_ADMIN_*`, SMTP, or OAuth client secrets on the frontend service.

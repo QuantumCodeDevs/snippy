@@ -1,0 +1,49 @@
+/* Angular Material theme, mapped onto the [data-theme] tokens. */
+
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: dark;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$orange-palette,
+        tertiary: mat.$orange-palette,
+        theme-type: color-scheme,
+      ),
+      typography: (
+        plain-family: (
+          'IBM Plex Sans',
+          sans-serif,
+        ),
+        brand-family: (
+          'Space Grotesk',
+          sans-serif,
+        ),
+      ),
+      density: 0,
+    )
+  );
+
+  /* Orchard pair. Values follow [data-theme] tokens, not a second palette. */
+  --mat-sys-background: var(--page-bg);
+  --mat-sys-surface: var(--card-bg);
+  --mat-sys-surface-container: var(--card-bg);
+  --mat-sys-surface-container-low: var(--page-bg);
+  --mat-sys-surface-container-high: var(--surface-hover);
+  --mat-sys-surface-container-highest: var(--surface-hover);
+  --mat-sys-on-surface: var(--text-primary);
+  --mat-sys-on-surface-variant: var(--text-muted);
+  --mat-sys-on-background: var(--text-primary);
+  --mat-sys-primary: var(--accent);
+  --mat-sys-on-primary: var(--accent-ink);
+  --mat-sys-primary-container: var(--accent);
+  --mat-sys-on-primary-container: var(--accent-ink);
+  --mat-sys-tertiary: var(--accent);
+  --mat-sys-on-tertiary: var(--accent-ink);
+  --mat-sys-outline: var(--hairline-strong);
+  --mat-sys-outline-variant: var(--hairline);
+  --mat-sys-surface-tint: transparent;
+  --mat-sys-error: var(--warn-fill);
+  --mat-sys-on-error: var(--text-white);
+}

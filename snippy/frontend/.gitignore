@@ -42,5 +42,3 @@ testem.log
 Thumbs.db
 
 # Runtime env injected by container entrypoint
-/public/env.js
-/src/assets/env.js

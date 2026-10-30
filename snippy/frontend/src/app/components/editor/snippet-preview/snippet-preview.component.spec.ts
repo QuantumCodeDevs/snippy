@@ -380,6 +380,20 @@ describe('dataUrlToBlob', () => {
 });
 
 describe('buildPreviewSrcdoc', () => {
+  it('loads CDN scripts before snippet JS so top-level code can use them', () => {
+    const doc = buildPreviewSrcdoc({
+      html: '<div></div>',
+      css: '',
+      js: 'window.__usesLib = _.VERSION;',
+      cdnResources: [{ resourceType: 'js', url: 'https://cdnjs.cloudflare.com/lib.js' }],
+      includeRuntime: true,
+    });
+    const cdnAt = doc.indexOf('<script src="https://cdnjs.cloudflare.com/lib.js">');
+    const userAt = doc.indexOf('window.__usesLib');
+    expect(cdnAt).toBeGreaterThan(-1);
+    expect(cdnAt).toBeLessThan(userAt);
+  });
+
   it('includes runtime JS only when requested', () => {
     const withRuntime = buildPreviewSrcdoc({
       html: '<div id="box">Hi</div>',

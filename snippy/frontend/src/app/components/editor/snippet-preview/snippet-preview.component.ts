@@ -120,10 +120,10 @@ export function buildPreviewSrcdoc(opts: {
         </head>
         <body>
           ${opts.html}
+          ${scripts}
           <script>
             ${opts.js ?? ''}
           <\/script>
-          ${scripts}
         </body>
       </html>
     `;
