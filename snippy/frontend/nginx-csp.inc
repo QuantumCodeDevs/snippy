@@ -2,7 +2,7 @@
 # ('self' for the app, * for /embed/). Do not include from /api/.
 #
 # script-src is 'self' only: no inline scripts, no eval, no third-party script.
-# index.html loads /boot.js and /env.js, and critical-CSS inlining is off
+# index.html loads /boot.js, and critical-CSS inlining is off
 # (angular.json) because it emits an inline script. Snippet code never runs under
 # this policy: the live preview loads /preview.html, which has its own CSP
 # (nginx-preview-headers.inc). The snapshot capture iframe is a srcdoc with no scripts.

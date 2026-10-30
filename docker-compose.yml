@@ -1,7 +1,7 @@
 # Local development only. Production images are built by GitHub Actions
 # and deployed via Docker Hub (slurrps/snippy-frontend, slurrps/snippy-pocketbase).
 #
-# PocketBase reads repo-root .env. Frontend only gets POCKETBASE_URL so
+# PocketBase reads repo-root .env. The frontend gets nothing from it, so
 # admin / SMTP / OAuth client secrets never reach the SPA container.
 
 services:
@@ -29,7 +29,6 @@ services:
     volumes:
       - ./snippy/frontend:/app
       - /app/node_modules
-    entrypoint: ["/bin/sh", "/app/entrypoint.dev.sh"]
     command:
       - ng
       - serve
@@ -43,7 +42,6 @@ services:
       - "4200:4200"
     environment:
       CHOKIDAR_USEPOLLING: "true"
-      POCKETBASE_URL: ${POCKETBASE_URL:-}
       POCKETBASE_PROXY_TARGET: http://pocketbase:8090
     depends_on:
       pocketbase:

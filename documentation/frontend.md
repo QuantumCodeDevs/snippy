@@ -31,7 +31,7 @@ Related: [PocketBase collections and rules](db.md) · [self-host README](../READ
 
 Dev: [`proxy.conf.js`](../snippy/frontend/proxy.conf.js) forwards `/api` and `/_/` to PocketBase (`http://127.0.0.1:8090`, or `POCKETBASE_PROXY_TARGET` inside Compose). `ng serve` loads it from `angular.json`. The Admin UI is still the PocketBase process.
 
-Prod: [`nginx.site.conf`](../snippy/frontend/nginx.site.conf) forwards `/api/` only. `/_/` is not the Admin UI. PocketBase sends the OAuth popup there to close it, so nginx serves [`oauth2-popup-close.html`](../snippy/frontend/public/oauth2-popup-close.html) for that path. The Admin UI stays on `127.0.0.1:8090/_/`. CSP `connect-src` is `'self' blob: data:` plus `https://api.cdnjs.com` and `https://cdnjs.cloudflare.com`. The app `script-src` is `'self'` only: no inline scripts, no `eval`, no third-party script. `index.html` loads [`boot.js`](../snippy/frontend/public/boot.js) (OAuth popup close and theme) and `env.js`, and critical-CSS inlining is off in `angular.json` because it emits an inline script. Snippet HTML and JS run only in the live preview iframe (`allow-scripts`, no `allow-same-origin`, no `allow-top-navigation`, no `allow-popups-to-escape-sandbox`). That iframe loads [`preview.html`](../snippy/frontend/public/preview.html), not a `srcdoc`, because a `srcdoc` inherits the app CSP. nginx serves `/preview.html` with its own CSP ([`nginx-preview-headers.inc`](../snippy/frontend/nginx-preview-headers.inc)): the loose `script-src` snippets need plus a CSP `sandbox`, so the page has an opaque origin even when opened directly or framed without a sandbox attribute. The page posts `ready` to its parent and renders the document the parent sends back. `ng serve` sends no CSP, so test CSP changes against the production image. Snapshot capture uses a second iframe with `allow-same-origin` and no scripts. Embed sandbox headers stay on `/embed/`.
+Prod: [`nginx.site.conf`](../snippy/frontend/nginx.site.conf) forwards `/api/` only. `/_/` is not the Admin UI. PocketBase sends the OAuth popup there to close it, so nginx serves [`oauth2-popup-close.html`](../snippy/frontend/public/oauth2-popup-close.html) for that path. The Admin UI stays on `127.0.0.1:8090/_/`. CSP `connect-src` is `'self' blob: data:` plus `https://api.cdnjs.com` and `https://cdnjs.cloudflare.com`. The app `script-src` is `'self'` only: no inline scripts, no `eval`, no third-party script. `index.html` loads [`boot.js`](../snippy/frontend/public/boot.js) (OAuth popup close and theme), and critical-CSS inlining is off in `angular.json` because it emits an inline script. Snippet HTML and JS run only in the live preview iframe (`allow-scripts`, no `allow-same-origin`, no `allow-top-navigation`, no `allow-popups-to-escape-sandbox`). That iframe loads [`preview.html`](../snippy/frontend/public/preview.html), not a `srcdoc`, because a `srcdoc` inherits the app CSP. nginx serves `/preview.html` with its own CSP ([`nginx-preview-headers.inc`](../snippy/frontend/nginx-preview-headers.inc)): the loose `script-src` snippets need plus a CSP `sandbox`, so the page has an opaque origin even when opened directly or framed without a sandbox attribute. The page posts `ready` to its parent and renders the document the parent sends back. `ng serve` sends no CSP, so test CSP changes against the production image. Snapshot capture uses a second iframe with `allow-same-origin` and no scripts. Embed sandbox headers stay on `/embed/`.
 
 ```mermaid
 flowchart LR
@@ -49,13 +49,9 @@ Pages and dialogs should not call the SDK. They call a **store** (shared state) 
 
 ## Runtime env
 
-[`src/app/config/runtime-env.ts`](../snippy/frontend/src/app/config/runtime-env.ts) reads `window.__env` from `/env.js` (written by the container entrypoint).
+The SPA has no runtime config. The PocketBase SDK always uses `window.location.origin`: nginx proxies `/api/` in production and `ng serve` proxies it in dev (`proxy.conf.js`). A separate PocketBase origin would not work anyway, because the CSP `connect-src` allows only `'self'` and cdnjs.
 
-| Key | Meaning |
-|---|---|
-| `pocketbase_url` | SDK base URL. Empty means `window.location.origin` (proxied same-origin) |
-
-There is no frontend `OAUTH_PROVIDERS` list. SMTP and social buttons come from `GET /api/snippy/meta`. Admin, SMTP, and OAuth **client secrets never** appear in `window.__env`.
+There is no frontend `OAUTH_PROVIDERS` list. SMTP and social buttons come from `GET /api/snippy/meta`. Admin, SMTP, and OAuth **client secrets never** reach the frontend container. Its only env var is the optional `SITE_URL` for `robots.txt`.
 
 CORS origins are scheme + host + port, derived by PocketBase (`localhost:4200`, `PB_APP_URL`, optional `PB_ALLOWED_ORIGINS`). See [README — Allowed origins](../README.md#allowed-origins-cors).
 
@@ -115,7 +111,7 @@ That is PocketBase’s built-in redirect, not an Angular route (there is still `
 
 Yes: PocketBase auth tokens are **JWTs**.
 
-1. [`PocketBaseService`](../snippy/frontend/src/app/services/data/pocketbase.service.ts) constructs one SDK instance with `pocketBaseBaseUrl()` and `autoCancellation(false)` (list pages fire overlapping requests).
+1. [`PocketBaseService`](../snippy/frontend/src/app/services/data/pocketbase.service.ts) constructs one SDK instance on `window.location.origin` with `autoCancellation(false)` (list pages fire overlapping requests).
 2. Login / register / OAuth / `authRefresh` persist `{ token, record }` on `pb.authStore`. Tokens last **2 days** (migration `1740000008`). `AuthStoreService.refreshSession()` calls `authRefresh` on startup and when the tab becomes visible, at most once an hour, so active users stay signed in and idle sessions end after 2 days. Only a 401/403 from the refresh signs the user out; network errors keep the session.
 3. The SDK writes that to **`localStorage`** under the key `pocketbase_auth`. Reloading the SPA restores the session without a round trip; `authStore.isValid` checks expiry.
 4. On later `collection(...)` and `send(...)` calls the SDK sets the HTTP header **`Authorization: <jwt>`** (the raw token; PocketBase also accepts a `Bearer` prefix).

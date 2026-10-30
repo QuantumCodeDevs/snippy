@@ -2,7 +2,6 @@
 
 import { Injectable, inject } from '@angular/core';
 import PocketBase from 'pocketbase';
-import { pocketBaseBaseUrl } from '@app/config/runtime-env';
 import { ActivityService } from '@app/services/ui/activity.service';
 
 @Injectable({ providedIn: 'root' })
@@ -11,7 +10,8 @@ export class PocketBaseService {
 
   constructor() {
     // Shared SDK client; auto-cancel off so overlapping list/detail requests are not aborted.
-    this.pb = new PocketBase(pocketBaseBaseUrl());
+    // PocketBase is always same-origin: nginx (prod) and ng serve (dev) proxy /api/.
+    this.pb = new PocketBase(typeof window !== 'undefined' ? window.location.origin : '');
     this.pb.autoCancellation(false);
     this.trackRequests(inject(ActivityService));
   }

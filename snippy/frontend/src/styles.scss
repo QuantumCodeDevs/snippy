@@ -5,92 +5,31 @@
  * Partials live in src/styles/ and are grouped by concern.
  * ------------------------------------------------------- */
 
-@use '@angular/material' as mat;
-
-html {
-  color-scheme: dark;
-  @include mat.theme(
-    (
-      color: (
-        primary: mat.$orange-palette,
-        tertiary: mat.$orange-palette,
-        theme-type: color-scheme,
-      ),
-      typography: (
-        plain-family: (
-          'IBM Plex Sans',
-          sans-serif,
-        ),
-        brand-family: (
-          'Space Grotesk',
-          sans-serif,
-        ),
-      ),
-      density: 0,
-    )
-  );
-
-  /* Orchard pair. Values follow [data-theme] tokens, not a second palette. */
-  --mat-sys-background: var(--page-bg);
-  --mat-sys-surface: var(--card-bg);
-  --mat-sys-surface-container: var(--card-bg);
-  --mat-sys-surface-container-low: var(--page-bg);
-  --mat-sys-surface-container-high: var(--surface-hover);
-  --mat-sys-surface-container-highest: var(--surface-hover);
-  --mat-sys-on-surface: var(--text-primary);
-  --mat-sys-on-surface-variant: var(--text-muted);
-  --mat-sys-on-background: var(--text-primary);
-  --mat-sys-primary: var(--accent);
-  --mat-sys-on-primary: var(--accent-ink);
-  --mat-sys-primary-container: var(--accent);
-  --mat-sys-on-primary-container: var(--accent-ink);
-  --mat-sys-tertiary: var(--accent);
-  --mat-sys-on-tertiary: var(--accent-ink);
-  --mat-sys-outline: var(--hairline-strong);
-  --mat-sys-outline-variant: var(--hairline);
-  --mat-sys-surface-tint: transparent;
-  --mat-sys-error: var(--warn-fill);
-  --mat-sys-on-error: var(--text-white);
-}
-
-@import 'tailwindcss';
-
-@theme inline {
-  --color-ink: var(--text-primary);
-  --color-bright: var(--text-bright);
-  --color-muted: var(--text-soft);
-  --color-faint: var(--text-faint);
-  --color-dim: var(--text-dim);
-  --color-page: var(--page-bg);
-  --color-surface: var(--card-bg);
-  --color-raised: var(--surface-hover);
-  --color-line: var(--hairline);
-  --color-accent: var(--accent);
-  --color-mint: var(--accent);
-  --color-clay: var(--accent);
-  --color-sky: var(--accent);
-}
+/* Load order is output order: theme, Tailwind, then the design system. */
+@use 'styles/material-theme';
+@use 'tailwindcss';
+@use 'styles/tailwind-theme';
 
 /* Design system */
-@import 'styles/tokens';
-@import 'styles/base';
-@import 'styles/brand-nav';
-@import 'styles/layout';
-@import 'styles/motion';
-@import 'styles/dialogs';
-@import 'styles/a11y-feedback';
+@use 'styles/tokens';
+@use 'styles/base';
+@use 'styles/brand-nav';
+@use 'styles/layout';
+@use 'styles/motion';
+@use 'styles/dialogs';
+@use 'styles/a11y-feedback';
 
 /* Shared list card chrome */
-@import 'styles/list-card';
+@use 'styles/list-card';
 
 /* Angular Material overrides */
-@import 'styles/material-cards';
-@import 'styles/material-dialogs';
-@import 'styles/material-chips-menus';
-@import 'styles/material-forms';
-@import 'styles/material-switch';
-@import 'styles/material-tabs';
-@import 'styles/material-buttons';
-@import 'styles/material-snackbar';
-@import 'styles/material-overlays';
-@import 'styles/material-tailwind-fixes';
+@use 'styles/material-cards';
+@use 'styles/material-dialogs';
+@use 'styles/material-chips-menus';
+@use 'styles/material-forms';
+@use 'styles/material-switch';
+@use 'styles/material-tabs';
+@use 'styles/material-buttons';
+@use 'styles/material-snackbar';
+@use 'styles/material-overlays';
+@use 'styles/material-tailwind-fixes';

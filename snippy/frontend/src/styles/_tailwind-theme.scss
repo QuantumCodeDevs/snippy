@@ -1,0 +1,17 @@
+/* Tailwind color names backed by the [data-theme] tokens. */
+
+@theme inline {
+  --color-ink: var(--text-primary);
+  --color-bright: var(--text-bright);
+  --color-muted: var(--text-soft);
+  --color-faint: var(--text-faint);
+  --color-dim: var(--text-dim);
+  --color-page: var(--page-bg);
+  --color-surface: var(--card-bg);
+  --color-raised: var(--surface-hover);
+  --color-line: var(--hairline);
+  --color-accent: var(--accent);
+  --color-mint: var(--accent);
+  --color-clay: var(--accent);
+  --color-sky: var(--accent);
+}
