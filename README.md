@@ -2,7 +2,7 @@
 
 Snippy is an open-source [CodePen](https://codepen.io/)-style app for writing, previewing, and sharing HTML, CSS, and JavaScript snippets.
 
-- **Version:** 0.5.2
+- **Version:** 0.5.10
 - **Repository:** [github.com/slurrps-mcgee/Snippy](https://github.com/slurrps-mcgee/Snippy)
 - **License:** [MIT](https://github.com/slurrps-mcgee/Snippy/blob/main/LICENSE)
 - **Docker Hub images:** `slurrps/snippy-frontend`, `slurrps/snippy-pocketbase` (tags `0.5.2` and `latest`)
