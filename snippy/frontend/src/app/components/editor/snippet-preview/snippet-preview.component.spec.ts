@@ -82,10 +82,13 @@ describe('SnippetPreviewComponent', () => {
       const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
       expect(iframe).toBeTruthy();
 
-      // Verify srcdoc is set (content is rendered)
-      expect(iframe.srcdoc).toContain(testHtml);
-      expect(iframe.srcdoc).toContain(testCss);
-      expect(iframe.srcdoc).toContain(testJs);
+      // The frame loads the preview page; the document waits until it posts ready.
+      expect(iframe.getAttribute('src')).toMatch(/^\/preview\.html\?v=\d+$/);
+      expect(iframe.srcdoc).toBe('');
+      const pending = component['pendingDoc'];
+      expect(pending).toContain(testHtml);
+      expect(pending).toContain(testCss);
+      expect(pending).toContain(testJs);
 
       // Verify sandbox prevents same-origin access
       // In a sandboxed iframe without allow-same-origin, contentDocument should be null
@@ -147,7 +150,7 @@ describe('SnippetPreviewComponent', () => {
       });
 
       // Trigger the message handler
-      component['onConsoleMessage'](fakeEvent);
+      component['onPreviewMessage'](fakeEvent);
 
       // Should not process message from wrong source
       expect(consoleSpy).not.toHaveBeenCalled();
@@ -173,7 +176,7 @@ describe('SnippetPreviewComponent', () => {
         origin: 'null', // Sandboxed iframes have null origin
       });
 
-      component['onConsoleMessage'](validEvent);
+      component['onPreviewMessage'](validEvent);
 
       // Should process message from correct source
       expect(consoleSpy).toHaveBeenCalledWith('log', ['valid message']);
@@ -194,75 +197,65 @@ describe('SnippetPreviewComponent', () => {
         origin: window.location.origin,
       });
 
-      component['onConsoleMessage'](invalidEvent);
+      component['onPreviewMessage'](invalidEvent);
 
       expect(consoleSpy).not.toHaveBeenCalled();
     });
   });
 
-  describe('XSS mitigation - CSS-only update fallback', () => {
-    it('should fall back to full reload when CSS-only update fails', () => {
+  describe('preview page handshake', () => {
+    it('reloads the preview page for CSS-only edits', () => {
       component.ngAfterViewInit();
-
-      // First, do a full load
       component.updatePreview('<div>test</div>', 'body { color: red; }', '', null, []);
+      const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+      const first = iframe.getAttribute('src');
 
-      // Spy on the private methods
-      const preview = component as unknown as {
-        updateCssOnly: (css: string) => boolean;
-        fullReload: () => void;
-      };
-      const updateCssOnlySpy = vi.spyOn(preview, 'updateCssOnly').mockReturnValue(false);
-      const fullReloadSpy = vi.spyOn(preview, 'fullReload').mockReturnValue(undefined);
-
-      // Try a partial update that will fail
       component.updatePreview('<div>test</div>', 'body { color: blue; }', '', 'partial', []);
 
-      // Should attempt CSS-only update
-      expect(updateCssOnlySpy).toHaveBeenCalled();
-
-      // Should fall back to full reload when CSS-only fails
-      expect(fullReloadSpy).toHaveBeenCalled();
+      expect(iframe.getAttribute('src')).not.toBe(first);
+      expect(component['pendingDoc']).toContain('color: blue');
     });
 
-    it('should not fall back to full reload when CSS-only update succeeds', () => {
+    it('sends the pending document when the preview page is ready', () => {
       component.ngAfterViewInit();
+      component.updatePreview('<div>ready</div>', '', '', null, []);
+      const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+      const frame = iframe.contentWindow!;
+      const post = vi.spyOn(frame, 'postMessage').mockReturnValue(undefined);
 
-      // First, do a full load
-      component.updatePreview('<div>test</div>', 'body { color: red; }', '', null, []);
+      component['onPreviewMessage'](
+        new MessageEvent('message', {
+          data: { source: 'snippy-preview', type: 'ready' },
+          source: frame,
+          origin: 'null',
+        })
+      );
 
-      // Spy on the private methods
-      const preview = component as unknown as {
-        updateCssOnly: (css: string) => boolean;
-        fullReload: () => void;
-      };
-      const updateCssOnlySpy = vi.spyOn(preview, 'updateCssOnly').mockReturnValue(true);
-      const fullReloadSpy = vi.spyOn(preview, 'fullReload').mockReturnValue(undefined);
-
-      // Try a partial update that will succeed
-      component.updatePreview('<div>test</div>', 'body { color: blue; }', '', 'partial', []);
-
-      // Should attempt CSS-only update
-      expect(updateCssOnlySpy).toHaveBeenCalled();
-
-      // Should NOT fall back to full reload when CSS-only succeeds
-      expect(fullReloadSpy).not.toHaveBeenCalled();
-    });
-
-    it('should return false from updateCssOnly when contentDocument is inaccessible', () => {
-      component.ngAfterViewInit();
-
-      // Mock iframe with no contentDocument (simulating sandbox restriction)
-      const mockIframe = {
-        nativeElement: {
-          contentDocument: null,
+      expect(post).toHaveBeenCalledWith(
+        {
+          source: 'snippy-preview-host',
+          type: 'render',
+          html: expect.stringContaining('<div>ready</div>'),
         },
-      };
-      component['previewIframe'] = mockIframe as any;
+        '*'
+      );
+    });
 
-      const result = component['updateCssOnly']('body { color: red; }');
+    it('ignores ready messages from other windows', () => {
+      component.ngAfterViewInit();
+      component.updatePreview('<div>secret</div>', '', '', null, []);
+      const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
+      const post = vi.spyOn(iframe.contentWindow!, 'postMessage').mockReturnValue(undefined);
 
-      expect(result).toBe(false);
+      component['onPreviewMessage'](
+        new MessageEvent('message', {
+          data: { source: 'snippy-preview', type: 'ready' },
+          source: window as any,
+          origin: window.location.origin,
+        })
+      );
+
+      expect(post).not.toHaveBeenCalled();
     });
   });
 
@@ -275,8 +268,9 @@ describe('SnippetPreviewComponent', () => {
 
       const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
 
-      // Content should be in srcdoc
-      expect(iframe.srcdoc).toContain(userHtml);
+      // Content waits for the preview page, never in an inherited-CSP srcdoc
+      expect(component['pendingDoc']).toContain(userHtml);
+      expect(iframe.srcdoc).toBe('');
 
       // But iframe should be sandboxed
       expect(iframe.hasAttribute('sandbox')).toBe(true);
@@ -291,8 +285,9 @@ describe('SnippetPreviewComponent', () => {
 
       const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
 
-      // Content should be in srcdoc
-      expect(iframe.srcdoc).toContain(userCss);
+      // Content waits for the preview page, never in an inherited-CSP srcdoc
+      expect(component['pendingDoc']).toContain(userCss);
+      expect(iframe.srcdoc).toBe('');
 
       // But iframe should be sandboxed
       expect(iframe.hasAttribute('sandbox')).toBe(true);
@@ -306,8 +301,9 @@ describe('SnippetPreviewComponent', () => {
 
       const iframe = fixture.nativeElement.querySelector('iframe') as HTMLIFrameElement;
 
-      // Content should be in srcdoc
-      expect(iframe.srcdoc).toContain(userJs);
+      // Content waits for the preview page, never in an inherited-CSP srcdoc
+      expect(component['pendingDoc']).toContain(userJs);
+      expect(iframe.srcdoc).toBe('');
 
       // But iframe should be sandboxed (preventing top navigation)
       expect(iframe.hasAttribute('sandbox')).toBe(true);
