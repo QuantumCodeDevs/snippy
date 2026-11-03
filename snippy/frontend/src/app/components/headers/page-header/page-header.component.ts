@@ -26,7 +26,6 @@ import { SnippetStatBarComponent } from '@app/components/ui/snippet-stat-bar/sni
 import { CommandPaletteComponent } from '@app/components/dialogs/command-palette/command-palette.component';
 import { DraftAutosaveService } from '@app/services/ui/draft-autosave.service';
 import { EditorCommandsService } from '@app/services/ui/editor-commands.service';
-import { SaveStatusComponent } from '@app/components/ui/save-status/save-status.component';
 import { ThemeService } from '@app/services/ui/theme.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
@@ -46,7 +45,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     ThemeToggleComponent,
     ForkAttributionComponent,
     SnippetStatBarComponent,
-    SaveStatusComponent,
     MatProgressSpinnerModule,
   ],
   templateUrl: './page-header.component.html',
@@ -86,13 +84,6 @@ export class PageHeaderComponent implements OnInit {
 
   get isGuest(): boolean {
     return this.editorUi.guestMode();
-  }
-
-  get saveLabel(): string {
-    if (this.snippetSaveUI.saving()) return 'Saving…';
-    if (this.snippetStore.isDirty()) return 'Save Changes';
-    if (this.hasSavedSnippet) return 'Saved';
-    return 'Save';
   }
 
   get showMenuNote(): boolean {

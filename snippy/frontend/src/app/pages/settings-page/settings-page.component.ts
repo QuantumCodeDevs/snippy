@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  HostListener,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -10,6 +11,7 @@ import {
   inject,
   signal,
   untracked,
+  computed,
   ChangeDetectionStrategy,
 } from '@angular/core';
 
@@ -48,6 +50,8 @@ import {
 import { EDITOR_THEMES } from '@app/editor/themes';
 import { ShortcutListComponent } from '@app/components/ui/shortcut-list/shortcut-list.component';
 import { baseEditorExtensions, buildPreferenceExtensions } from '@app/editor/codemirror-extensions';
+import type { HasUnsavedChanges } from '@app/guards/unsaved-changes.guard';
+import { authErrorMessage } from '@app/pages/auth/auth-errors';
 
 type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'current';
 type PreviewLang = 'html' | 'css' | 'js';
@@ -96,7 +100,7 @@ console.log(greet('Snippy'));`,
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './settings-page.component.scss',
 })
-export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
+export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy, HasUnsavedChanges {
   private authStore = inject(AuthStoreService);
   private api = inject(SnippyApi);
   private snackbar = inject(SnackbarService);
@@ -114,10 +118,12 @@ export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.authStore.user;
   }
 
+  /** One Save button commits every tab. */
+  saving = signal(false);
+
   // Profile tab
   displayName = '';
   bio = '';
-  profileSaving = signal(false);
   pictureUploading = signal(false);
   pictureRemoving = signal(false);
 
@@ -128,14 +134,15 @@ export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   // Account tab
   userName = '';
   usernameStatus = signal<UsernameStatus>('idle');
-  usernameSaving = signal(false);
   isPrivate = false;
-  privacySaving = signal(false);
   deleting = signal(false);
 
   // Editor tab
   editorDraft: EditorPreferences = mergeEditorPreferences(undefined);
-  editorSaving = signal(false);
+  /** Saved prefs, serialized once per user change instead of on every check. */
+  private savedPrefsJson = computed(() =>
+    JSON.stringify(mergeEditorPreferences(this.user()?.editorPreferences))
+  );
   previewLang: PreviewLang = 'html';
   readonly fontKeys = EDITOR_FONT_KEYS;
   readonly fontLabels = FONT_FAMILY_LABELS;
@@ -160,7 +167,7 @@ export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
       if (this.hydratedUserName === u.userName) return;
-      if (this.isProfileDirty() || this.isUsernameDirty() || this.isPrivacyDirty()) return;
+      if (this.isDirty()) return;
       this.hydrateFromUser();
     });
 
@@ -174,35 +181,66 @@ export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  isProfileDirty(): boolean {
-    const u = this.user();
-    if (!u) return false;
-    return this.displayName !== (u.displayName ?? '') || this.bio !== (u.bio ?? '');
+  //#region Dirty state
+
+  /** Any tab differs from the saved user. */
+  isDirty(): boolean {
+    return (
+      this.isProfileDirty() ||
+      this.isUsernameDirty() ||
+      this.isPrivacyDirty() ||
+      this.isEditorDirty()
+    );
   }
 
-  isUsernameDirty(): boolean {
+  private isProfileDirty(): boolean {
+    const u = this.user();
+    return !!u && (this.displayName !== (u.displayName ?? '') || this.bio !== (u.bio ?? ''));
+  }
+
+  private isUsernameDirty(): boolean {
     const u = this.user();
     return !!u && this.userName.trim() !== u.userName;
   }
 
-  isPrivacyDirty(): boolean {
+  private isPrivacyDirty(): boolean {
     const u = this.user();
     return !!u && this.isPrivate !== !!u.isPrivate;
   }
 
-  isEditorDirty(): boolean {
-    const saved = mergeEditorPreferences(this.user()?.editorPreferences);
-    return JSON.stringify(this.editorDraft) !== JSON.stringify(saved);
+  private isEditorDirty(): boolean {
+    return !!this.user() && JSON.stringify(this.editorDraft) !== this.savedPrefsJson();
   }
 
-  canSaveUsername(): boolean {
-    const status = this.usernameStatus();
+  /** A changed username must be confirmed available before it is sent. */
+  private isUsernameReady(): boolean {
+    if (!this.isUsernameDirty()) return true;
+    return this.usernameStatus() === 'available';
+  }
+
+  /** Other edits are ready but the new username is taken, invalid, or unchecked. */
+  usernameBlocksSave(): boolean {
     return (
-      this.isUsernameDirty() &&
-      (status === 'available' || status === 'current') &&
-      !this.usernameSaving()
+      this.isUsernameDirty() && !this.isUsernameReady() && this.usernameStatus() !== 'checking'
     );
   }
+
+  canSave(): boolean {
+    return this.isDirty() && this.isUsernameReady() && !this.saving();
+  }
+
+  /** Read by `unsavedChangesGuard` before the router leaves settings. */
+  hasUnsavedChanges(): boolean {
+    return this.isDirty();
+  }
+
+  /** Reloads, tab closes, and typed URLs skip the router guard. */
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent) {
+    if (this.isDirty()) event.preventDefault();
+  }
+
+  //#endregion Dirty state
 
   usernameStatusLabel(): string {
     switch (this.usernameStatus()) {
@@ -388,78 +426,44 @@ export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  async saveProfile() {
-    if (!this.isProfileDirty() || this.profileSaving()) return;
-    this.profileSaving.set(true);
+  /** Save every changed tab in one update. Only changed fields are sent. */
+  async saveSettings() {
+    if (!this.canSave()) return;
+    const patch: Parameters<SnippyApi['updateUser']>[0] = {};
+    if (this.isProfileDirty()) {
+      patch.displayName = this.displayName.trim();
+      patch.bio = this.bio.trim() || null;
+    }
+    if (this.isUsernameDirty()) patch.userName = this.userName.trim();
+    if (this.isPrivacyDirty()) patch.isPrivate = this.isPrivate;
+    if (this.isEditorDirty()) patch.editorPreferences = { ...this.editorDraft };
+
+    const sent = this.formSnapshot();
+    this.saving.set(true);
     try {
-      const res = await this.api.updateUser({
-        displayName: this.displayName.trim(),
-        bio: this.bio.trim() || null,
-      });
+      const res = await this.api.updateUser(patch);
       if (res?.user) {
         this.authStore.setUserFromApi(res.user);
-        this.hydrateFromUser();
+        // Keep edits made while the request was in flight; they stay dirty.
+        if (this.formSnapshot() === sent) this.hydrateFromUser();
       }
-      this.snackbar.success('Profile updated');
-    } catch {
-      this.snackbar.error('Failed to update profile');
+      this.snackbar.success('Settings saved');
+    } catch (err) {
+      this.snackbar.error(authErrorMessage(err, 'Failed to save settings'));
     } finally {
-      this.profileSaving.set(false);
+      this.saving.set(false);
     }
   }
 
-  async saveUsername() {
-    if (!this.canSaveUsername()) return;
-    this.usernameSaving.set(true);
-    try {
-      const res = await this.api.updateUser({ userName: this.userName.trim() });
-      if (res?.user) {
-        this.authStore.setUserFromApi(res.user);
-        this.hydrateFromUser();
-      }
-      this.snackbar.success('Username updated');
-    } catch {
-      this.snackbar.error('Failed to update username');
-    } finally {
-      this.usernameSaving.set(false);
-    }
-  }
-
-  async savePrivacy() {
-    if (!this.isPrivacyDirty() || this.privacySaving()) return;
-    this.privacySaving.set(true);
-    try {
-      const res = await this.api.updateUser({ isPrivate: this.isPrivate });
-      if (res?.user) {
-        this.authStore.setUserFromApi(res.user);
-        this.hydrateFromUser();
-      }
-      this.snackbar.success(this.isPrivate ? 'Account is now private' : 'Account is now public');
-    } catch {
-      this.snackbar.error('Failed to update privacy');
-    } finally {
-      this.privacySaving.set(false);
-    }
-  }
-
-  async saveEditorPreferences() {
-    if (!this.isEditorDirty() || this.editorSaving()) return;
-    this.editorSaving.set(true);
-    try {
-      const res = await this.api.updateUser({
-        editorPreferences: { ...this.editorDraft },
-      });
-      if (res?.user) {
-        this.authStore.setUserFromApi(res.user);
-        this.editorDraft = mergeEditorPreferences(res.user.editorPreferences);
-        this.editorPrefsService.clearLocal();
-      }
-      this.snackbar.success('Editor preferences saved');
-    } catch {
-      this.snackbar.error('Failed to save editor preferences');
-    } finally {
-      this.editorSaving.set(false);
-    }
+  /** Current form values, for spotting edits made during a save. */
+  private formSnapshot(): string {
+    return JSON.stringify([
+      this.displayName,
+      this.bio,
+      this.userName,
+      this.isPrivate,
+      this.editorDraft,
+    ]);
   }
 
   async confirmDeleteAccount() {

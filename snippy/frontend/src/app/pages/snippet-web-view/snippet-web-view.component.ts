@@ -127,6 +127,8 @@ export class SnippetWebViewComponent implements OnInit, OnDestroy {
   private viewRecorded = false;
   private previewTimer: ReturnType<typeof setTimeout> | null = null;
   private draftTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Draft key written while the open pen was dirty, so a later undo can drop it. */
+  private dirtyDraftKey: string | null = null;
 
   constructor() {
     this.autosave.watch();
@@ -194,9 +196,22 @@ export class SnippetWebViewComponent implements OnInit, OnDestroy {
     effect(() => {
       const dirty = this.snippetStoreService.isDirty();
       const snippet = this.snippetStoreService.snippet();
-      if (!dirty || !snippet || !this.canPersistDraft(snippet)) return;
-      if (this.draftTimer) clearTimeout(this.draftTimer);
-      this.draftTimer = setTimeout(() => this.persistDraft(), 400);
+      if (!snippet || !this.canPersistDraft(snippet)) return;
+      const key = this.draftKey(snippet);
+      if (dirty) {
+        this.dirtyDraftKey = key;
+        if (this.draftTimer) clearTimeout(this.draftTimer);
+        this.draftTimer = setTimeout(() => this.persistDraft(), 400);
+        return;
+      }
+      // Edits undone back to the saved copy leave a stale draft that would
+      // reopen the pen as unsaved. Only the same pen counts: a freshly loaded
+      // one may still be about to restore its own draft.
+      if (this.dirtyDraftKey === key) {
+        if (this.draftTimer) clearTimeout(this.draftTimer);
+        this.drafts.remove(key);
+      }
+      this.dirtyDraftKey = null;
     });
   }
 
@@ -412,14 +427,21 @@ export class SnippetWebViewComponent implements OnInit, OnDestroy {
     this.drafts.persistFromSnippet(this.drafts.keyFor({ guest: this.isGuest, shortId }), snippet);
   }
 
+  /** localStorage key for the open pen's draft. */
+  private draftKey(snippet: Snippet): string {
+    return this.drafts.keyFor({ guest: this.isGuest, shortId: snippet.shortId?.trim() || null });
+  }
+
   private restoreDraft() {
     const snippet = this.snippetStoreService.snippet();
     if (!snippet || !this.canPersistDraft(snippet)) return;
-    const key = this.drafts.keyFor({ guest: this.isGuest, shortId: snippet.shortId || null });
+    const key = this.draftKey(snippet);
     const draft = this.drafts.read(key);
     if (!draft) return;
     if (!this.drafts.shouldRestore(draft, snippet.updatedAt)) return;
     this.snippetStoreService.applyDraft(this.drafts.applyToSnippet(snippet, draft));
+    // A draft identical to the saved copy changes nothing; drop it.
+    if (!this.snippetStoreService.isDirty()) this.drafts.remove(key);
   }
 
   private updateSeo(snippet: Snippet | null, error: string | null) {

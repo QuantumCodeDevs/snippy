@@ -21,6 +21,8 @@ const OAUTH_REQUEST_KEY = 'snippy-oauth2-login';
 const OAUTH_CLOSE_GRACE_MS = 1500;
 /** Auth tokens last 2 days; renewing at most hourly keeps active sessions alive. */
 const SESSION_REFRESH_MS = 60 * 60 * 1000;
+/** Tells other tabs to re-read the shared session cookie after login or logout. */
+const SESSION_CHANNEL = 'snippy-auth';
 
 /** Open a blank centered popup (same size as the PocketBase SDK's), or null if blocked. */
 function openOAuthPopup(): Window | null {
@@ -47,13 +49,15 @@ export class AuthStoreService {
   private pb = inject(PocketBaseService).pb;
   private router = inject(Router);
   private lastRefresh = 0;
+  private channel =
+    typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(SESSION_CHANNEL) : null;
 
   constructor() {
     this.pb.authStore.onChange(() => {
       this.syncFromStore();
     }, true);
     void this.loadMeta();
-    void this.refreshSession();
+    this.channel?.addEventListener('message', () => void this.refreshUserFromBackend());
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') void this.refreshSession();
@@ -93,6 +97,7 @@ export class AuthStoreService {
   async login(identity: string, password: string) {
     await this.pb.collection('users').authWithPassword(identity, password);
     this.syncFromStore();
+    this.announceSessionChange();
   }
 
   /** Create a user then immediately sign them in. */
@@ -100,41 +105,52 @@ export class AuthStoreService {
     await this.pb.collection('users').create({ email, password, passwordConfirm });
     await this.pb.collection('users').authWithPassword(email, password);
     this.syncFromStore();
+    this.announceSessionChange();
   }
 
-  /** Clear JWT and send the browser home. */
-  logout() {
+  /** Expire the HttpOnly session cookie and send the browser home. */
+  async logout() {
     this.pb.authStore.clear();
     this.user.set(null);
-    void this.router.navigateByUrl('/');
+    try {
+      await this.pb.send('/api/snippy/logout', { method: 'POST' });
+    } catch {
+      /* the cookie expires on its own */
+    }
+    this.announceSessionChange();
+    await this.router.navigateByUrl('/');
   }
 
-  /** Renew the JWT on startup and when the tab regains focus, at most once an hour. */
+  /** Renew the session on startup and when the tab regains focus, at most once an hour. */
   async refreshSession() {
     if (Date.now() - this.lastRefresh < SESSION_REFRESH_MS) return;
-    if (!this.pb.authStore.isValid) {
-      // An expired token never fires onChange, so drop the stale user here.
-      this.syncFromStore();
-      return;
-    }
     this.lastRefresh = Date.now();
     await this.refreshUserFromBackend();
   }
 
-  /** Refresh the JWT and replace `user` from the latest record. */
+  /**
+   * Ask PocketBase who the session cookie belongs to. A signed-in reply renews
+   * the cookie and replaces `user`; `{ record: null }` (no cookie, expired, or
+   * revoked) signs out. Network errors keep the current session.
+   */
   async refreshUserFromBackend() {
     try {
-      if (!this.pb.authStore.isValid) return;
-      const rec = await this.pb.collection('users').authRefresh();
-      this.user.set(mapUser(this.pb, rec.record));
-    } catch (err) {
-      // Only a rejected token ends the session; network errors keep it.
-      const status = (err as { status?: number } | null)?.status;
-      if (status === 401 || status === 403) {
+      const res = await this.pb.send<{ record?: RecordModel | null }>('/api/snippy/session', {
+        method: 'POST',
+      });
+      if (res?.record) {
+        this.pb.authStore.save('', res.record);
+      } else {
         this.pb.authStore.clear();
-        this.user.set(null);
       }
+    } catch {
+      /* offline or PocketBase down */
     }
+  }
+
+  /** Let other open tabs pick up a login or logout (they share the cookie). */
+  private announceSessionChange() {
+    this.channel?.postMessage('changed');
   }
 
   /** Login route (redirect query is unused; kept for call-site compatibility). */
@@ -164,9 +180,13 @@ export class AuthStoreService {
 
   /** Change password while signed in (`oldPassword` required by PocketBase). */
   async setPassword(oldPassword: string, password: string, passwordConfirm: string) {
-    const id = this.pb.authStore.record?.id;
-    if (!id) throw new Error('Not authenticated');
-    await this.pb.collection('users').update(id, { oldPassword, password, passwordConfirm });
+    const record = this.pb.authStore.record;
+    if (!record?.id) throw new Error('Not authenticated');
+    await this.pb.collection('users').update(record.id, { oldPassword, password, passwordConfirm });
+    // A new password revokes every token, including this session's cookie.
+    const identity = String(record['email'] || record['username'] || '');
+    await this.pb.collection('users').authWithPassword(identity, password);
+    this.syncFromStore();
   }
 
   //#endregion Password
@@ -210,6 +230,7 @@ export class AuthStoreService {
         authData as { meta?: Record<string, unknown>; record?: RecordModel }
       );
       this.syncFromStore();
+      this.announceSessionChange();
     } finally {
       clearInterval(watch);
       clearTimeout(grace);
@@ -248,7 +269,7 @@ export class AuthStoreService {
     if (Object.keys(patch).length === 0) return;
     try {
       const rec = await this.pb.collection('users').update(record.id, patch);
-      this.pb.authStore.save(this.pb.authStore.token, rec);
+      this.pb.authStore.save('', rec);
     } catch {
       /* keep generated username / name */
     }

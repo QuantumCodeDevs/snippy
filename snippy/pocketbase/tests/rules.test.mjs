@@ -23,6 +23,7 @@ const settings = fs.readFileSync(path.join(root, 'pb_hooks/0_settings.pb.js'), '
 const usersHook = fs.readFileSync(path.join(root, 'pb_hooks/1_users.pb.js'), 'utf8');
 const util = fs.readFileSync(path.join(root, 'pb_hooks/lib.js'), 'utf8');
 const counters = fs.readFileSync(path.join(root, 'pb_hooks/3_counters.pb.js'), 'utf8');
+const authCookie = fs.readFileSync(path.join(root, 'pb_hooks/5_auth_cookie.pb.js'), 'utf8');
 const entrypoint = fs.readFileSync(path.join(root, 'entrypoint.sh'), 'utf8');
 const envExample = fs.readFileSync(path.join(repoRoot, '.env.example'), 'utf8');
 const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8');
@@ -30,6 +31,10 @@ const frontendDoc = fs.readFileSync(path.join(repoRoot, 'documentation/frontend.
 const dbDoc = fs.readFileSync(path.join(repoRoot, 'documentation/db.md'), 'utf8');
 const authStore = fs.readFileSync(
   path.join(repoRoot, 'snippy/frontend/src/app/services/stores/auth.store.service.ts'),
+  'utf8'
+);
+const pbService = fs.readFileSync(
+  path.join(repoRoot, 'snippy/frontend/src/app/services/data/pocketbase.service.ts'),
   'utf8'
 );
 const initialsSrc = fs.readFileSync(
@@ -108,6 +113,20 @@ describe('PocketBase API rules', () => {
     );
     assert.match(tokens, /authToken\.duration = 172800/);
     assert.match(authStore, /refreshSession/);
+  });
+
+  it('keeps the auth token in an HttpOnly cookie, never in the SPA', () => {
+    assert.match(util, /httpOnly: true/);
+    assert.match(util, /sameSite: 3/);
+    assert.match(util, /path: '\/api\/'/);
+    assert.match(authCookie, /onRecordAuthRequest/);
+    assert.match(authCookie, /e\.token = ''/);
+    assert.match(authCookie, /-1025/);
+    assert.match(authCookie, /isSameOriginRequest/);
+    assert.match(authCookie, /\/api\/snippy\/session/);
+    assert.match(authCookie, /\/api\/snippy\/logout/);
+    assert.match(pbService, /new CookieAuthStore\(\)/);
+    assert.doesNotMatch(pbService, /LocalAuthStore/);
   });
 
   it('hides isAdmin from clients', () => {

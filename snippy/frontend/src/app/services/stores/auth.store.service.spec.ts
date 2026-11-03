@@ -9,13 +9,14 @@ describe('AuthStoreService session refresh', () => {
       isValid: boolean;
       record: { id: string } | null;
       onChange: (cb: () => void, fire?: boolean) => void;
+      save: ReturnType<typeof vi.fn>;
       clear: ReturnType<typeof vi.fn>;
     };
     send: ReturnType<typeof vi.fn>;
     files: { getURL: ReturnType<typeof vi.fn> };
     collection: ReturnType<typeof vi.fn>;
   };
-  let authRefresh: ReturnType<typeof vi.fn>;
+  let session: ReturnType<typeof vi.fn<() => Promise<unknown>>>;
 
   function create(): AuthStoreService {
     TestBed.configureTestingModule({
@@ -27,53 +28,62 @@ describe('AuthStoreService session refresh', () => {
     return TestBed.inject(AuthStoreService);
   }
 
+  function sessionCalls() {
+    return pb.send.mock.calls.filter(([path]) => path === '/api/snippy/session').length;
+  }
+
   beforeEach(() => {
-    authRefresh = vi.fn().mockResolvedValue({ record: { id: 'u1', username: 'otter' } });
+    session = vi
+      .fn<() => Promise<unknown>>()
+      .mockResolvedValue({ record: { id: 'u1', username: 'otter' } });
     pb = {
       authStore: {
         isValid: true,
         record: { id: 'u1' },
         onChange: () => {},
+        save: vi.fn(),
         clear: vi.fn(),
       },
-      send: vi.fn().mockResolvedValue({}),
+      send: vi.fn((path: string) =>
+        path === '/api/snippy/session' ? session() : Promise.resolve({})
+      ),
       files: { getURL: vi.fn().mockReturnValue('') },
-      collection: vi.fn().mockReturnValue({ authRefresh }),
+      collection: vi.fn(),
     };
   });
 
-  it('renews the token on startup', async () => {
-    create();
-    await vi.waitFor(() => expect(authRefresh).toHaveBeenCalledTimes(1));
-  });
-
-  it('skips the refresh when there is no valid token', async () => {
-    pb.authStore.isValid = false;
+  it('stores the record from the session cookie without a token', async () => {
     const auth = create();
     await auth.refreshSession();
-    expect(authRefresh).not.toHaveBeenCalled();
-    expect(auth.user()).toBeNull();
+    expect(pb.authStore.save).toHaveBeenCalledWith('', { id: 'u1', username: 'otter' });
+  });
+
+  it('signs out when the server has no session', async () => {
+    session.mockResolvedValue({ record: null });
+    const auth = create();
+    await auth.refreshUserFromBackend();
+    expect(pb.authStore.clear).toHaveBeenCalled();
   });
 
   it('keeps the session on a network error', async () => {
-    authRefresh.mockRejectedValue({ status: 0 });
+    session.mockRejectedValue({ status: 0 });
     const auth = create();
     await auth.refreshUserFromBackend();
     expect(pb.authStore.clear).not.toHaveBeenCalled();
   });
 
-  it('signs out when the server rejects the token', async () => {
-    authRefresh.mockRejectedValue({ status: 401 });
-    const auth = create();
-    await auth.refreshUserFromBackend();
-    expect(pb.authStore.clear).toHaveBeenCalled();
-    expect(auth.user()).toBeNull();
-  });
-
   it('renews at most once an hour', async () => {
     const auth = create();
-    await vi.waitFor(() => expect(authRefresh).toHaveBeenCalledTimes(1));
     await auth.refreshSession();
-    expect(authRefresh).toHaveBeenCalledTimes(1);
+    await auth.refreshSession();
+    expect(sessionCalls()).toBe(1);
+  });
+
+  it('expires the cookie on logout', async () => {
+    const auth = create();
+    await auth.logout();
+    expect(pb.authStore.clear).toHaveBeenCalled();
+    expect(pb.send).toHaveBeenCalledWith('/api/snippy/logout', { method: 'POST' });
+    expect(auth.user()).toBeNull();
   });
 });

@@ -174,6 +174,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/settings-page/settings-page.component').then((m) => m.SettingsPageComponent),
     canActivate: [authGuard],
+    canDeactivate: [unsavedChangesGuard],
     data: {
       seo: { title: 'Settings', noindex: true } satisfies SeoData,
       header: 'feed' satisfies HeaderMode,

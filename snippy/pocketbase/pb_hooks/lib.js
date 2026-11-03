@@ -232,6 +232,57 @@ function requireAuth(e) {
   return e.auth;
 }
 
+// HttpOnly session cookie that carries the users JWT (see 5_auth_cookie.pb.js).
+const AUTH_COOKIE = 'snippy_auth';
+
+/** The auth cookie's token, or '' when the request has none. */
+function readAuthCookie(e) {
+  try {
+    return e.request.cookie(AUTH_COOKIE).value || '';
+  } catch (err) {
+    return '';
+  }
+}
+
+/**
+ * Secure when the public site (PB_APP_URL) is https. Not read from the request:
+ * auth hook events do not expose e.request, and nginx behind a TLS proxy
+ * forwards its own http scheme.
+ */
+function authCookieSecure(e) {
+  const appUrl = String(e.app.settings().meta.appURL || '');
+  return appUrl.toLowerCase().indexOf('https://') === 0;
+}
+
+/** Set (or, with an empty token, expire) the auth cookie. */
+function setAuthCookie(e, token, maxAge) {
+  e.setCookie(
+    new Cookie({
+      name: AUTH_COOKIE,
+      value: token,
+      path: '/api/',
+      maxAge: token ? maxAge : -1,
+      httpOnly: true,
+      secure: authCookieSecure(e),
+      sameSite: 3, // http.SameSiteStrictMode
+    })
+  );
+}
+
+function clearAuthCookie(e) {
+  setAuthCookie(e, '', 0);
+}
+
+/**
+ * True unless the browser says the request came from another origin.
+ * Sec-Fetch-Site is missing on old browsers and non-browser clients; the
+ * SameSite=Strict cookie still keeps cross-site requests from carrying it.
+ */
+function isSameOriginRequest(e) {
+  const site = String(e.request.header.get('Sec-Fetch-Site') || '');
+  return !site || site === 'same-origin' || site === 'none';
+}
+
 module.exports = {
   isReservedUsername,
   isValidUsername,
@@ -242,6 +293,10 @@ module.exports = {
   relationId,
   bumpCount,
   requireAuth,
+  readAuthCookie,
+  setAuthCookie,
+  clearAuthCookie,
+  isSameOriginRequest,
   assertCommentParent,
   publicSnippet,
   publicFiles,
