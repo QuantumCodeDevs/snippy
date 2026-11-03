@@ -1,9 +1,10 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy, booleanAttribute } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 /**
- * "forked from: <parent> by @<owner>" line shown on snippet cards and in the
- * editor header. Renders nothing when the snippet is not a fork.
+ * "forked from: <parent> by @<owner>" shown on snippet cards, in the compact
+ * editor menu, and in the desktop editor footer. Renders nothing when the
+ * snippet is not a fork.
  */
 @Component({
   selector: 'app-fork-attribution',
@@ -11,7 +12,15 @@ import { RouterModule } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @if (parentShortId) {
-      <span class="text-sm text-muted flex flex-col">
+      <span
+        class="text-muted flex"
+        [class.text-sm]="!inline"
+        [class.flex-col]="!inline"
+        [class.text-xs]="inline"
+        [class.items-center]="inline"
+        [class.gap-x-2]="inline"
+        [class.whitespace-nowrap]="inline"
+      >
         @if (parentDeleted) {
           <div class="flex items-center gap-1">
             <span>Forked From:</span>
@@ -60,4 +69,6 @@ export class ForkAttributionComponent {
   @Input() parentName: string | null | undefined;
   @Input() parentUserName: string | null | undefined;
   @Input() parentDeleted = false;
+  /** One line ("Forked From: x  By: @y") for tight spots like the editor footer. */
+  @Input({ transform: booleanAttribute }) inline = false;
 }

@@ -27,10 +27,20 @@ import { EditorUiService } from '@app/services/ui/editor-ui.service';
 import { PreviewConsoleService } from '@app/services/ui/preview-console.service';
 import { ZipImportService } from '@app/services/ui/zip-import.service';
 import { EditorCommandsService } from '@app/services/ui/editor-commands.service';
+import { SaveStatusComponent } from '@app/components/ui/save-status/save-status.component';
+import { ForkAttributionComponent } from '@app/components/ui/fork-attribution/fork-attribution.component';
 
 @Component({
   selector: 'app-footer',
-  imports: [RouterLink, MatButtonModule, MatIconModule, MatTooltipModule, MatProgressSpinnerModule],
+  imports: [
+    RouterLink,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
+    SaveStatusComponent,
+    ForkAttributionComponent,
+  ],
   templateUrl: './footer.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './footer.component.scss',

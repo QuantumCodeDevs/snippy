@@ -111,14 +111,14 @@ That is PocketBase’s built-in redirect, not an Angular route (there is still `
 
 Yes: PocketBase auth tokens are **JWTs**.
 
-1. [`PocketBaseService`](../snippy/frontend/src/app/services/data/pocketbase.service.ts) constructs one SDK instance on `window.location.origin` with `autoCancellation(false)` (list pages fire overlapping requests).
-2. Login / register / OAuth / `authRefresh` persist `{ token, record }` on `pb.authStore`. Tokens last **2 days** (migration `1740000008`). `AuthStoreService.refreshSession()` calls `authRefresh` on startup and when the tab becomes visible, at most once an hour, so active users stay signed in and idle sessions end after 2 days. Only a 401/403 from the refresh signs the user out; network errors keep the session.
-3. The SDK writes that to **`localStorage`** under the key `pocketbase_auth`. Reloading the SPA restores the session without a round trip; `authStore.isValid` checks expiry.
-4. On later `collection(...)` and `send(...)` calls the SDK sets the HTTP header **`Authorization: <jwt>`** (the raw token; PocketBase also accepts a `Bearer` prefix).
-5. [`AuthStoreService`](../snippy/frontend/src/app/services/stores/auth.store.service.ts) subscribes to `authStore.onChange` and maps `authStore.record` into the `User` signal. Angular never stores a second copy of the JWT.
-6. [`authGuard`](../snippy/frontend/src/app/guards/auth.guard.ts) / `guestGuard` read `pb.authStore.isValid` only. They do not decode claims.
+1. [`PocketBaseService`](../snippy/frontend/src/app/services/data/pocketbase.service.ts) constructs one SDK instance on `window.location.origin` with `autoCancellation(false)` (list pages fire overlapping requests) and a `CookieAuthStore`: an in-memory store that keeps the user record and never a token.
+2. The JWT lives in an **HttpOnly** cookie, `snippy_auth` (`Path=/api/`, `SameSite=Strict`, `Secure` when `PB_APP_URL` is https). [`5_auth_cookie.pb.js`](../snippy/pocketbase/pb_hooks/5_auth_cookie.pb.js) sets it on every users auth response (password, OAuth2, refresh) and sends `"token": ""` in the JSON body, so page script, including an XSS, can never read it. Nothing auth-related is written to `localStorage`.
+3. The browser sends the cookie on same-origin `/api/` requests. A router middleware copies it into `Authorization` just before PocketBase's `loadAuthToken`. An explicit `Authorization` header (Admin UI, scripts) wins, and requests whose `Sec-Fetch-Site` is not `same-origin` / `none` never use the cookie.
+4. Tokens last **2 days** (migration `1740000008`). Before the first route runs, an app initializer calls `AuthStoreService.refreshSession()`, which POSTs `/api/snippy/session`. That returns `{ record }` and renews the cookie, or `{ record: null }` (and expires a stale cookie) for visitors. It runs again when the tab becomes visible, at most once an hour, so active users stay signed in and idle sessions end after 2 days. Network errors keep the session. `/embed/` pages skip it: a third-party iframe never carries the `SameSite=Strict` cookie.
+5. [`AuthStoreService`](../snippy/frontend/src/app/services/stores/auth.store.service.ts) subscribes to `authStore.onChange` and maps `authStore.record` into the `User` signal. Login and logout post on a `BroadcastChannel` so other open tabs re-read the shared cookie.
+6. [`authGuard`](../snippy/frontend/src/app/guards/auth.guard.ts) / `guestGuard` read `pb.authStore.isValid` (a record is loaded) only. They do not decode claims.
 
-Logout is `authStore.clear()` (removes the JWT and record).
+Logout clears the store and POSTs `/api/snippy/logout`, which expires the cookie (JavaScript cannot delete an HttpOnly cookie). Changing the password revokes every token, so `setPassword` signs in again for a fresh cookie.
 
 ### What the JWT is *not*
 
@@ -272,7 +272,7 @@ Identity for `isOwner` / `isFavorited` is `this.pb.authStore.record?.id` (`me`).
 
 - **What:** `user`, `isAuthenticated`, `oauthProviders`, `smtpEnabled`. Loads `/api/snippy/meta` on construct. `login` / `register` / `loginWithProvider` / password reset / `setPassword` / `logout` / `refreshUserFromBackend`. After OAuth, `applyOAuthMeta` PATCHes display name and a valid unused username from provider `meta`.
 - **Who:** Auth pages, header, settings, guards (indirectly via `authStore`), `EditorPreferencesService`.
-- **Must not:** Fetch snippets or collections. JWT stays in `pb.authStore`.
+- **Must not:** Fetch snippets or collections. The JWT never reaches the SPA; it is an HttpOnly cookie.
 
 #### [`snippet.store.service.ts`](../snippy/frontend/src/app/services/stores/snippet.store.service.ts)
 

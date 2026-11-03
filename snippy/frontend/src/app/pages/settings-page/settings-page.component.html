@@ -1,8 +1,24 @@
 <div class="flex h-full flex-col overflow-auto">
   <div class="page-shell max-w-3xl">
-    <div class="mb-6">
-      <h1 class="text-3xl font-semibold text-bright">Settings</h1>
-      <p class="mt-1 text-muted">Manage your profile, editor, and account.</p>
+    <div class="flex mb-6">
+      <div>
+        <h1 class="text-3xl font-semibold text-bright">Settings</h1>
+        <p class="mt-1 text-muted">Manage your profile, editor, and account.</p>
+      </div>
+      <div class="ml-auto flex flex-col items-end gap-1">
+        <button mat-raised-button color="primary" (click)="saveSettings()" [disabled]="!canSave()">
+          @if (saving()) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            Save changes
+          }
+        </button>
+        @if (usernameBlocksSave()) {
+          <p class="text-xs text-muted" role="status">
+            Pick an available username on the Account tab.
+          </p>
+        }
+      </div>
     </div>
 
     @if (!user()) {
@@ -76,19 +92,6 @@
               <textarea matInput rows="4" [(ngModel)]="bio" maxlength="500"></textarea>
               <mat-hint align="end">{{ bio.length }}/500</mat-hint>
             </mat-form-field>
-
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="saveProfile()"
-              [disabled]="!isProfileDirty() || profileSaving()"
-            >
-              @if (profileSaving()) {
-                <mat-spinner diameter="18"></mat-spinner>
-              } @else {
-                Save profile
-              }
-            </button>
           </div>
         </mat-tab>
 
@@ -248,20 +251,6 @@
                 Autocomplete
               </mat-checkbox>
             </div>
-
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="saveEditorPreferences()"
-              [disabled]="!isEditorDirty() || editorSaving()"
-            >
-              @if (editorSaving()) {
-                <mat-spinner diameter="18"></mat-spinner>
-              } @else {
-                Save editor preferences
-              }
-            </button>
-
             <mat-divider></mat-divider>
             <div>
               <p class="section-label">Keyboard shortcuts</p>
@@ -304,19 +293,6 @@
               </span>
             </mat-form-field>
 
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="saveUsername()"
-              [disabled]="!canSaveUsername()"
-            >
-              @if (usernameSaving()) {
-                <mat-spinner diameter="18"></mat-spinner>
-              } @else {
-                Update username
-              }
-            </button>
-
             <div class="privacy-section">
               <p class="section-label">Privacy</p>
               <div class="privacy-row">
@@ -332,18 +308,6 @@
                 </div>
                 <mat-slide-toggle [(ngModel)]="isPrivate"></mat-slide-toggle>
               </div>
-              <button
-                mat-raised-button
-                color="primary"
-                (click)="savePrivacy()"
-                [disabled]="!isPrivacyDirty() || privacySaving()"
-              >
-                @if (privacySaving()) {
-                  <mat-spinner diameter="18"></mat-spinner>
-                } @else {
-                  Save privacy
-                }
-              </button>
             </div>
 
             <div class="danger-zone">

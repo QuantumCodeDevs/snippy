@@ -131,6 +131,17 @@
                 <mat-icon>{{ snippet.isFavorited ? 'favorite' : 'favorite_border' }}</mat-icon>
               </button>
             }
+            @if (canEdit && !isGuest) {
+              <button
+                mat-icon-button
+                type="button"
+                (click)="snippetSaveUI.saveSnippetWithUI(snippetStore, user)"
+                [disabled]="!snippetStore.isDirty() || snippetSaveUI.saving()"
+                [attr.aria-busy]="snippetSaveUI.saving()"
+              >
+                <mat-icon>save</mat-icon>
+              </button>
+            }
           } @else {
             <span class="editor-title"></span>
           }
@@ -161,18 +172,6 @@
                   }
                 </div>
               }
-            }
-            @if (canEdit && !isGuest) {
-              <button
-                mat-menu-item
-                type="button"
-                (click)="snippetSaveUI.saveSnippetWithUI(snippetStore, user)"
-                [disabled]="!snippetStore.isDirty() || snippetSaveUI.saving()"
-                [attr.aria-busy]="snippetSaveUI.saving()"
-              >
-                <mat-icon>save</mat-icon>
-                <span>{{ saveLabel }}</span>
-              </button>
             }
             @if (!isGuest && hasSavedSnippet) {
               <button mat-menu-item type="button" (click)="openComments()">
@@ -219,7 +218,7 @@
       </header>
     } @else {
       <header class="site-header">
-        <div class="page-container flex flex-wrap items-center justify-between gap-3 py-2">
+        <div class="flex flex-wrap items-center justify-between gap-3 py-2 px-2">
           <div class="flex min-w-0 flex-1 items-center gap-3">
             <a [routerLink]="isGuest ? '/' : '/home'" class="brand-mark shrink-0">
               <img src="/snippy.svg" alt="" class="brand-mark__icon" width="38" height="24" />
@@ -248,29 +247,9 @@
                     Template
                   </span>
                 }
-                @if (snippet.parentShortId) {
-                  <p class="truncate text-xs text-muted">
-                    <app-fork-attribution
-                      [parentShortId]="snippet.parentShortId"
-                      [parentName]="snippet.parentName"
-                      [parentUserName]="snippet.parentUserName"
-                      [parentDeleted]="!!snippet.parentDeleted"
-                    />
-                  </p>
-                }
               } @else {
                 <div class="min-w-0 flex-1">
                   <h1 class="truncate text-lg font-semibold text-ink">{{ snippet.name }}</h1>
-                  @if (snippet.parentShortId) {
-                    <p class="truncate text-xs text-muted">
-                      <app-fork-attribution
-                        [parentShortId]="snippet.parentShortId"
-                        [parentName]="snippet.parentName"
-                        [parentUserName]="snippet.parentUserName"
-                        [parentDeleted]="!!snippet.parentDeleted"
-                      />
-                    </p>
-                  }
                 </div>
               }
             }
@@ -293,7 +272,6 @@
 
           <div class="flex items-center gap-2">
             @if (canEdit && !isGuest) {
-              <app-save-status class="hidden lg:inline-flex"></app-save-status>
               <button
                 mat-raised-button
                 color="primary"
@@ -311,7 +289,7 @@
                 } @else {
                   <mat-icon aria-hidden="true">save</mat-icon>
                 }
-                {{ saveLabel }}
+                Save
               </button>
             }
 
